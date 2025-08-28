@@ -3,6 +3,7 @@ export class User {
     public id: number = 0,
     public korisnickoIme: string = '',
     public uloga: string = 'korisnik',
-    public lozinka: string = ''
+    public lozinka: string = '',
+    public blokiran: boolean = false
   ) {}
 }

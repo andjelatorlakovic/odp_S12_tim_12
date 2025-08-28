@@ -22,41 +22,47 @@ export class AuthController {
    * POST /api/v1/auth/login
    * Prijava korisnika
    */
-  private async prijava(req: Request, res: Response): Promise<void> {
-    try {
-      const { korisnickoIme, lozinka } = req.body;
+private async prijava(req: Request, res: Response): Promise<void> {
+  try {
+    const { korisnickoIme, lozinka } = req.body;
 
-      // Validacija input parametara
-      const rezultat = validacijaPodatakaAuth(korisnickoIme, lozinka);
-
-      if (!rezultat.uspesno) {
-        res.status(400).json({ success: false, message: rezultat.poruka });
-        return;
-      }
-
-      const result = await this.authService.prijava(korisnickoIme, lozinka);
-
-      // Proveravamo da li je prijava uspešna
-      if (result.id !== 0) {
-        // Kreiranje jwt tokena
-        const token = jwt.sign(
-          { 
-            id: result.id, 
-            korisnickoIme: result.korisnickoIme, 
-            uloga: result.uloga,
-          }, process.env.JWT_SECRET ?? "", { expiresIn: '6h' });
-
-        res.status(200).json({success: true, message: 'Uspešna prijava', data: token});
-        return;
-      } else {
-        res.status(401).json({success: false, message: 'Неисправно корисничко име или лозинка'});
-        return;
-      }
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({success: false, message: error});
+    const rezultat = validacijaPodatakaAuth(korisnickoIme, lozinka);
+    if (!rezultat.uspesno) {
+      res.status(400).json({ success: false, message: rezultat.poruka });
+      return;
     }
+
+    const result = await this.authService.prijava(korisnickoIme, lozinka);
+
+    if (result.id !== 0) {
+      // Ubacujemo i 'blokiran' u token
+      const token = jwt.sign(
+        { 
+          id: result.id, 
+          korisnickoIme: result.korisnickoIme, 
+          uloga: result.uloga,
+          blokiran: result.blokiran,   // OVDE DODAJEMO
+        },
+        process.env.JWT_SECRET ?? "",
+        { expiresIn: '6h' }
+      );
+
+      res.status(200).json({ 
+        success: true, 
+        message: 'Uspešna prijava', 
+        data: { token, blokiran: result.blokiran } // saljemo i status blokiranosti
+      });
+      return;
+    } else {
+      res.status(401).json({ success: false, message: 'Neispravno korisničko ime ili lozinka' });
+      return;
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: error });
   }
+}
+
 
   /**
    * POST /api/v1/auth/register

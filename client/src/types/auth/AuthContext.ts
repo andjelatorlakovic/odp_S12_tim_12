@@ -7,4 +7,7 @@ export type AuthContextType = {
     logout: () => void;
     isAuthenticated: boolean;
     isLoading: boolean;
+
+    blokiran: boolean;                    // status blokiranosti korisnika
+    setBlokiran: (blokiran: boolean) => void;  // setter za blokiran status
 }

@@ -17,7 +17,8 @@ const decodeJWT = (token: string): JwtTokenClaims | null => {
             return {
                 id: decoded.id,
                 korisnickoIme: decoded.korisnickoIme,
-                uloga: decoded.uloga
+                uloga: decoded.uloga,
+                blokiran: decoded.blokiran ?? false, // dodaj blokiran polje
             };
         }
         
@@ -44,6 +45,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [user, setUser] = useState<AuthUser | null>(null);
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [blokiran, setBlokiran] = useState<boolean>(false);  // novi state
 
     // Učitaj token iz localStorage pri pokretanju
     useEffect(() => {
@@ -59,15 +61,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             
             const claims = decodeJWT(savedToken);
             if (claims) {
-                setToken(savedToken);
-                setUser({
-                    id: claims.id,
-                    korisnickoIme: claims.korisnickoIme,
-                    uloga: claims.uloga
-                });
-            } else {
-                ObrišiVrednostPoKljuču("authToken");
-            }
+    setToken(savedToken);
+    setUser({
+        id: claims.id,
+        korisnickoIme: claims.korisnickoIme,
+        uloga: claims.uloga,
+        blokiran: claims.blokiran ?? false  // obavezno polje
+    });
+    setBlokiran(claims.blokiran ?? false);
+}
         }
         
         setIsLoading(false);
@@ -76,22 +78,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const login = (newToken: string) => {
         const claims = decodeJWT(newToken);
         
-        if (claims && !isTokenExpired(newToken)) {
-            setToken(newToken);
-            setUser({
-                id: claims.id,
-                korisnickoIme: claims.korisnickoIme,
-                uloga: claims.uloga
-            });
-            SačuvajVrednostPoKljuču("authToken", newToken);
-        } else {
-            console.error('Nevažeći ili istekao token');
-        }
+       if (claims && !isTokenExpired(newToken)) {
+    setToken(newToken);
+    setUser({
+        id: claims.id,
+        korisnickoIme: claims.korisnickoIme,
+        uloga: claims.uloga,
+        blokiran: claims.blokiran ?? false  // obavezno polje
+    });
+    setBlokiran(claims.blokiran ?? false);
+    SačuvajVrednostPoKljuču("authToken", newToken);
+}
     };
 
     const logout = () => {
         setToken(null);
         setUser(null);
+        setBlokiran(false);  // resetuj blokiran
         ObrišiVrednostPoKljuču("authToken");
     };
 
@@ -103,7 +106,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         login,
         logout,
         isAuthenticated,
-        isLoading
+        isLoading,
+        blokiran,        // dodaj u context
+        setBlokiran      // i set funkciju
     };
 
     return (

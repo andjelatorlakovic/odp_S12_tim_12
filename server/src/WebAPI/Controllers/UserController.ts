@@ -15,29 +15,76 @@ export class UserController {
   }
 
   private initializeRoutes(): void {
-    // ostale metode, npr. /api/v1/user/1 <--- user po ID-ju 1
-    this.router.get("/korisnici", authenticate, authorize("moderator"), this.korisnici.bind(this));
+    this.router.get(
+      "/korisnici",
+      authenticate,
+      authorize("moderator"),
+      this.korisnici.bind(this)
+    );
+
+    this.router.post(
+      "/korisnici/blokiraj",
+      authenticate,
+      authorize("moderator"),
+      this.blokirajKorisnike.bind(this)
+    );
+
+    
+    this.router.post(
+      "/korisnici/odblokiraj",
+      authenticate,
+      authorize("moderator"),
+      this.odblokirajKorisnike.bind(this)
+    );
   }
 
-  /**
-   * GET /api/v1/users
-   * Svi korisnici
-   */
   private async korisnici(req: Request, res: Response): Promise<void> {
     try {
-      const korisniciPodaci: UserDto[] =
-        await this.userService.getSviKorisnici();
+      const korisniciPodaci: UserDto[] = await this.userService.getSviKorisnici();
 
       res.status(200).json(korisniciPodaci);
-      return;
     } catch (error) {
-      res.status(500).json({ success: false, message: error });
+      const errorMessage = error instanceof Error ? error.message : "Nepoznata greška";
+      res.status(500).json({ success: false, message: errorMessage });
     }
   }
 
-  /**
-   * Getter za router
-   */
+  private async blokirajKorisnike(req: Request, res: Response): Promise<void> {
+    try {
+      const { userIds } = req.body as { userIds: number[] };
+
+      if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+        res.status(400).json({ success: false, message: "Morate poslati niz ID korisnika za blokiranje." });
+        return;
+      }
+
+      await this.userService.blokirajKorisnike(userIds);
+
+      res.status(200).json({ success: true, message: "Korisnici uspešno blokirani." });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Nepoznata greška";
+      res.status(500).json({ success: false, message: errorMessage });
+    }
+  }
+
+ private async odblokirajKorisnike(req: Request, res: Response): Promise<void> {
+  try {
+    const { userIds } = req.body as { userIds: number[] };
+
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+      res.status(400).json({ success: false, message: "Morate poslati niz ID korisnika za odblokiranje." });
+      return;
+    }
+
+    await this.userService.odblokirajKorisnike(userIds);  // obavezno ovde pozovi odblokirajKorisnike
+
+    res.status(200).json({ success: true, message: "Korisnik uspešno odblokiran." });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Nepoznata greška";
+    res.status(500).json({ success: false, message: errorMessage });
+  }
+}
+
   public getRouter(): Router {
     return this.router;
   }

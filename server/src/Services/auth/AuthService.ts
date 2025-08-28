@@ -10,14 +10,14 @@ export class AuthService implements IAuthService {
   public constructor(private userRepository: IUserRepository) {}
 
   async prijava(korisnickoIme: string, lozinka: string): Promise<UserAuthDataDto> {
-    const user = await this.userRepository.getByUsername(korisnickoIme);
+  const user = await this.userRepository.getByUsername(korisnickoIme);
 
-    if (user.id !== 0 && await bcrypt.compare(lozinka, user.lozinka)) {
-      return new UserAuthDataDto(user.id, user.korisnickoIme, user.uloga);
-    }
-
-    return new UserAuthDataDto(); // Neispravno korisničko ime ili lozinka
+  if (user.id !== 0 && await bcrypt.compare(lozinka, user.lozinka)) {
+    return new UserAuthDataDto(user.id, user.korisnickoIme, user.uloga, user.blokiran);
   }
+
+  return new UserAuthDataDto(); // Neispravno korisničko ime ili lozinka
+}
 
   async registracija(korisnickoIme: string, uloga: string, lozinka: string): Promise<UserAuthDataDto> {
     const existingUser = await this.userRepository.getByUsername(korisnickoIme);

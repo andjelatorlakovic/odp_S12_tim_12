@@ -5,49 +5,77 @@ import type { AuthFormProps } from "../../types/props/auth_form_props/AuthFormPr
 import knjiga from "../../assets/knjiga.png";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+
 import type { JwtTokenClaims } from "../../types/auth/JwtTokenClaims";
+import { SačuvajVrednostPoKljuču } from "../../helpers/local_storage";
 
 interface PrijavaFormaProps extends AuthFormProps {
   onUlogovan?: () => void;
+}
+
+interface AuthResponseData {
+  token?: string;
+  [key: string]: any;
 }
 
 export function PrijavaForma({ authApi, onUlogovan }: PrijavaFormaProps) {
   const [korisnickoIme, setKorisnickoIme] = useState("");
   const [lozinka, setLozinka] = useState("");
   const [greska, setGreska] = useState("");
-  const { login } = useAuth();
+  const { login, setBlokiran } = useAuth(); // Pretpostavimo da si dodao i setBlokiran u context
   const navigate = useNavigate();
 
-  const podnesiFormu = async (e: React.FormEvent) => {
-    e.preventDefault();
+const podnesiFormu = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    const validacija = validacijaPodatakaAuth(korisnickoIme, lozinka);
-    if (!validacija.uspesno) {
-      setGreska(validacija.poruka ?? "Неисправни подаци");
-      return;
-    }
+  const validacija = validacijaPodatakaAuth(korisnickoIme, lozinka);
+  if (!validacija.uspesno) {
+    setGreska(validacija.poruka ?? "Неисправни подаци");
+    return;
+  }
 
-    const odgovor = await authApi.prijava(korisnickoIme, lozinka);
-    if (odgovor.success && odgovor.data) {
-      login(odgovor.data);
+  const odgovor = await authApi.prijava(korisnickoIme, lozinka);
 
+  // Ova linija menja tip zbog TS greške
+  const data = odgovor.data as unknown as AuthResponseData;
 
-      const claims = jwtDecode<JwtTokenClaims>(odgovor.data);
-      if (claims.uloga === "moderator") {
-        navigate("/moderator-dashboard");
-      } else if (claims.uloga === "korisnik") {
-        navigate("/korisnik-dashboard");
-      } else {
-        navigate("/");
-      }
+  let token: string;
 
-      if (onUlogovan) onUlogovan(); 
-    } else {
-      setGreska(odgovor.message);
-      setKorisnickoIme("");
-      setLozinka("");
-    }
-  };
+  if (typeof data === "string") {
+    token = data;
+  } else if (data.token && typeof data.token === "string") {
+    token = data.token;
+  } else {
+    setGreska("Nepoznat format tokena.");
+    return;
+  }
+
+  try {
+  const claims = jwtDecode<JwtTokenClaims>(token);
+
+  SačuvajVrednostPoKljuču('authToken', token);  // Čuvanje tokena u localStorage
+
+  login(token);
+  setBlokiran(claims.blokiran);
+
+  if (claims.blokiran) {
+    setGreska("Vaš nalog je blokiran. Imaćete ograničen pristup.");
+  }
+
+  if (claims.uloga === "moderator") {
+    navigate("/moderator-dashboard");
+  } else if (claims.uloga === "korisnik") {
+    navigate("/korisnik-dashboard");
+  } else {
+    navigate("/");
+  }
+
+  if (onUlogovan) onUlogovan();
+} catch (error) {
+  setGreska("Token je neispravan.");
+}
+};
+
 
   return (
     <div className="min-h-screen bg-white">
