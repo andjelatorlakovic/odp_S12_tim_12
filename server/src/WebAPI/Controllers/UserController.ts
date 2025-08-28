@@ -16,7 +16,7 @@ export class UserController {
 
   private initializeRoutes(): void {
     // ostale metode, npr. /api/v1/user/1 <--- user po ID-ju 1
-    this.router.get("/users", authenticate, authorize("moderator"), this.korisnici.bind(this));
+    this.router.get("/korisnici", authenticate, authorize("moderator"), this.korisnici.bind(this));
   }
 
   /**

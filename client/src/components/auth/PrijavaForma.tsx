@@ -34,9 +34,9 @@ export function PrijavaForma({ authApi, onUlogovan }: PrijavaFormaProps) {
 
       const claims = jwtDecode<JwtTokenClaims>(odgovor.data);
       if (claims.uloga === "moderator") {
-        navigate("/admin-dashboard");
+        navigate("/moderator-dashboard");
       } else if (claims.uloga === "korisnik") {
-        navigate("/user-dashboard");
+        navigate("/korisnik-dashboard");
       } else {
         navigate("/");
       }

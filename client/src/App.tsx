@@ -17,7 +17,7 @@ function App() {
 
       {/* Zaštićene rute */}
       <Route
-        path="/user-dashboard"
+        path="/korisnik-dashboard"
         element={
           <ProtectedRoute requiredRole="korisnik">
             <KorisnikStranica />
@@ -26,7 +26,7 @@ function App() {
       />
 
       <Route
-        path="/admin-dashboard"
+        path="/moderator-dashboard"
         element={
           <ProtectedRoute requiredRole="moderator">
             <ModeratorStranica />
