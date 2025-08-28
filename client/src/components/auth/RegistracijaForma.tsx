@@ -84,8 +84,8 @@ export function RegistracijaForma({ authApi }: AuthFormProps) {
             className="w-full px-4 bg-white py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
             disabled={uspesno}
           >
-            <option value="user">Korisnik</option>
-            <option value="admin">Moderator</option>
+            <option value="korisnik">Korisnik</option>
+            <option value="moderator">Moderator</option>
           </select>
 
           {greska && (
