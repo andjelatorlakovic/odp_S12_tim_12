@@ -97,7 +97,7 @@ export function RegistracijaForma({ authApi }: AuthFormProps) {
             className="mt-[30px] w-[60%] h-[60px] bg-[#8f60bf] text-white text-[20px] hover:bg-white hover:text-[#8f60bf] border-2 border-[#8f60bf] transition mx-auto block"
             disabled={uspesno}
           >
-            Potvrdi
+            Registracija
           </button>
         </form>
       </div>

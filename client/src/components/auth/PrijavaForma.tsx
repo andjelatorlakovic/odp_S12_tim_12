@@ -87,7 +87,7 @@ export function PrijavaForma({ authApi, onUlogovan }: PrijavaFormaProps) {
             type="submit"
             className="mt-[30px] w-[50%] h-[45px] bg-[#8f60bf] text-white text-[20px] hover:bg-white hover:text-[#8f60bf] border-2 border-[#8f60bf] transition mx-auto block"
           >
-            Potvrdi
+            Prijava
           </button>
         </form>
       </div>
