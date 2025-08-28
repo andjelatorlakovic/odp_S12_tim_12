@@ -19,7 +19,7 @@ function App() {
       <Route
         path="/user-dashboard"
         element={
-          <ProtectedRoute requiredRole="user">
+          <ProtectedRoute requiredRole="korisnik">
             <KorisnikStranica />
           </ProtectedRoute>
         }
@@ -28,7 +28,7 @@ function App() {
       <Route
         path="/admin-dashboard"
         element={
-          <ProtectedRoute requiredRole="admin">
+          <ProtectedRoute requiredRole="moderator">
             <ModeratorStranica />
           </ProtectedRoute>
         }

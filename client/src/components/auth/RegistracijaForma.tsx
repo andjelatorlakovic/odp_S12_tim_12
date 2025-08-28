@@ -8,7 +8,7 @@ import knjiga from "../../assets/knjiga.png";
 export function RegistracijaForma({ authApi }: AuthFormProps) {
   const [korisnickoIme, setKorisnickoIme] = useState("");
   const [lozinka, setLozinka] = useState("");
-  const [uloga, setUloga] = useState("user");
+  const [uloga, setUloga] = useState("korisnik");
   const [greska, setGreska] = useState("");
   const [uspesno, setUspesno] = useState(false); 
 
