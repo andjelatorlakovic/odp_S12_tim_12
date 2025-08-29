@@ -10,28 +10,29 @@ import { LanguagesController } from './WebAPI/Controllers/LanguageContoller';
 import { UserController } from './WebAPI/Controllers/UserController';
 import { IUserService } from './Domain/services/users/IUserService';
 import { UserService } from './Services/users/UserService';
-import { LanguageLevelController } from './WebAPI/Controllers/LanguageLevelController';  // Dodajemo import za LanguageLevelController
+import { LanguageLevelController } from './WebAPI/Controllers/LanguageLevelController';  // Importujemo controller
 
 require('dotenv').config();
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
-// Repositories
+// Inicijalizujemo repozitorijume
 const userRepository: IUserRepository = new UserRepository();
 
-// Services
+// Inicijalizujemo servise
 const authService: IAuthService = new AuthService(userRepository);
 const userService: IUserService = new UserService(userRepository);
 
-// WebAPI routes
-const languagesController = new LanguagesController();
+// Inicijalizujemo kontrolere
 const authController = new AuthController(authService);
+const languagesController = new LanguagesController();
 const userController = new UserController(userService);
-const languageLevelController = new LanguageLevelController();  // Instanciramo LanguageLevelController
+const languageLevelController = new LanguageLevelController();  // LanguageLevelController
 
-// Registering routes
+// Registrujemo rute pod istim prefiksom (api/v1)
 app.use('/api/v1', authController.getRouter());
 app.use('/api/v1', languagesController.getRouter());
 app.use('/api/v1', userController.getRouter());
