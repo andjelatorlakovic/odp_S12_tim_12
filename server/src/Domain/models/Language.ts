@@ -1,5 +1,6 @@
 export class Language {
-    public constructor(
-        id: number,
-        jezik: string) { }
+  public constructor(
+    public id: number = 0,
+    public jezik: string = ''
+  ) {}
 }

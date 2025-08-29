@@ -1,33 +1,27 @@
 import { Router, Request, Response } from 'express';
 import { LanguagesRepository } from '../../Domain/repositories/languages/LanguagesRepository';
+import { LanguageService } from '../../Services/languages/LanguageService'; // Importujemo LanguageService
+import { validacijaPodatakaAuth } from '../validators/languages/LanguageValidator'; // Importujemo funkciju za validaciju jezika
 
 export class LanguagesController {
   private router = Router();
   private languagesRepository = new LanguagesRepository();
+  private languageService: LanguageService;
 
   constructor() {
+    // Kreiramo instancu LanguageService sa zavisnošću LanguagesRepository
+    this.languageService = new LanguageService(this.languagesRepository);
+
+    // Postavljamo rute
     this.router.get('/languages', this.getLanguages);
-    this.router.post('/languages', this.addLanguage);
+    this.router.post('/languagesAdd', this.dodajJezik); // Nova ruta za dodavanje jezika
   }
 
   getRouter() {
     return this.router;
   }
-private addLanguage = async (req: Request, res: Response) => {
-  try {
-    const { jezik } = req.body; // koristi isto ime koje šalješ iz frontenda
-    if (!jezik) {
-      return res.status(400).json({ message: 'Nedostaje naziv jezika.' });
-    }
-    const novi = await this.languagesRepository.createLanguage(jezik);
-    res.status(201).json(novi);
-  } catch (error) {
-    console.error('Greška pri dodavanju jezika:', error);
-    res.status(500).json({ message: 'Greška pri dodavanju jezika.' });
-  }
-};
 
-
+  // Ruta za dohvat svih jezika
   private getLanguages = async (req: Request, res: Response) => {
     try {
       const jezici = await this.languagesRepository.getAllLanguages();
@@ -35,6 +29,40 @@ private addLanguage = async (req: Request, res: Response) => {
     } catch (error) {
       console.error('Greška pri dohvaćanju jezika:', error);
       res.status(500).json({ message: 'Greška pri dohvaćanju jezika' });
+    }
+  };
+
+  // Nova ruta za dodavanje jezika
+  private dodajJezik = async (req: Request, res: Response) => {
+    try {
+      const { jezik } = req.body; // Koristi isto ime koje šalješ iz frontenda
+
+      // Validacija podataka za jezik
+      const validacija = validacijaPodatakaAuth(jezik);
+      if (!validacija.uspesno) {
+        return res.status(400).json({ message: validacija.poruka });
+      }
+
+      // Pozivamo servis za dodavanje jezika
+      const noviJezik = await this.languageService.dodavanjeJezika(jezik);
+
+      if (noviJezik.id !== 0) {
+        // Vraćamo uspešan odgovor sa podacima o jeziku
+        res.status(201).json({
+          success: true,
+          message: 'Jezik uspešno dodat',
+          data: noviJezik,
+        });
+      } else {
+        // Ako je jezik već postojao ili došlo je do greške
+        res.status(400).json({
+          success: false,
+          message: 'Jezik već postoji ili došlo je do greške prilikom dodavanja.',
+        });
+      }
+    } catch (error) {
+      console.error('Greška pri dodavanju jezika:', error);
+      res.status(500).json({ message: 'Greška pri dodavanju jezika.' });
     }
   };
 }
