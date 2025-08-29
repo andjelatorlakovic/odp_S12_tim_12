@@ -1,59 +1,66 @@
 import { useState } from "react";
-import { languageApi } from "../../api_services/languages/LanguageApiService"; // Importuj LanguageApiService
-import { validacijaPodatakaJezik } from "../../api_services/validators/languages/LanguageValidator"; // Importuj funkciju validacije
-import knjiga from "../../assets/knjiga.png"; // Importuj sliku za logo
+import { languageApi } from "../../api_services/languages/LanguageApiService";
+import { LanguageLevelAPIService } from "../../api_services/languageLevels/LanguageLevelApiService";
+import { validacijaPodatakaJezik } from "../../api_services/validators/languages/LanguageValidator";
+import knjiga from "../../assets/knjiga.png";
+
+// Instanciraj servis za nivoe
+const languageLevelApi = new LanguageLevelAPIService();
 
 export default function DodajNoviJezikForma() {
-  const [jezik, setJezik] = useState("");  // Stanje za naziv jezika
-  const [nivoi, setNivoi] = useState<string[]>([]);  // Stanje za nivo jezika, sada kao niz
-  const [greska, setGreska] = useState(""); // Stanje za greške
-  const [greska2, setGreska2] = useState(""); // Stanje za greške
-  const [uspesno, setUspesno] = useState(false);  // Stanje za uspesnu registraciju
+  const [jezik, setJezik] = useState("");
+  const [nivoi, setNivoi] = useState<string[]>([]);
+  const [greska, setGreska] = useState("");
+  const [uspesno, setUspesno] = useState(false);
+  const [brojNivoi, setBrojNivoi] = useState(1);
 
-
+  const nivoiOpcije = ["A1", "A2", "B1", "B2", "C1", "C2"];
 
   const podnesiFormu = async (e: React.FormEvent) => {
-    e.preventDefault(); // Sprečava ponovno učitavanje stranice pri submit-u
-    setGreska("");  // Resetuje grešku pre svakog pokušaja
-    setUspesno(false); // Resetuje status uspeha
+    e.preventDefault();
+    setGreska("");
+    setUspesno(false);
 
-    // Pozivanje funkcije za validaciju jezika
     const validacija = validacijaPodatakaJezik(jezik);
 
-    // Ako validacija nije uspešna, postavljamo grešku
     if (!validacija.uspesno) {
       setGreska(validacija.poruka);
       return;
     }
 
-    // Validacija nivoa
-    if (nivoi.length === 0) {
-      setGreska2("Molimo odaberite barem jedan nivo.");
-      return;
-    }
+    // ➕ Sačuvaj kopiju nivoa pre resetovanja stanja
+    const nivoiZaDodavanje = [...nivoi];
 
-    // Poziv API funkcije za dodavanje jezika
-    const odgovor = await languageApi.dodajJezik(jezik.trim(), nivoi.join(", "));
+    // Dodaj jezik
+    const odgovorJezik = await languageApi.dodajJezik(jezik.trim(), nivoiZaDodavanje.join(", "));
+    console.log("API odgovorJezik:", odgovorJezik);
 
-    // Ako je odgovor uspešan, prikazuje poruku o uspehu
-    if (odgovor.success) {
+    if (odgovorJezik.success) {
+      console.log("Dodajem nivoe:", nivoiZaDodavanje);
+
+      // Resetuj formu
+      setJezik("");
+      setNivoi([]);
+      setBrojNivoi(1);
       setUspesno(true);
-      setJezik("");  // Resetuje unos jezika
-      setNivoi([]);   // Resetuje nivo jezika
-      setGreska("");
-      setGreska2("");
+
+      // Dodaj svaki nivo posebno
+      for (let nivo of nivoiZaDodavanje) {
+        const odgovorNivo = await languageLevelApi.dodajLanguageLevel(jezik.trim(), nivo);
+        if (!odgovorNivo.success) {
+          setGreska(`Greška pri dodavanju nivoa: ${nivo}`);
+          return;
+        }
+      }
     } else {
-      setGreska(odgovor.message);  // Ako dođe do greške, postavlja grešku
+      setGreska(odgovorJezik.message);
     }
   };
 
-  // Funkcija za ažuriranje stanja nivoa
-  const handleCheckboxChange = (nivo: string) => {
-    if (nivoi.includes(nivo)) {
-      setNivoi(nivoi.filter((item) => item !== nivo)); // Uklanja nivo iz stanja ako je već označen
-    } else {
-      setNivoi([...nivoi, nivo]); // Dodaje nivo u stanje ako nije označen
-    }
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedLevels = Array.from({ length: Number(e.target.value) }, (_, i) => nivoiOpcije[i]);
+    setBrojNivoi(Number(e.target.value));
+    setNivoi(selectedLevels);
   };
 
   return (
@@ -64,7 +71,7 @@ export default function DodajNoviJezikForma() {
         <h1 className="text-[60px] text-[#8f60bf] font-bold">Ucilingo</h1>
       </div>
 
-      {/* Glavni sadržaj ispod zaglavlja */}
+      {/* Glavni sadržaj */}
       <div className="pt-[120px] flex justify-center mt-[60px]">
         <form
           onSubmit={podnesiFormu}
@@ -74,99 +81,40 @@ export default function DodajNoviJezikForma() {
           <input
             type="text"
             value={jezik}
-            onChange={(e) => setJezik(e.target.value)} // Ažurira stanje jezika
+            onChange={(e) => setJezik(e.target.value)}
             className="w-full px-4 bg-white py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
             placeholder="Unesite naziv jezika"
           />
 
-          {/* Prikazivanje greške ako je naziv jezika manji od 3 slova */}
-          {greska && !nivoi.length && <p className="text-red-700 text-center mb-4">{greska}</p>}
+          {greska && <p className="text-red-700 text-center mb-4">{greska}</p>}
 
-          <label className="block text-lg text-gray-800 mb-2 mt-4">Nivo znanja:</label>
-          
-          {/* Raspored checkboksova u dva reda */}
-          <div className="grid grid-cols-3 gap-4 mb-4">
-            {/* Prvi red: A1, B1, C1 */}
-            <div>
-              <label className="inline-flex items-center">
-                <input
-                  type="checkbox"
-                  value="A1"
-                  checked={nivoi.includes("A1")}
-                  onChange={() => handleCheckboxChange("A1")}
-                  className="form-checkbox text-purple-600"
-                />
-                <span className="ml-2">A1</span>
-              </label>
-            </div>
-            <div>
-              <label className="inline-flex items-center">
-                <input
-                  type="checkbox"
-                  value="B1"
-                  checked={nivoi.includes("B1")}
-                  onChange={() => handleCheckboxChange("B1")}
-                  className="form-checkbox text-purple-600"
-                />
-                <span className="ml-2">B1</span>
-              </label>
-            </div>
-            <div>
-              <label className="inline-flex items-center">
-                <input
-                  type="checkbox"
-                  value="C1"
-                  checked={nivoi.includes("C1")}
-                  onChange={() => handleCheckboxChange("C1")}
-                  className="form-checkbox text-purple-600"
-                />
-                <span className="ml-2">C1</span>
-              </label>
-            </div>
-            
-            {/* Drugi red: A2, B2, C2 */}
-            <div>
-              <label className="inline-flex items-center">
-                <input
-                  type="checkbox"
-                  value="A2"
-                  checked={nivoi.includes("A2")}
-                  onChange={() => handleCheckboxChange("A2")}
-                  className="form-checkbox text-purple-600"
-                />
-                <span className="ml-2">A2</span>
-              </label>
-            </div>
-            <div>
-              <label className="inline-flex items-center">
-                <input
-                  type="checkbox"
-                  value="B2"
-                  checked={nivoi.includes("B2")}
-                  onChange={() => handleCheckboxChange("B2")}
-                  className="form-checkbox text-purple-600"
-                />
-                <span className="ml-2">B2</span>
-              </label>
-            </div>
-            <div>
-              <label className="inline-flex items-center">
-                <input
-                  type="checkbox"
-                  value="C2"
-                  checked={nivoi.includes("C2")}
-                  onChange={() => handleCheckboxChange("C2")}
-                  className="form-checkbox text-purple-600"
-                />
-                <span className="ml-2">C2</span>
-              </label>
-            </div>
+          <label className="block text-lg text-gray-800 mb-2 mt-4">Broj nivoa jezika:</label>
+          <select
+            value={brojNivoi}
+            onChange={handleSelectChange}
+            className="w-full px-4 bg-white py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400 mb-4"
+          >
+            <option value={1}>1 nivo</option>
+            <option value={2}>2 nivoa</option>
+            <option value={3}>3 nivoa</option>
+            <option value={4}>4 nivoa</option>
+            <option value={5}>5 nivoa</option>
+            <option value={6}>6 nivoa</option>
+          </select>
+
+          <label className="block text-lg text-gray-800 mb-2">Odabrani nivoi:</label>
+          <div className="mb-4">
+            <select
+              value={nivoi}
+              onChange={(e) => setNivoi(Array.from(e.target.selectedOptions, option => option.value))}
+              multiple
+              className="w-full px-4 bg-white py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
+            >
+              {nivoiOpcije.slice(0, brojNivoi).map((nivo, index) => (
+                <option key={index} value={nivo}>{nivo}</option>
+              ))}
+            </select>
           </div>
-
-          {/* Greška za nivo jezika sada se prikazuje samo ispod checkboksova */}
-          {nivoi.length === 0 && greska2 && (
-            <p className="text-red-700 text-center mt-2">{greska2}</p>
-          )}
 
           <button
             type="submit"
@@ -175,9 +123,8 @@ export default function DodajNoviJezikForma() {
             Dodaj jezik
           </button>
 
-          {/* Poruka o uspehu ako je jezik uspešno dodat */}
           {uspesno && (
-            <p className="text-green-700 text-center mb-4">
+            <p className="text-green-700 text-center mt-4">
               Jezik je uspešno dodat!
             </p>
           )}

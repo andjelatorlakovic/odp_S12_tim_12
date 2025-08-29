@@ -12,24 +12,40 @@ CREATE TABLE IF NOT EXISTS users (
     lozinka VARCHAR(500) NOT NULL,
     blokiran BOOLEAN NOT NULL DEFAULT FALSE
 );
+CREATE TABLE IF NOT EXISTS levels (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    naziv VARCHAR(10) NOT NULL UNIQUE
 
+);
+INSERT INTO levels (naziv)
+VALUES ('A1'),
+       ('A2'),
+       ('B1'),
+       ('B2'),
+       ('C1'),
+       ('C2');
 CREATE TABLE IF NOT EXISTS languages (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    jezik VARCHAR(50) NOT NULL
+    jezik VARCHAR(50) NOT NULL UNIQUE
 );
+CREATE TABLE IF NOT EXISTS user_language (
+    user_id INT,
+    jezik_id INT,
+    PRIMARY KEY (user_id, jezik_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (jezik_id) REFERENCES languages(id) ON DELETE CASCADE
+);
+INSERT INTO user_language (user_id, jezik_id)
+VALUES (1, 2)
+ 
 
 INSERT INTO languages (id, jezik) VALUES (1, 'Engleski');
 INSERT INTO languages (id, jezik) VALUES (2, 'Nemački');
 
-CREATE TABLE IF NOT EXISTS levels (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    language_id INT NOT NULL,
-    nivo VARCHAR(10) NOT NULL,
-    FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS language_levels (
+    jezik varchar(20),
+    naziv  varchar(20),
+    PRIMARY KEY (jezik, naziv),
+    FOREIGN KEY (jezik) REFERENCES languages(jezik) ON DELETE CASCADE,
+    FOREIGN KEY (naziv) REFERENCES levels(naziv) ON DELETE CASCADE
 );
-
-INSERT INTO levels (language_id, nivo) VALUES (1, 'A1');
-INSERT INTO levels (language_id, nivo) VALUES (1, 'A2');
-INSERT INTO levels (language_id, nivo) VALUES (1, 'B1');
-INSERT INTO levels (language_id, nivo) VALUES (2, 'A1');
-INSERT INTO levels (language_id, nivo) VALUES (2, 'A2');
