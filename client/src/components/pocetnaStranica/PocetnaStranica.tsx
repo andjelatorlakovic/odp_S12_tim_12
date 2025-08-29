@@ -3,26 +3,27 @@ import { useNavigate } from 'react-router-dom';
 import knjiga from '../../assets/knjiga.png';
 import panda from '../../assets/panda.png';
 
+import { apiInstance } from '../../api_services/auth/AuthAPIService';  // Import axios instance sa interceptorom
+
 function PocetnaStranica() {
   const navigate = useNavigate();
 
   const [languages, setLanguages] = useState<{ id: number; jezik: string; nivo: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Modal state
+  // Modal state za selektovani jezik
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('http://localhost:4000/api/v1/languages')
-      .then(res => res.json())
-      .then(data => {
-        setLanguages(data);
+    apiInstance.get('/api/v1/languages')
+      .then(res => {
+        setLanguages(res.data);
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, []);
 
-  // Grupisani jezici (unikatni nazivi)
+  // Jedinstveni jezici (unikatni nazivi)
   const uniqueLanguages = Array.from(new Set(languages.map(l => l.jezik)));
 
   // Nivoi za selektovani jezik
