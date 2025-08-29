@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { LanguageLevelRepository } from '../../Domain/repositories/languageLevels/LanguageLevelRepository';
 import { LanguageLevelService } from '../../Services/languageLevels/LanguageLevelService';
+import { authenticate } from '../../Middlewares/autentification/AuthMiddleware';
+
 
 export class LanguageLevelController {
   private router = Router();
@@ -8,19 +10,17 @@ export class LanguageLevelController {
   private languageLevelService: LanguageLevelService;
 
   constructor() {
-    // Kreiramo instancu LanguageLevelService sa zavisnošću LanguageLevelRepository
-    this.languageLevelService = new LanguageLevelService(this.languageLevelRepository); // Prosleđivanje repo-a
+    this.languageLevelService = new LanguageLevelService(this.languageLevelRepository);
 
-    // Postavljamo rute
-    this.router.get('/languageLevels', this.getLanguageLevels);
-    this.router.post('/addLanguageLevel', this.dodajLanguageLevel); // Nova ruta za dodavanje jezik-nivo para
+    // Postavljamo rute sa middleware-om
+    this.router.get('/languageLevels', authenticate, this.getLanguageLevels);
+    this.router.post('/addLanguageLevel', authenticate, this.dodajLanguageLevel);
   }
 
   getRouter() {
     return this.router;
   }
 
-  // Ruta za dohvat svih jezik-nivo parova
   private getLanguageLevels = async (req: Request, res: Response) => {
     try {
       const languageLevels = await this.languageLevelRepository.getAllLanguageLevels();
@@ -31,28 +31,22 @@ export class LanguageLevelController {
     }
   };
 
-  // Nova ruta za dodavanje jezik-nivo para
   private dodajLanguageLevel = async (req: Request, res: Response) => {
     try {
-      const { jezik, naziv } = req.body; 
+      const { jezik, naziv } = req.body;
 
-      // Pozivamo servis za dodavanje jezik-nivo para
       const noviLanguageLevel = await this.languageLevelService.dodavanjeLanguageLevel(jezik, naziv);
 
-      if (noviLanguageLevel.jezik!=="") {
-        // Vraćamo uspešan odgovor sa podacima o jezik-nivo paru
+      if (noviLanguageLevel.jezik !== "") {
         res.status(201).json({
           success: true,
           message: 'Jezik-nivo par uspešno dodat',
-         data: {
-          noviLanguageLevel,
-        }
+          data: { noviLanguageLevel }
         });
       } else {
-        // Ako dođe do greške prilikom dodavanja
         res.status(400).json({
           success: false,
-          message: 'Došlo je do greške prilikom dodavanja jezik-nivo para.',
+          message: 'Došlo je do greške prilikom dodavanja jezik-nivo para.'
         });
       }
     } catch (error) {

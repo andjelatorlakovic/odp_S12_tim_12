@@ -22,7 +22,7 @@ export function PrijavaForma({ authApi, onUlogovan }: PrijavaFormaProps) {
   const [korisnickoIme, setKorisnickoIme] = useState("");
   const [lozinka, setLozinka] = useState("");
   const [greska, setGreska] = useState("");
-  const { login, setBlokiran } = useAuth(); // Pretpostavimo da si dodao i setBlokiran u context
+  const { login, setBlokiran } = useAuth(); 
   const navigate = useNavigate();
 
 const podnesiFormu = async (e: React.FormEvent) => {

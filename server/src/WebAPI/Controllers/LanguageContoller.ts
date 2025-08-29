@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { LanguagesRepository } from '../../Domain/repositories/languages/LanguagesRepository';
 import { LanguageService } from '../../Services/languages/LanguageService'; // Importujemo LanguageService
 import { validacijaPodatakaAuth } from '../validators/languages/LanguageValidator'; // Importujemo funkciju za validaciju jezika
+import { authenticate } from '../../Middlewares/autentification/AuthMiddleware';
 
 export class LanguagesController {
   private router = Router();
@@ -13,8 +14,8 @@ export class LanguagesController {
     this.languageService = new LanguageService(this.languagesRepository);
 
     // Postavljamo rute
-    this.router.get('/languages', this.getLanguages);
-    this.router.post('/languagesAdd', this.dodajJezik); // Nova ruta za dodavanje jezika
+    this.router.get('/languages',authenticate ,this.getLanguages);
+    this.router.post('/languagesAdd',authenticate, this.dodajJezik); // Nova ruta za dodavanje jezika
   }
 
   getRouter() {
