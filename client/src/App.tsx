@@ -9,6 +9,7 @@ import { authApi } from './api_services/auth/AuthAPIService';
 import { ProtectedRoute } from './components/protected_route/ProtectedRoute';
 import BlokirajKorisnikaStranica from './pages/moderator/BlokirajKorisnikaStranica';
 import ListaBlokiranihStranica from './pages/moderator/ListaBlokiranihKorisnikaStranica';
+import KreirajKvizStranica from './pages/korisnik/KreirajKvizStranica';
 
 function App() {
   return (
@@ -26,7 +27,9 @@ function App() {
             <KorisnikStranica />
           </ProtectedRoute>
         }
-      />
+        >
+          <Route path="kreiraj-kviz" element={<KreirajKvizStranica />} />
+       </Route>
 
       <Route
         path="/moderator-dashboard"
