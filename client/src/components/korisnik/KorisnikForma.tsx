@@ -1,21 +1,32 @@
-import { useState, type SetStateAction } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import knjiga from "../../assets/knjiga.png";
+import type { JezikSaNivoima } from '../../types/languageLevels/ApiResponseLanguageWithLevel';
+import { LanguageLevelAPIService } from "../../api_services/languageLevels/LanguageLevelApiService";
 
 export function KorisnikForma() {
     const [selectedLanguage, setSelectedLanguage] = useState('');
+    const [languages, setLanguages] = useState<string[]>([]);
+    const apiService = new LanguageLevelAPIService();
 
-    // Lista jezika koje možeš dodati
-    const languages = ['Engleski', 'Nemački', 'Francuski', 'Italijanski', 'Španski'];
-
-    // Funkcija koja menja jezik
-    const handleLanguageChange = (event: { target: { value: SetStateAction<string>; }; }) => {
+    // Funkcija koja menja izabrani jezik (samo lokalno)
+    const handleLanguageChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setSelectedLanguage(event.target.value);
-        if (event.target.value) {
-            // Ovde možeš dodati logiku da se jezik odmah doda korisniku
-            alert(`Jezik "${event.target.value}" je uspešno izabran!`);
-        }
     };
+
+    // Dohvat jezika iz API-ja pri mountovanju komponente
+    useEffect(() => {
+        const fetchLanguages = async () => {
+            try {
+                const data: JezikSaNivoima[] = await apiService.getLanguagesWithLevels();
+                const jezici = data.map(item => item.jezik);
+                setLanguages(jezici);
+            } catch (error) {
+                console.error("Greška pri dohvatanju jezika:", error);
+            }
+        };
+        fetchLanguages();
+    }, []);
 
     return (
         <div className="min-h-screen bg-white">
