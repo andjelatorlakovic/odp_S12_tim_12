@@ -1,11 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import knjiga from "../../assets/knjiga.png";
+import { LanguageLevelAPIService } from "../../api_services/languageLevels/LanguageLevelApiService";
 
-// Definisanje tipova za pitanje i odgovore
 type Pitanje = {
   pitanje: string;
   odgovori: string[];
   tacanOdgovor: string;
+};
+
+type Jezik = {
+  jezik: string;
+  nivoi: string[];
 };
 
 export function KreirajKvizForma() {
@@ -13,42 +18,70 @@ export function KreirajKvizForma() {
     { pitanje: "", odgovori: ["", "", "", ""], tacanOdgovor: "odgovor1" },
   ]);
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [languages, setLanguages] = useState<Jezik[]>([]);  // Stanje za jezike
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("");  // Stanje za odabrani jezik
+  const [levels, setLevels] = useState<string[]>([]);  // Stanje za nivoe jezika
 
-  // Funkcija za dodavanje novog pitanja
+  const languageLevelAPIService = new LanguageLevelAPIService(); // Kreiranje instance servisa
+
+  // Funkcija za dohvat jezika i nivoa sa servera
+  const fetchLanguages = async () => {
+    try {
+      const languagesWithLevels = await languageLevelAPIService.getLanguagesWithLevels();
+      setLanguages(languagesWithLevels);
+    } catch (error) {
+      console.error("Greška pri dohvaćanju jezika:", error);
+      setLanguages([]); // Postavi praznu listu ako dođe do greške
+    }
+  };
+
+  // Pozivanje funkcije za učitavanje jezika kada se komponenta učita
+  useEffect(() => {
+    fetchLanguages();
+  }, []);
+
+  // Funkcija koja se poziva kada korisnik izabere jezik
+  const handleLanguageChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const language = event.target.value;
+    setSelectedLanguage(language);
+
+    // Filtriramo nivoe na osnovu odabranog jezika
+    const languageData = languages.find(lang => lang.jezik === language);
+    if (languageData) {
+      setLevels(languageData.nivoi);
+    }
+  };
+
   const handleAddQuestion = () => {
     if (pitanja.length >= 6) {
       setErrorMessage("Maksimalno 6 pitanja po kvizu.");
-      return; // Ne dozvoljava dodavanje više pitanja
+      return;
     }
     setPitanja([
       ...pitanja,
       { pitanje: "", odgovori: ["", "", "", ""], tacanOdgovor: "odgovor1" },
     ]);
-    setErrorMessage(""); // Resetuje poruku greške kada je pitanje uspešno dodato
+    setErrorMessage("");  // Reset greške
   };
 
-  // Funkcija za promenu vrednosti pitanja
   const handleQuestionChange = (index: number, field: "pitanje", value: string) => {
     const newPitanja = [...pitanja];
     newPitanja[index][field] = value;
     setPitanja(newPitanja);
   };
 
-  // Funkcija za promenu odgovora
   const handleAnswerChange = (index: number, answerIndex: number, value: string) => {
     const newPitanja = [...pitanja];
     newPitanja[index].odgovori[answerIndex] = value;
     setPitanja(newPitanja);
   };
 
-  // Funkcija za promenu tačnog odgovora
   const handleCorrectAnswerChange = (index: number, value: string) => {
     const newPitanja = [...pitanja];
     newPitanja[index].tacanOdgovor = value;
     setPitanja(newPitanja);
   };
 
-  // Funkcija za proveru da li je moguće kreirati kviz
   const canCreateQuiz = pitanja.length >= 3;
 
   return (
@@ -92,10 +125,15 @@ export function KreirajKvizForma() {
                 id="jezik"
                 name="jezik"
                 className="w-full p-2 border border-purple-300 rounded-md bg-white"
+                value={selectedLanguage}
+                onChange={handleLanguageChange}  // Pozivamo funkciju kada korisnik izabere jezik
               >
-                <option value="engleski">Engleski</option>
-                <option value="nemacki">Nemački</option>
-                <option value="francuski">Francuski</option>
+                <option value="">Izaberite jezik</option>
+                {languages.map((lang, index) => (
+                  <option key={index} value={lang.jezik}>
+                    {lang.jezik}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -109,12 +147,15 @@ export function KreirajKvizForma() {
                 name="nivo"
                 className="w-full p-2 border border-purple-300 rounded-md bg-white"
               >
-                <option value="A1">A1</option>
-                <option value="A2">A2</option>
-                <option value="B1">B1</option>
-                <option value="B2">B2</option>
-                <option value="C1">C1</option>
-                <option value="C2">C2</option>
+                {levels.length > 0 ? (
+                  levels.map((level, index) => (
+                    <option key={index} value={level}>
+                      {level}
+                    </option>
+                  ))
+                ) : (
+                  <option value="">Prvo izaberite jezik</option>
+                )}
               </select>
             </div>
 
@@ -210,19 +251,12 @@ export function KreirajKvizForma() {
             <div className="flex justify-end mt-6">
               <button
                 type="submit"
-                className="bg-[#8f60bf] text-white px-4 py-2 rounded-md hover:bg-white hover:text-[#8f60bf] border border-[#8f60bf] transition"
+                className="bg-[#8f60bf] text-white px-6 py-3 rounded-md hover:bg-white hover:text-[#8f60bf] border border-[#8f60bf] transition"
                 disabled={!canCreateQuiz}
               >
                 Kreiraj kviz
               </button>
             </div>
-
-            {/* Poruka koja objašnjava da je potrebno uneti bar 3 pitanja */}
-            {!canCreateQuiz && (
-              <div className="text-red-500 text-sm mt-4">
-                Potrebno je uneti najmanje 3 pitanja da biste kreirali kviz.
-              </div>
-            )}
           </form>
         </div>
       </div>
