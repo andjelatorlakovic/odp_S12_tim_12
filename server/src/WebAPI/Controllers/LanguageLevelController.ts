@@ -15,7 +15,7 @@ export class LanguageLevelController {
     // Postavljamo rute sa middleware-om
     this.router.get('/languageLevels', authenticate, this.getLanguageLevels);
     this.router.post('/addLanguageLevel', authenticate, this.dodajLanguageLevel);
-    this.router.get('/languagesWithLevels', this.getLanguageLevels);
+     this.router.get("/languagesWithLevels", this.getLanguagesWithLevels);
 
   }
 
@@ -33,7 +33,14 @@ export class LanguageLevelController {
       res.status(500).json({ message: 'Greška pri dohvaćanju jezik-nivo parova' });
     }
   };
-
+private getLanguagesWithLevels = async (req: Request, res: Response) => {
+    try {
+      const data = await this.languageLevelService.getLanguagesWithLevels();
+      res.status(200).json(data);
+    } catch (error) {
+      res.status(500).json({ message: "Greška pri učitavanju jezika sa nivoima" });
+    }
+  };
   private dodajLanguageLevel = async (req: Request, res: Response) => {
     try {
       const { jezik, naziv } = req.body;

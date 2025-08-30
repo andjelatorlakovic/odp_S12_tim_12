@@ -4,52 +4,28 @@ import { RowDataPacket, ResultSetHeader } from "mysql2";
 import db from "../../../Database/connection/DbConnectionPool";
 
 export class LanguageLevelRepository implements ILanguageLevelRepository {
-  // Get all language levels
-  async getAllLanguageLevels(): Promise<LanguageLevel[]> {
-    try {
-      const query = `SELECT * FROM language_levels `;
-      const [rows] = await db.execute<RowDataPacket[]>(query);
-
-      return rows.map(
-        (row) => new LanguageLevel(row.jezik, row.naziv)
-      );
-    } catch (error) {
-      console.error('Error fetching language levels:', error);
-      return [];
-    }
-  }
-  async getLanguagesWithLevels(): Promise<{ jezik: string; nivoi: string[] }[]> {
+ 
+async getLanguagesWithLevels(): Promise<{ jezik: string; nivoi: string[] }[]> {
     try {
       const query = `
-      SELECT l.jezik, COALESCE(ll.naziv, 'Nema nivoa') AS nivo
-      FROM languages l
-      LEFT JOIN language_levels ll ON l.jezik = ll.jezik
-      ORDER BY l.jezik, ll.naziv;
-    `;
+        SELECT l.jezik, COALESCE(ll.naziv, 'Nema nivoa') AS nivo
+        FROM languages l
+        LEFT JOIN language_levels ll ON l.jezik = ll.jezik
+        ORDER BY l.jezik, ll.naziv
+      `;
+
       const [rows] = await db.execute<RowDataPacket[]>(query);
 
-      // Grupisanje nivoa po jeziku
-      const map = new Map<string, Set<string>>();
+      // Grupisanje po jeziku
+      const map = new Map<string, string[]>();
+      rows.forEach(row => {
+        if (!map.has(row.jezik)) map.set(row.jezik, []);
+        map.get(row.jezik)?.push(row.nivo);
+      });
 
-      for (const row of rows) {
-        if (!map.has(row.jezik)) {
-          map.set(row.jezik, new Set());
-        }
-        if (row.nivo) {
-          map.get(row.jezik)!.add(row.nivo);
-        }
-      }
-
-      // Pretvori u niz objekata sa nizom nivoa
-      const result = Array.from(map.entries()).map(([jezik, nivoiSet]) => ({
-        jezik,
-        nivoi: Array.from(nivoiSet),
-      }));
-
-      return result;
-
+      return Array.from(map.entries()).map(([jezik, nivoi]) => ({ jezik, nivoi }));
     } catch (error) {
-      console.error('Greška pri dohvatanju jezika sa nivoima:', error);
+      console.error("Greška pri učitavanju jezika sa nivoima:", error);
       return [];
     }
   }

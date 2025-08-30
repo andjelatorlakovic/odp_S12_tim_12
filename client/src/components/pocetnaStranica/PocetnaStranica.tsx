@@ -1,50 +1,42 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import knjiga from '../../assets/knjiga.png';
 import panda from '../../assets/panda.png';
+import { LanguageLevelAPIService } from '../../api_services/languageLevels/LanguageLevelApiService';
 
-import { apiInstance } from '../../api_services/auth/AuthAPIService';
-
-type LanguageWithLevel = {
-  id: number;
+type JezikSaNivoima = {
   jezik: string;
-  nivo: string;
+  nivoi: string[];
 };
 
 function PocetnaStranica() {
   const navigate = useNavigate();
-
-  const [languages, setLanguages] = useState<LanguageWithLevel[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [jezici, setJezici] = useState<JezikSaNivoima[]>([]);
+  const apiService = new LanguageLevelAPIService();
 
   useEffect(() => {
-    apiInstance.get('/languagesWithLevels')
-      .then(res => {
-        const flatLanguages = res.data.flatMap((item: { jezik: string; nivoi: string[] }) =>
-          item.nivoi.length > 0
-            ? item.nivoi.map((nivo: string) => ({
-                id: Math.random(),
-                jezik: item.jezik,
-                nivo,
-              }))
-            : [{
-                id: Math.random(),
-                jezik: item.jezik,
-                nivo: '',
-              }]
-        );
-        setLanguages(flatLanguages);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+    const fetchLanguages = async () => {
+      try {
+        const response: JezikSaNivoima[] = await apiService.getLanguagesWithLevels();
 
-  const uniqueLanguages = Array.from(new Set(languages.map(l => l.jezik)));
+        const processed = response.map(lang => ({
+          jezik: lang.jezik,
+          nivoi: lang.nivoi.length > 0 ? lang.nivoi : ['Nema nivoa'],
+        }));
+
+        setJezici(processed);
+      } catch (error) {
+        console.error("❌ Greška pri dohvatanju jezika:", error);
+      }
+    };
+
+    fetchLanguages();
+  }, []);
 
   return (
     <>
       {/* Zaglavlje */}
-      <div className="fixed top-0 left-0 w-screen box-border px-5 py-2 bg-[#f3e5ff] shadow-md flex items-center justify-center gap-2 z-20">
+      <div className="fixed top-0 left-0 w-screen px-5 py-2 bg-[#f3e5ff] shadow-md flex items-center justify-center gap-2 z-20">
         <img src={knjiga} alt="knjiga" className="w-20 h-auto" />
         <h1 className="text-[60px] text-[#8f60bf] font-bold">Ucilingo</h1>
       </div>
@@ -73,51 +65,33 @@ function PocetnaStranica() {
         </div>
       </div>
 
-      {/* Sekcija sa jezicima - BEZ dugmadi i hover efekata */}
-      <div className="bg-white py-12 px-6 mt-10">
-        <h3 className="text-3xl font-bold text-center text-[#8f60bf] mb-10">Dostupni jezici za učenje</h3>
+      {/* Sekcija sa jezicima – na dnu stranice */}
+      <div className="bg-white py-12 px-6 mt-10 flex flex-col items-center gap-4">
+        <h3 className="text-3xl font-bold text-center text-[#8f60bf] mb-6">
+          Dostupni jezici i njihovi nivoi
+        </h3>
 
-        {loading ? (
-          <p className="text-center text-gray-600">Učitavanje jezika...</p>
-        ) : uniqueLanguages.length === 0 ? (
-          <p className="text-center text-gray-600">Nema dostupnih jezika.</p>
-        ) : (
-          <div className="max-w-6xl mx-auto space-y-6">
-            {uniqueLanguages.map((jezik, idx) => {
-              const nivoi = Array.from(
-                new Set(
-                  languages
-                    .filter(l => l.jezik === jezik)
-                    .map(l => l.nivo)
-                    .filter(nivo => nivo) // ukloni prazne nivoe
-                )
-              ).sort();
+        {jezici.map((lang, index) => (
+          <div
+            key={index}
+            className="w-full lg:w-4/5 xl:w-3/4 bg-[#f3e5ff] border-2 border-[#8f60bf] rounded-2xl p-4 shadow-md hover:shadow-lg transition flex justify-between items-center"
+          >
+            {/* Leva strana – ime jezika */}
+            <div className="text-xl font-semibold text-[#8f60bf]">{lang.jezik}</div>
 
-              return (
-                <div
+            {/* Desna strana – nivoi */}
+            <div className="flex flex-wrap gap-2">
+              {lang.nivoi.map((nivo, idx) => (
+                <span
                   key={idx}
-                  className="bg-[#f3e5ff] border border-purple-300 rounded-xl flex items-center justify-between p-4 shadow-sm"
+                  className="bg-[#8f60bf] text-white text-sm font-medium px-3 py-1 rounded-full"
                 >
-                  <h4 className="text-xl font-semibold text-[#8f60bf]">{jezik}</h4>
-                  <div className="flex flex-wrap gap-2 text-sm text-purple-600">
-                    {nivoi.length > 0 ? (
-                      nivoi.map((nivo, i) => (
-                        <span
-                          key={i}
-                          className="inline-block px-2 py-0.5 bg-white rounded border border-purple-300 shadow-sm"
-                        >
-                          {nivo}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="italic text-gray-500">Nema dostupnih nivoa</span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+                  {nivo}
+                </span>
+              ))}
+            </div>
           </div>
-        )}
+        ))}
       </div>
     </>
   );

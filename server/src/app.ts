@@ -10,7 +10,7 @@ import { LanguagesController } from './WebAPI/Controllers/LanguageContoller';
 import { UserController } from './WebAPI/Controllers/UserController';
 import { IUserService } from './Domain/services/users/IUserService';
 import { UserService } from './Services/users/UserService';
-import { LanguageLevelController } from './WebAPI/Controllers/LanguageLevelController';  // Importujemo controller
+import { LanguageLevelController } from './WebAPI/Controllers/LanguageLevelController';  
 
 require('dotenv').config();
 
@@ -30,12 +30,12 @@ const userService: IUserService = new UserService(userRepository);
 const authController = new AuthController(authService);
 const languagesController = new LanguagesController();
 const userController = new UserController(userService);
-const languageLevelController = new LanguageLevelController();  // LanguageLevelController
+const languageLevelController = new LanguageLevelController();
 
 // Registrujemo rute pod istim prefiksom (api/v1)
 app.use('/api/v1', authController.getRouter());
 app.use('/api/v1', languagesController.getRouter());
 app.use('/api/v1', userController.getRouter());
-app.use('/api/v1', languageLevelController.getRouter());  // Registrujemo rute za LanguageLevelController
+app.use('/api/v1', languageLevelController.getRouter());  // ✅ sada i LanguageLevelController koristi getRouter()
 
 export default app;

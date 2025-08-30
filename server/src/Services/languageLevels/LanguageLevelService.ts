@@ -10,7 +10,7 @@ export class LanguageLevelService implements ILanguageLevelService {
   }
 
   // Metoda za dobijanje jezika sa njihovim nivoima
-  async getLanguagesWithLevels() {
+   async getLanguagesWithLevels() {
     return this.languageLevelRepository.getLanguagesWithLevels();
   }
 
