@@ -8,9 +8,9 @@ export class LanguageLevelRepository implements ILanguageLevelRepository {
 async getLanguagesWithLevels(): Promise<{ jezik: string; nivoi: string[] }[]> {
     try {
       const query = `
-        SELECT l.jezik, COALESCE(ll.naziv, 'Nema nivoa') AS nivo
+        SELECT l.jezik, ll.naziv AS nivo
         FROM languages l
-        LEFT JOIN language_levels ll ON l.jezik = ll.jezik
+        INNER JOIN language_levels ll ON l.jezik = ll.jezik
         ORDER BY l.jezik, ll.naziv
       `;
 
