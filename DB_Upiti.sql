@@ -28,13 +28,16 @@ CREATE TABLE IF NOT EXISTS languages (
     id INT PRIMARY KEY AUTO_INCREMENT,
     jezik VARCHAR(50) NOT NULL UNIQUE
 );
-CREATE TABLE IF NOT EXISTS user_language (
+
+CREATE TABLE IF NOT EXISTS user_language_levels (
     user_id INT,
-    jezik_id INT,
-    PRIMARY KEY (user_id, jezik_id),
+    jezik VARCHAR(20),
+    nivo VARCHAR(20),
+    PRIMARY KEY (user_id, jezik),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (jezik_id) REFERENCES languages(id) ON DELETE CASCADE
+    FOREIGN KEY (jezik, nivo) REFERENCES language_levels(jezik, naziv) ON DELETE CASCADE
 );
+
 INSERT INTO user_language (user_id, jezik_id)
 VALUES (1, 2)
  
