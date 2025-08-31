@@ -20,6 +20,11 @@ import { QuestionController } from './WebAPI/Controllers/QuestionController';
 import { QuestionRepository } from './Domain/repositories/questions/QuestionRepository';
 import { QuestionService } from './Services/questions/QuestionService';
 
+// Odgovori (answers)
+import { AnswerController } from './WebAPI/Controllers/AnswerController';
+import { AnswerRepository } from './Domain/repositories/answers/AnswerRepository';
+import { AnswerService } from './Services/answers/AnswerService';
+
 require('dotenv').config();
 
 const app = express();
@@ -30,20 +35,23 @@ app.use(express.json());
 // Repozitorijumi
 const userRepository: IUserRepository = new UserRepository();
 const questionRepository = new QuestionRepository();
+const answerRepository = new AnswerRepository(); // <-- answer repo
 
 // Servisi
 const authService: IAuthService = new AuthService(userRepository);
 const userService: IUserService = new UserService(userRepository);
 const questionService = new QuestionService(questionRepository);
+const answerService = new AnswerService(answerRepository); // <-- answer service
 
 // Kontroleri
 const authController = new AuthController(authService);
 const languagesController = new LanguagesController();
 const userController = new UserController(userService);
 const languageLevelController = new LanguageLevelController();
-const userLanguageLevelController = new UserLanguageLevelController(); // Ako i ovaj koristi servis, uradi isto kao za pitanje
+const userLanguageLevelController = new UserLanguageLevelController();
 const kvizController = new KvizController();
-const questionController = new QuestionController(questionService); // Prosleđujemo servis!
+const questionController = new QuestionController(questionService);
+const answerController = new AnswerController(answerService); // <-- answer controller
 
 // Registracija ruta
 app.use('/api/v1', authController.getRouter());
@@ -52,6 +60,7 @@ app.use('/api/v1', userController.getRouter());
 app.use('/api/v1', languageLevelController.getRouter());
 app.use('/api/v1', userLanguageLevelController.getRouter());
 app.use('/api/v1', kvizController.getRouter());
-app.use('/api/v1', questionController.getRouter()); // Registracija pitanja
+app.use('/api/v1', questionController.getRouter());
+app.use('/api/v1', answerController.getRouter()); // <-- answer ruta
 
 export default app;

@@ -25,8 +25,14 @@ CREATE TABLE IF NOT EXISTS kvizovi (
   FOREIGN KEY (jezik, nivo_znanja) REFERENCES language_levels(jezik, naziv) ON DELETE CASCADE,
   UNIQUE (naziv_kviza, jezik, nivo_znanja) 
 );
-
-CREATE TABLE IF NOT EXISTS pitanja (
+CREATE TABLE IF NOT EXISTS answers (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  pitanje_id INT NOT NULL,                     
+  tekst_odgovora VARCHAR(255) NOT NULL,      
+  tacan BOOLEAN NOT NULL DEFAULT FALSE,        
+  FOREIGN KEY (pitanje_id) REFERENCES questions(id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS questions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     kviz_id INT NOT NULL,
     tekst_pitanja TEXT NOT NULL,
