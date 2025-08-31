@@ -4,11 +4,12 @@ import knjiga from "../../assets/knjiga.png";
 import { LanguageLevelAPIService } from "../../api_services/languageLevels/LanguageLevelApiService";
 import { kvizApi } from "../../api_services/quiz/QuizApiService";
 import { QuestionAPIService } from "../../api_services/questions/QuestionsApiService";
+import { AnswerAPIService } from "../../api_services/answers/AnswerApiService";
 
 type Pitanje = {
   pitanje: string;
   odgovori: string[];
-  tacanOdgovor: string;
+  tacanOdgovor: string; // npr. "odgovor1"
 };
 
 type Jezik = {
@@ -18,7 +19,7 @@ type Jezik = {
 
 export function KreirajKvizForma() {
   const [pitanja, setPitanja] = useState<Pitanje[]>([
-    { pitanje: "", odgovori: ["", "", "", ""], tacanOdgovor: "odgovor1" },
+    { pitanje: "", odgovori: ["", "", "", ""], tacanOdgovor: "" },
   ]);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [apiMessage, setApiMessage] = useState<string>("");
@@ -32,6 +33,7 @@ export function KreirajKvizForma() {
 
   const languageLevelAPIService = new LanguageLevelAPIService();
   const questionAPIService = new QuestionAPIService();
+  const answerAPIService = new AnswerAPIService();
 
   useEffect(() => {
     const fetchLanguages = async () => {
@@ -67,7 +69,7 @@ export function KreirajKvizForma() {
     }
     setPitanja([
       ...pitanja,
-      { pitanje: "", odgovori: ["", "", "", ""], tacanOdgovor: "odgovor1" },
+      { pitanje: "", odgovori: ["", "", "", ""], tacanOdgovor: "" },
     ]);
     setErrorMessage("");
   };
@@ -90,7 +92,7 @@ export function KreirajKvizForma() {
     setPitanja(copy);
   };
 
-  // Validacija - sva polja ne smeju biti prazna
+  // Validacija - sva polja ne smeju biti prazna i mora biti izabran tacan odgovor
   const validateQuestions = (): boolean => {
     for (let i = 0; i < pitanja.length; i++) {
       const p = pitanja[i];
@@ -138,7 +140,6 @@ export function KreirajKvizForma() {
       // Kreiraj kviz prvo
       const response = await kvizApi.kreirajKviz(nazivKviza, selectedLanguage, selectedLevel);
 
-      // Provera da li response.data postoji
       if (!response.success || !response.data) {
         setApiMessage(response.message || "Došlo je do greške prilikom kreiranja kviza.");
         return;
@@ -146,18 +147,32 @@ export function KreirajKvizForma() {
 
       const createdQuizId = response.data.id;
 
-      // Kreiraj pitanja za kreirani kviz
+      // Kreiraj pitanja i njihove odgovore
       for (const pitanje of pitanja) {
-        await questionAPIService.kreirajPitanje(createdQuizId, pitanje.pitanje);
-        // Ako treba da šalješ i odgovore i tačan odgovor, prilagodi API i poziv
+        const pitanjeResponse = await questionAPIService.kreirajPitanje(createdQuizId, pitanje.pitanje);
+
+        if (!pitanjeResponse.success || !pitanjeResponse.data) {
+          setApiMessage("Greška pri kreiranju pitanja.");
+          return;
+        }
+
+        const createdQuestionId = pitanjeResponse.data.id;
+
+        for (let i = 0; i < pitanje.odgovori.length; i++) {
+          const odgovorTekst = pitanje.odgovori[i];
+          const tacan = pitanje.tacanOdgovor === `odgovor${i + 1}`;
+
+          await answerAPIService.kreirajOdgovor(createdQuestionId, odgovorTekst, tacan);
+        }
       }
 
-      setApiMessage("Kviz i pitanja uspešno kreirani!");
+      setApiMessage("Kviz, pitanja i odgovori uspešno kreirani!");
+
       // Reset forme
       setNazivKviza("");
       setSelectedLanguage("");
       setSelectedLevel("");
-      setPitanja([{ pitanje: "", odgovori: ["", "", "", ""], tacanOdgovor: "odgovor1" }]);
+      setPitanja([{ pitanje: "", odgovori: ["", "", "", ""], tacanOdgovor: "" }]);
       setLevels([]);
       setErrorMessage("");
     } catch (error) {
@@ -270,6 +285,7 @@ export function KreirajKvizForma() {
                   value={pitanje.tacanOdgovor}
                   onChange={(e) => handleCorrectAnswerChange(index, e.target.value)}
                 >
+                  <option value="">-- Izaberite tačan odgovor --</option>
                   {pitanje.odgovori.map((_, i) => (
                     <option key={i} value={`odgovor${i + 1}`}>
                       Odgovor {i + 1}
@@ -299,10 +315,11 @@ export function KreirajKvizForma() {
               <button
                 type="submit"
                 disabled={!canCreateQuiz}
-                className={`px-4 py-2 rounded-md text-white ${canCreateQuiz
+                className={`px-4 py-2 rounded-md text-white ${
+                  canCreateQuiz
                     ? "bg-green-600 hover:bg-green-700"
                     : "bg-gray-400 cursor-not-allowed"
-                  } transition`}
+                } transition`}
               >
                 Kreiraj kviz
               </button>
