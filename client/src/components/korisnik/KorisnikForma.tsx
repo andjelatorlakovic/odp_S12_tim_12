@@ -4,11 +4,12 @@ import knjiga from "../../assets/knjiga.png";
 import { Link } from "react-router-dom";
 import type { JezikSaNivoima } from "../../types/languageLevels/ApiResponseLanguageWithLevel";
 import { LanguageLevelAPIService } from "../../api_services/languageLevels/LanguageLevelApiService";
-import {jwtDecode} from "jwt-decode";  // ispravno importovanje
+import { jwtDecode } from "jwt-decode";
 import { userLanguageLevelApi } from "../../api_services/userLanguage/UserLanguageApiService";
 
 interface JwtPayload {
   id: number;
+  blokiran?: boolean | number;
 }
 
 export function KorisnikForma() {
@@ -16,15 +17,17 @@ export function KorisnikForma() {
   const [languages, setLanguages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [blockedMessage, setBlockedMessage] = useState("");
   const apiService = new LanguageLevelAPIService();
   const navigate = useNavigate();
 
-  const getUserIdFromToken = (): number | null => {
+  const getUserFromToken = (): JwtPayload | null => {
     const token = localStorage.getItem("authToken");
     if (!token) return null;
     try {
       const decoded = jwtDecode<JwtPayload>(token);
-      return decoded.id;
+      return decoded;
     } catch (error) {
       console.error("Neuspešno dekodiranje tokena:", error);
       return null;
@@ -36,8 +39,8 @@ export function KorisnikForma() {
   };
 
   const handleAddLanguage = async () => {
-    const userId = getUserIdFromToken();
-    if (!userId) {
+    const user = getUserFromToken();
+    if (!user?.id) {
       alert("Niste ulogovani.");
       return;
     }
@@ -48,7 +51,7 @@ export function KorisnikForma() {
     }
 
     setLoading(true);
-    const response = await userLanguageLevelApi.dodajUserLanguageLevel(userId, selectedLanguage, "A1");
+    const response = await userLanguageLevelApi.dodajUserLanguageLevel(user.id, selectedLanguage, "A1");
     setLoading(false);
 
     if (response.success) {
@@ -74,6 +77,11 @@ export function KorisnikForma() {
   };
 
   useEffect(() => {
+    const user = getUserFromToken();
+    if (user?.blokiran === true || user?.blokiran === 1) {
+      setIsBlocked(true);
+      setBlockedMessage("Vaš nalog je blokiran. Možete samo pregledati rezultate.");
+    }
     fetchLanguages();
   }, []);
 
@@ -87,6 +95,12 @@ export function KorisnikForma() {
 
       {/* Glavni sadržaj */}
       <div className="pt-[140px] px-6">
+        {isBlocked && (
+          <div className="mb-6 max-w-5xl mx-auto bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md text-center">
+            {blockedMessage}
+          </div>
+        )}
+
         <h2 className="text-4xl font-semibold text-center text-[#8f60bf] mb-10">
           Dobro došli, korisniče!
         </h2>
@@ -103,6 +117,7 @@ export function KorisnikForma() {
                   className="w-full p-2 border border-purple-300 rounded-md"
                   value={selectedLanguage}
                   onChange={handleLanguageChange}
+                  disabled={isBlocked}
                 >
                   <option value="">Izaberite jezik</option>
                   {languages.length > 0 ? (
@@ -127,8 +142,8 @@ export function KorisnikForma() {
             <div className="flex justify-end mt-6">
               <button
                 onClick={handleAddLanguage}
-                disabled={loading || languages.length === 0}
-                className="bg-[#8f60bf] text-white px-4 py-2 rounded-md hover:bg-white hover:text-[#8f60bf] border border-[#8f60bf] transition"
+                disabled={loading || languages.length === 0 || isBlocked}
+                className="bg-[#8f60bf] text-white px-4 py-2 rounded-md hover:bg-white hover:text-[#8f60bf] border border-[#8f60bf] transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Dodavanje..." : "Započni kviz"}
               </button>
@@ -141,8 +156,13 @@ export function KorisnikForma() {
             <p className="text-gray-700 mb-6">Napravite kviz kako biste testirali svoje znanje.</p>
             <div className="flex justify-end">
               <Link
-                to="kreiraj-kviz"
-                className="bg-[#8f60bf] text-white px-4 py-2 rounded-md hover:bg-white hover:text-[#8f60bf] border border-[#8f60bf] transition"
+                to={isBlocked ? "#" : "kreiraj-kviz"}
+                onClick={(e) => isBlocked && e.preventDefault()}
+                className={`px-4 py-2 rounded-md border transition ${
+                  isBlocked
+                    ? "bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed"
+                    : "bg-[#8f60bf] text-white hover:bg-white hover:text-[#8f60bf] border-[#8f60bf]"
+                }`}
               >
                 Kreiraj kviz
               </Link>

@@ -1,4 +1,4 @@
-import  { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { userLanguageLevelApi } from "../../api_services/userLanguage/UserLanguageApiService";
 import { jwtDecode } from "jwt-decode";
@@ -40,6 +40,8 @@ export function KvizForma() {
   const [kvizovi, setKvizovi] = useState<Kviz[]>([]);
   const [loadingKvizovi, setLoadingKvizovi] = useState(false);
   const [errorKvizovi, setErrorKvizovi] = useState<string | null>(null);
+
+  const [selectedKvizId, setSelectedKvizId] = useState<number | null>(null);
 
   useEffect(() => {
     const userId = getUserIdFromToken();
@@ -114,7 +116,7 @@ export function KvizForma() {
       <div className="pt-[140px] px-6 pb-10">
         <h2 className="text-4xl font-semibold text-center text-[#8f60bf] mb-10">
           {nivo && language
-            ? `Odaberi kviz i testiraj znanje iz jezika ${language} za trenutni nivo znanja ${nivo}`
+            ? `Odaberi kviz i testiraj znanje iz jezika ${language} za nivo ${nivo}`
             : "Učitavanje podataka..."}
         </h2>
 
@@ -137,11 +139,33 @@ export function KvizForma() {
             {kvizovi.map((kviz) => (
               <div
                 key={kviz.id}
-                className="bg-[#f3e5ff] border border-purple-300 rounded-xl shadow-md p-6 hover:shadow-lg transition cursor-pointer"
+                onClick={() =>
+                  setSelectedKvizId((prev) => (prev === kviz.id ? null : kviz.id))
+                }
+                className={`bg-[#f3e5ff] border border-purple-300 rounded-xl shadow-md p-6 hover:shadow-lg transition cursor-pointer ${
+                  selectedKvizId === kviz.id ? "ring-2 ring-[#8f60bf]" : ""
+                }`}
               >
                 <h3 className="text-2xl font-bold text-[#8f60bf]">
                   {kviz.naziv_kviza}
                 </h3>
+
+                {selectedKvizId === kviz.id && (
+                  <div className="mt-4 bg-white border border-purple-200 rounded-md p-4 text-sm text-gray-800">
+                    <p><strong>Jezik:</strong> {kviz.jezik}</p>
+                    <p><strong>Nivo znanja:</strong> {kviz.nivo_znanja}</p>
+                    <button
+                      className="mt-4 bg-[#8f60bf] text-white px-4 py-2 rounded-md hover:bg-white hover:text-[#8f60bf] border border-[#8f60bf] transition"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        alert(`Započinje se kviz ID ${kviz.id}`);
+                        // navigate(`/kviz/${kviz.id}`); // <- ubaci ako imaš rutu za to
+                      }}
+                    >
+                      Započni kviz
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
