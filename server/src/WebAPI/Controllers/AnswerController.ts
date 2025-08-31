@@ -10,7 +10,7 @@ export class AnswerController {
     this.answerService = answerService;
 
     // Definisanje ruta
-    this.router.get('/answersAll', authenticate, this.dobaviSveOdgovore);
+    this.router.get('/answersAll', this.dobaviSveOdgovore);
     this.router.post('/answerAdd', this.kreirajOdgovor);
     this.router.get('/answerGetId', authenticate, this.dobaviOdgovorPoId);
     this.router.get('/answersForQuestion', authenticate, this.dobaviOdgovoreZaPitanje);

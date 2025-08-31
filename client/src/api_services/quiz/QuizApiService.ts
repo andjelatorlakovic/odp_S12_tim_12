@@ -3,14 +3,14 @@ import type { ApiResponseKviz, ApiResponseKvizList, ApiResponseDelete } from '..
 
 const BASE_URL: string = import.meta.env.VITE_API_URL;
 
-// Definicije endpointa
-const API_URL_ALL = BASE_URL + "kvizAll";
-const API_URL_ADD = BASE_URL + "kvizAdd";
-const API_URL_GET_ID = (id: number) => BASE_URL + `kvizGet/${id}`;
-const API_URL_GET_NAZ_JEZ_NIV = BASE_URL + "kvizGetNazJezNiv";
-const API_URL_DELETE = (id: number) => BASE_URL + `kvizDelete/${id}`;
+// API rute
+const API_URL_ALL = BASE_URL + "kviz";
+const API_URL_ADD = BASE_URL + "kviz";
+const API_URL_GET_ID = (id: number) => BASE_URL + `kvizId?id=${id}`;
+const API_URL_GET_NAZ_JEZ_NIV = BASE_URL + "kvizPretraga";
+const API_URL_FILTER = BASE_URL + "kvizFilter";
+const API_URL_DELETE = (id: number) => BASE_URL + `kvizObrisi?id=${id}`;
 
-// Dohvatanje tokena iz localStorage
 const getToken = () => localStorage.getItem('authToken');
 
 export const kvizApi = {
@@ -25,11 +25,7 @@ export const kvizApi = {
       if (axios.isAxiosError(error)) {
         message = error.response?.data?.message || message;
       }
-      return {
-        success: false,
-        message,
-        data: [],
-      };
+      return { success: false, message, data: [] };
     }
   },
 
@@ -48,11 +44,7 @@ export const kvizApi = {
       if (axios.isAxiosError(error)) {
         message = error.response?.data?.message || message;
       }
-      return {
-        success: false,
-        message,
-        data: null,
-      };
+      return { success: false, message, data: null };
     }
   },
 
@@ -67,11 +59,7 @@ export const kvizApi = {
       if (axios.isAxiosError(error)) {
         message = error.response?.data?.message || message;
       }
-      return {
-        success: false,
-        message,
-        data: null,
-      };
+      return { success: false, message, data: null };
     }
   },
 
@@ -93,11 +81,29 @@ export const kvizApi = {
       if (axios.isAxiosError(error)) {
         message = error.response?.data?.message || message;
       }
-      return {
-        success: false,
-        message,
-        data: null,
-      };
+      return { success: false, message, data: null };
+    }
+  },
+
+  async dobaviKvizovePoJezikuINivou(jezik: string, nivo_znanja: string): Promise<ApiResponseKvizList> {
+    try {
+      const token = getToken();
+      const config = token
+        ? {
+            headers: { Authorization: `Bearer ${token}` },
+            params: { jezik, nivo_znanja },
+          }
+        : {
+            params: { jezik, nivo_znanja },
+          };
+      const res = await axios.get<ApiResponseKvizList>(API_URL_FILTER, config);
+      return res.data;
+    } catch (error) {
+      let message = "Greška pri filtriranju kvizova po jeziku i nivou.";
+      if (axios.isAxiosError(error)) {
+        message = error.response?.data?.message || message;
+      }
+      return { success: false, message, data: [] };
     }
   },
 
@@ -112,10 +118,7 @@ export const kvizApi = {
       if (axios.isAxiosError(error)) {
         message = error.response?.data?.message || message;
       }
-      return {
-        success: false,
-        message,
-      };
+      return { success: false, message };
     }
   },
 };

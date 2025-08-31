@@ -10,7 +10,7 @@ export class UserLanguageLevelService implements IUserLanguageLevelService {
     this.userLanguageLevelRepository = userLanguageLevelRepository;
   }
 
-  // Dohvatanje jezika i nivoa za korisnika po jeziku i nivou
+  // Dohvatanje specifičnog nivoa jezika za korisnika (userId + jezik + nivo)
   async getByUserLanguageAndLevel(
     userId: number,
     jezik: string,
@@ -25,16 +25,33 @@ export class UserLanguageLevelService implements IUserLanguageLevelService {
     return new UserLanguageLevelDto(); // Prazni DTO ako nije pronađeno
   }
 
-  // Dodavanje novog jezika i nivoa za korisnika
+  // Dohvatanje jezika koje korisnik još nema
+  async getLanguagesUserDoesNotHave(userId: number): Promise<string[]> {
+    return await this.userLanguageLevelRepository.getLanguagesUserDoesNotHave(userId);
+  }
+
+  // Dohvatanje jezika korisnika bez nivoa (korisno za proveru da li već postoji jezik)
+  async getByUserAndLanguage(userId: number, jezik: string): Promise<UserLanguageLevelDto> {
+    const existing = await this.userLanguageLevelRepository.getByUserAndLanguage(userId, jezik);
+
+    if (existing.userId !== 0) {
+      return new UserLanguageLevelDto(existing.userId, existing.jezik, existing.nivo);
+    }
+
+    return new UserLanguageLevelDto(); // Prazni DTO ako nije pronađeno
+  }
+
+  // Kreiranje novog jezika i nivoa za korisnika
   async createUserLanguageLevel(
     userId: number,
     jezik: string,
     nivo: string
   ): Promise<UserLanguageLevelDto> {
-    // Provera da li korisnik već ima dati jezik
+    // Provera da li korisnik već ima dati jezik (bilo koji nivo)
     const existing = await this.userLanguageLevelRepository.getByUserAndLanguage(userId, jezik);
     if (existing.userId !== 0) {
-      return new UserLanguageLevelDto(); // Već postoji jezik za tog korisnika
+      // Korisnik već ima dati jezik (bilo koji nivo)
+      return new UserLanguageLevelDto(); // Možeš i baciti grešku ako želiš
     }
 
     const newLevel = new UserLanguageLevel(userId, jezik, nivo);
@@ -47,10 +64,5 @@ export class UserLanguageLevelService implements IUserLanguageLevelService {
     return new UserLanguageLevelDto(); // Ako nešto pođe po zlu
   }
 
-  // Nova metoda: Dohvatanje jezika koje korisnik još uvek nema
-  async getLanguagesUserDoesNotHave(userId: number): Promise<string[]> {
-    return await this.userLanguageLevelRepository.getLanguagesUserDoesNotHave(userId);
-  }
-
-  // Ovde možeš dodati update, delete itd.
+  // Opciono: ovde možeš dodati metode za update, delete itd.
 }

@@ -5,6 +5,18 @@ import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { IKvizRepository } from '../../../Database/repositories/quiz/IQuizRepository';
 
 export class KvizRepository implements IKvizRepository {
+ async getByJezikINivo(jezik: string, nivo_znanja: string): Promise<Kviz[]> {
+  try {
+    const query = `SELECT * FROM kvizovi WHERE jezik = ? AND nivo_znanja = ?`;
+    const [rows] = await db.query<RowDataPacket[]>(query, [jezik, nivo_znanja]);
+
+    return rows.map(row => new Kviz(row.id, row.naziv_kviza, row.jezik, row.nivo_znanja));
+  } catch (error) {
+    console.log("Error getting kvizovi by jezik and nivo: " + error);
+    return [];
+  }
+}
+
   async getAllKvizovi(): Promise<Kviz[]> {
     try {
       const query = `SELECT * FROM kvizovi`;

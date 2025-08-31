@@ -1,35 +1,34 @@
 import { Router, Request, Response } from 'express';
 
-import { authenticate } from '../../Middlewares/autentification/AuthMiddleware';
-import { UserLanguageLevelRepository } from '../../Domain/repositories/userLanguage/UserLanguageRepository';
 import { UserLanguageLevelService } from '../../Services/userLanguages/UserLanguageService';
 
 export class UserLanguageLevelController {
   private router = Router();
-  private userLanguageLevelRepository = new UserLanguageLevelRepository();
   private userLanguageLevelService: UserLanguageLevelService;
 
-  constructor() {
-    // Kreiramo instancu servisa sa zavisnošću repozitorijuma
-    this.userLanguageLevelService = new UserLanguageLevelService(this.userLanguageLevelRepository);
+  constructor(userLanguageLevelService: UserLanguageLevelService) {
+    this.userLanguageLevelService = userLanguageLevelService;
+
+    // Test ruta za proveru
+    this.router.get('/test', (req, res) => {
+      res.json({ msg: 'Radi!' });
+    });
 
     // Postavljamo rute
     this.router.post('/userLanguagesAdd', this.createUserLanguageLevel);
-
-    // Nova ruta za jezike koje korisnik nema
-    this.router.get('/userLanguagesMissing', authenticate, this.getLanguagesUserDoesNotHave);
+    this.router.get('/userLanguagesMissing', this.getLanguagesUserDoesNotHave);
+    this.router.get('/userLanguageByUserAndLanguage', this.getByUserAndLanguage);
+    this.router.get('/userLanguageByUserLanguageAndLevel', this.getByUserLanguageAndLevel);
   }
 
   getRouter() {
     return this.router;
   }
 
-  // Dodavanje jezika i nivoa korisniku
   private createUserLanguageLevel = async (req: Request, res: Response) => {
     try {
       const { userId, jezik, nivo } = req.body;
 
-      // Poziv servisa koji ce da doda jezik i nivo ako nije već dodat
       const noviLevel = await this.userLanguageLevelService.createUserLanguageLevel(userId, jezik, nivo);
 
       if (noviLevel.userId !== 0) {
@@ -50,10 +49,8 @@ export class UserLanguageLevelController {
     }
   };
 
-  // Nova metoda za dohvatanje jezika koje korisnik nema
   private getLanguagesUserDoesNotHave = async (req: Request, res: Response) => {
     try {
-      // Pretpostavimo da userId dolazi iz query parametra (npr. /userLanguagesMissing?userId=1)
       const userId = Number(req.query.userId);
       if (!userId) {
         return res.status(400).json({ success: false, message: "Nije prosleđen validan userId" });
@@ -68,6 +65,51 @@ export class UserLanguageLevelController {
     } catch (error) {
       console.error('Greška pri dohvatanju jezika koje korisnik nema:', error);
       res.status(500).json({ success: false, message: 'Greška pri dohvatanju jezika.' });
+    }
+  };
+
+  private getByUserAndLanguage = async (req: Request, res: Response) => {
+    try {
+      const userId = Number(req.query.userId);
+      const jezik = req.query.jezik as string;
+
+      if (!userId || !jezik) {
+        return res.status(400).json({ success: false, message: "Nisu prosleđeni validni parametri" });
+      }
+
+      const userLang = await this.userLanguageLevelService.getByUserAndLanguage(userId, jezik);
+
+      if (userLang.userId !== 0) {
+        res.status(200).json({ success: true, data: userLang });
+      } else {
+        res.status(404).json({ success: false, message: "Jezik nije pronađen za korisnika" });
+      }
+    } catch (error) {
+      console.error('Greška pri dohvatanju jezika korisnika:', error);
+      res.status(500).json({ success: false, message: 'Greška pri dohvatanju jezika korisnika.' });
+    }
+  };
+
+  private getByUserLanguageAndLevel = async (req: Request, res: Response) => {
+    try {
+      const userId = Number(req.query.userId);
+      const jezik = req.query.jezik as string;
+      const nivo = req.query.nivo as string;
+
+      if (!userId || !jezik || !nivo) {
+        return res.status(400).json({ success: false, message: "Nisu prosleđeni validni parametri" });
+      }
+
+      const level = await this.userLanguageLevelService.getByUserLanguageAndLevel(userId, jezik, nivo);
+
+      if (level.userId !== 0) {
+        res.status(200).json({ success: true, data: level });
+      } else {
+        res.status(404).json({ success: false, message: "Nivo jezika nije pronađen za korisnika" });
+      }
+    } catch (error) {
+      console.error('Greška pri dohvatanju nivoa jezika korisnika:', error);
+      res.status(500).json({ success: false, message: 'Greška pri dohvatanju nivoa jezika korisnika.' });
     }
   };
 }
