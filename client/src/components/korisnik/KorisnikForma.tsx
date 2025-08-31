@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import knjiga from "../../assets/knjiga.png";
+import { Link } from "react-router-dom";
 import type { JezikSaNivoima } from "../../types/languageLevels/ApiResponseLanguageWithLevel";
 import { LanguageLevelAPIService } from "../../api_services/languageLevels/LanguageLevelApiService";
-import { jwtDecode } from "jwt-decode";
+import {jwtDecode} from "jwt-decode";  // ispravno importovanje
 import { userLanguageLevelApi } from "../../api_services/userLanguage/UserLanguageApiService";
 
 interface JwtPayload {
@@ -16,9 +17,7 @@ export function KorisnikForma() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const apiService = new LanguageLevelAPIService();
-
-  // Ref za programatsko klikanje na Link
-  const linkRef = useRef<HTMLAnchorElement | null>(null);
+  const navigate = useNavigate();
 
   const getUserIdFromToken = (): number | null => {
     const token = localStorage.getItem("authToken");
@@ -58,9 +57,8 @@ export function KorisnikForma() {
       setMessage("Odabrali ste postojeći jezik.");
     }
 
-    // Nakon 2 sekunde automatski pokreni klik na Link
     setTimeout(() => {
-      linkRef.current?.click();
+      navigate(`kviz?language=${encodeURIComponent(selectedLanguage)}`);
     }, 500);
   };
 
@@ -126,7 +124,6 @@ export function KorisnikForma() {
               )}
             </div>
 
-            {/* Dugme + sakriveni Link */}
             <div className="flex justify-end mt-6">
               <button
                 onClick={handleAddLanguage}
@@ -135,9 +132,6 @@ export function KorisnikForma() {
               >
                 {loading ? "Dodavanje..." : "Započni kviz"}
               </button>
-
-              {/* Sakriveni Link koji će biti kliknut programatski */}
-              <Link to="kviz" ref={linkRef} className="hidden" />
             </div>
           </div>
 
