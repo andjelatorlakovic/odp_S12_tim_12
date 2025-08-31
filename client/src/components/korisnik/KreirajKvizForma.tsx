@@ -257,6 +257,11 @@ export function KreirajKvizForma() {
                 Kreiraj kviz
               </button>
             </div>
+            {!canCreateQuiz && (
+              <div className="text-red-500 text-sm mt-4">
+                Potrebno je uneti najmanje 3 pitanja da biste kreirali kviz.
+              </div>
+            )}
           </form>
         </div>
       </div>

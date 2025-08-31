@@ -1,113 +1,73 @@
 import { Router, Request, Response } from 'express';
-import { IUserLanguageLevelService } from '../../Domain/services/userLanguage/IUserLanguageService';
 
-import { UserLanguageLevelDto } from '../../Domain/DTOs/userLanguage/UserLanguageDto';
-import { authenticate } from '../../Middlewares/autentification/AuthMiddleware'; // ako koristis auth middleware
+import { authenticate } from '../../Middlewares/autentification/AuthMiddleware';
 import { UserLanguageLevelRepository } from '../../Domain/repositories/userLanguage/UserLanguageRepository';
 import { UserLanguageLevelService } from '../../Services/userLanguages/UserLanguageService';
 
 export class UserLanguageLevelController {
   private router = Router();
-  private userLangLevelService: IUserLanguageLevelService;
-    userLangLevelRepository: any;
+  private userLanguageLevelRepository = new UserLanguageLevelRepository();
+  private userLanguageLevelService: UserLanguageLevelService;
 
   constructor() {
-    const repo = new UserLanguageLevelRepository();
-    this.userLangLevelService = new UserLanguageLevelService(repo);
+    // Kreiramo instancu servisa sa zavisnošću repozitorijuma
+    this.userLanguageLevelService = new UserLanguageLevelService(this.userLanguageLevelRepository);
 
-    // Rute
-    this.router.get('/getUserLanguageLevel', this.getUserLanguageLevel);
-    this.router.get('/getAllUserLanguageLevel', this.getAllUserLanguageLevels);
-    this.router.post('/postUserLanguageLevel', this.addUserLanguageLevel);
-    this.router.put('/putUserLanguageLevel', this.updateUserLanguageLevel);
-    this.router.delete('/deleteUserLanguageLevel', this.deleteUserLanguageLevel);
+    // Postavljamo rute
+    this.router.post('/userLanguagesAdd', this.createUserLanguageLevel);
+
+    // Nova ruta za jezike koje korisnik nema
+    this.router.get('/userLanguagesMissing', authenticate, this.getLanguagesUserDoesNotHave);
   }
 
   getRouter() {
     return this.router;
   }
 
-  private getUserLanguageLevel = async (req: Request, res: Response) => {
+  // Dodavanje jezika i nivoa korisniku
+  private createUserLanguageLevel = async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.params.userId);
-      const jezik = req.params.jezik;
+      const { userId, jezik, nivo } = req.body;
 
-      const result = await this.userLangLevelService.getUserLanguageLevel(userId, jezik);
-      if (result.userId === 0) {
-        return res.status(404).json({ message: 'Nije pronađen nivo jezika za ovog korisnika.' });
+      // Poziv servisa koji ce da doda jezik i nivo ako nije već dodat
+      const noviLevel = await this.userLanguageLevelService.createUserLanguageLevel(userId, jezik, nivo);
+
+      if (noviLevel.userId !== 0) {
+        res.status(201).json({
+          success: true,
+          message: 'Jezik i nivo uspešno dodat korisniku',
+          data: noviLevel,
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          message: 'Korisnik već ima taj jezik ili došlo je do greške.',
+        });
       }
-      res.json(result);
     } catch (error) {
-      console.error('Greška pri dohvaćanju nivoa jezika:', error);
-      res.status(500).json({ message: 'Greška na serveru.' });
+      console.error('Greška pri dodavanju jezika korisniku:', error);
+      res.status(500).json({ message: 'Greška pri dodavanju jezika korisniku.' });
     }
   };
 
-  private getAllUserLanguageLevels = async (req: Request, res: Response) => {
+  // Nova metoda za dohvatanje jezika koje korisnik nema
+  private getLanguagesUserDoesNotHave = async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.params.userId);
-      const results = await this.userLangLevelService.getAllUserLanguageLevels(userId);
-      res.json(results);
-    } catch (error) {
-      console.error('Greška pri dohvaćanju svih nivoa jezika:', error);
-      res.status(500).json({ message: 'Greška na serveru.' });
-    }
-  };
-
-  private addUserLanguageLevel = async (req: Request, res: Response) => {
-    try {
-      const dto = req.body as UserLanguageLevelDto;
-      const created = await this.userLangLevelRepository.createUserLanguageLevel(dto);
-
-      if (created.userId === 0) {
-        return res.status(400).json({ message: 'Korisnik već ima ovaj jezik sa nivoom.' });
+      // Pretpostavimo da userId dolazi iz query parametra (npr. /userLanguagesMissing?userId=1)
+      const userId = Number(req.query.userId);
+      if (!userId) {
+        return res.status(400).json({ success: false, message: "Nije prosleđen validan userId" });
       }
 
-      res.status(201).json({
+      const jezici = await this.userLanguageLevelService.getLanguagesUserDoesNotHave(userId);
+
+      res.status(200).json({
         success: true,
-        message: 'Jezik i nivo uspešno dodati.',
-        data: { created},
+        data: jezici,
       });
     } catch (error) {
-      console.error('Greška pri dodavanju nivoa jezika:', error);
-      res.status(500).json({ message: 'Greška na serveru.' });
-    }
-  };
-
-  private updateUserLanguageLevel = async (req: Request, res: Response) => {
-    try {
-      const userId = parseInt(req.params.userId);
-      const jezik = req.params.jezik;
-      const { nivo } = req.body;
-
-      const updated = await this.userLangLevelService.updateUserLanguageLevel(userId, jezik, nivo);
-
-      if (updated.userId === 0) {
-        return res.status(404).json({ message: 'Nije pronađen nivo jezika za ažuriranje.' });
-      }
-
-      res.json({
-        success: true,
-        message: 'Nivo jezika uspešno ažuriran.',
-        data: updated,
-      });
-    } catch (error) {
-      console.error('Greška pri ažuriranju nivoa jezika:', error);
-      res.status(500).json({ message: 'Greška na serveru.' });
-    }
-  };
-
-  private deleteUserLanguageLevel = async (req: Request, res: Response) => {
-    try {
-      const userId = parseInt(req.params.userId);
-      const jezik = req.params.jezik;
-
-      await this.userLangLevelService.deleteUserLanguageLevel(userId, jezik);
-
-      res.status(204).send();
-    } catch (error) {
-      console.error('Greška pri brisanju nivoa jezika:', error);
-      res.status(500).json({ message: 'Greška na serveru.' });
+      console.error('Greška pri dohvatanju jezika koje korisnik nema:', error);
+      res.status(500).json({ success: false, message: 'Greška pri dohvatanju jezika.' });
     }
   };
 }

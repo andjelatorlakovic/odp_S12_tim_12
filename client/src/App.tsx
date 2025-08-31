@@ -10,6 +10,7 @@ import { ProtectedRoute } from './components/protected_route/ProtectedRoute';
 import BlokirajKorisnikaStranica from './pages/moderator/BlokirajKorisnikaStranica';
 import ListaBlokiranihStranica from './pages/moderator/ListaBlokiranihKorisnikaStranica';
 import KreirajKvizStranica from './pages/korisnik/KreirajKvizStranica';
+import KvizStranica from './pages/korisnik/KvizStranica';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
         }
         >
           <Route path="kreiraj-kviz" element={<KreirajKvizStranica />} />
+           <Route path="kviz" element={<KvizStranica />} />
        </Route>
 
       <Route

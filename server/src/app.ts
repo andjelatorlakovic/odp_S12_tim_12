@@ -20,25 +20,25 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Inicijalizujemo repozitorijume
+// Repozitorijumi
 const userRepository: IUserRepository = new UserRepository();
 
-// Inicijalizujemo servise
+// Servisi
 const authService: IAuthService = new AuthService(userRepository);
 const userService: IUserService = new UserService(userRepository);
 
-// Inicijalizujemo kontrolere
+// Kontroleri
 const authController = new AuthController(authService);
 const languagesController = new LanguagesController();
 const userController = new UserController(userService);
 const languageLevelController = new LanguageLevelController();
-const userLanguageLevelController = new UserLanguageLevelController();  // <-- Instanciraj novi controller
+const userLanguageLevelController = new UserLanguageLevelController(); // <-- ovde instanciramo
 
-// Registrujemo rute pod istim prefiksom (api/v1)
+// Registracija ruta
 app.use('/api/v1', authController.getRouter());
 app.use('/api/v1', languagesController.getRouter());
 app.use('/api/v1', userController.getRouter());
 app.use('/api/v1', languageLevelController.getRouter());
-app.use('/api/v1', userLanguageLevelController.getRouter());  // <-- Registruj rute za UserLanguageLevelController
+app.use('/api/v1', userLanguageLevelController.getRouter()); // <-- registrujemo rute za UserLanguageLevelController
 
 export default app;

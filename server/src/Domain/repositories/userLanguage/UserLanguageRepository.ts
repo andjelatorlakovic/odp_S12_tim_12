@@ -1,18 +1,57 @@
-import { UserLanguageLevel } from "../../models/UserLanguageLevel";
+import { UserLanguageLevel } from "../../../Domain/models/UserLanguageLevel";
 import db from "../../../Database/connection/DbConnectionPool";
-import { ResultSetHeader, RowDataPacket } from 'mysql2';
+
+import { RowDataPacket, ResultSetHeader } from "mysql2/promise";
 import { IUserLanguageLevelRepository } from "../../../Database/repositories/userLanguage/IUserLanguageRepository";
 
 export class UserLanguageLevelRepository implements IUserLanguageLevelRepository {
-  
-  // Dobijanje nivoa korisnika za određeni jezik
+
+  // Dohvatanje specifičnog nivoa jezika za korisnika
+  async getByUserLanguageAndLevel(userId: number, jezik: string, nivo: string): Promise<UserLanguageLevel> {
+    try {
+      const query = `
+        SELECT * FROM user_language_levels
+        WHERE user_id = ? AND jezik = ? AND nivo = ?
+      `;
+      const [rows] = await db.execute<RowDataPacket[]>(query, [userId, jezik, nivo]);
+
+      if (rows.length > 0) {
+        const row = rows[0];
+        return new UserLanguageLevel(row.user_id, row.jezik, row.nivo);
+      }
+
+      return new UserLanguageLevel();
+    } catch (error) {
+      console.error("Error getting user language level:", error);
+      return new UserLanguageLevel();
+    }
+  }
+  // Dohvata jezike koje korisnik jos uvek ne pohadja
+  async getLanguagesUserDoesNotHave(userId: number): Promise<string[]> {
+    try {
+      const query = `
+        SELECT distinct(l.jezik)
+        FROM language_levels l
+        LEFT JOIN user_language_levels ull ON l.jezik = ull.jezik AND ull.user_id = ?
+        WHERE ull.jezik IS NULL
+      `;
+      const [rows] = await db.execute<RowDataPacket[]>(query, [userId]);
+
+      // Mapiramo rezultat na niz stringova jezika
+      return rows.map(row => row.jezik);
+    } catch (error) {
+      console.error("Error getting languages user does not have:", error);
+      return [];
+    }
+  }
+
+  // Nova metoda: Dohvatanje jezika za korisnika (bez nivoa) da se proveri da li već postoji jezik
   async getByUserAndLanguage(userId: number, jezik: string): Promise<UserLanguageLevel> {
     try {
       const query = `
-        SELECT * FROM user_language_levels 
+        SELECT * FROM user_language_levels
         WHERE user_id = ? AND jezik = ?
       `;
-
       const [rows] = await db.execute<RowDataPacket[]>(query, [userId, jezik]);
 
       if (rows.length > 0) {
@@ -20,94 +59,40 @@ export class UserLanguageLevelRepository implements IUserLanguageLevelRepository
         return new UserLanguageLevel(row.user_id, row.jezik, row.nivo);
       }
 
-      // Ako nije pronađen, vraća prazan objekat
       return new UserLanguageLevel();
     } catch (error) {
-      console.log("Error getting user language level: " + error);
-      return new UserLanguageLevel();  // Prazan objekat u slučaju greške
+      console.error("Error getting user language by user and language:", error);
+      return new UserLanguageLevel();
     }
   }
 
-  // Dobijanje svih jezika i nivoa koje korisnik uči
-  async getAllByUser(userId: number): Promise<UserLanguageLevel[]> {
-    try {
-      const query = `
-        SELECT * FROM user_language_levels 
-        WHERE user_id = ?
-      `;
-      
-      const [rows] = await db.execute<RowDataPacket[]>(query, [userId]);
-      return rows.map(row => new UserLanguageLevel(row.user_id, row.jezik, row.nivo));
-    } catch (error) {
-      console.log("Error getting all user language levels: " + error);
-      return [];  // Ako dođe do greške, vraća praznu listu
-    }
-  }
-
-  // Dodavanje jezika i nivoa za korisnika
+  // Kreiranje novog jezika i nivoa za korisnika
   async createUserLanguageLevel(userLanguageLevel: UserLanguageLevel): Promise<UserLanguageLevel> {
-    try {
-      const query = `
-        INSERT INTO user_language_levels (user_id, jezik, nivo)
-        VALUES (?, ?, ?)
-      `;
-      
-      const [result] = await db.execute<ResultSetHeader>(query, [
-        userLanguageLevel.userId,
-        userLanguageLevel.jezik,
-        userLanguageLevel.nivo
-      ]);
-      console.log("sdfsfs");
-      // Ako je unos uspešan, vraća dodeljeni ID i podatke
-      if (result.insertId) {
-
-        return new UserLanguageLevel(userLanguageLevel.userId, userLanguageLevel.jezik, userLanguageLevel.nivo);
-      }
-
-      return new UserLanguageLevel();  // Vraća prazan objekat ako nije uspešno
-    } catch (error) {
-      console.log("Error creating user language level: " + error);
-      return new UserLanguageLevel();  // Vraća prazan objekat u slučaju greške
+  try {
+    // Provera da li korisnik već ima taj jezik (bilo koji nivo)
+    const existing = await this.getByUserAndLanguage(userLanguageLevel.userId, userLanguageLevel.jezik);
+    if (existing.userId!==0) {
+      // Korisnik već ima dati jezik (bilo koji nivo)
+      console.warn(`Korisnik već ima jezik ${userLanguageLevel.jezik}`);
+      return new UserLanguageLevel(); // Vrati prazno (ili možeš baciti grešku po želji)
     }
+
+    const query = `
+      INSERT INTO user_language_levels (user_id, jezik, nivo)
+      VALUES (?, ?, ?)
+    `;
+
+    await db.execute<ResultSetHeader>(query, [
+      userLanguageLevel.userId,
+      userLanguageLevel.jezik,
+      userLanguageLevel.nivo
+    ]);
+
+    return userLanguageLevel;
+  } catch (error) {
+    console.error("Error creating user language level:", error);
+    return new UserLanguageLevel();
   }
-
-  // Ažuriranje nivoa jezika za korisnika
-  async updateUserLanguageLevel(userId: number, jezik: string, nivo: string): Promise<UserLanguageLevel> {
-    try {
-      const query = `
-        UPDATE user_language_levels
-        SET nivo = ?
-        WHERE user_id = ? AND jezik = ?
-      `;
-      
-      const [result] = await db.execute<ResultSetHeader>(query, [nivo, userId, jezik]);
-
-      if (result.affectedRows > 0) {
-        return new UserLanguageLevel(userId, jezik, nivo);  // Vraća ažurirane podatke
-      }
-
-      return new UserLanguageLevel();  // Ako nije ništa ažurirano, vraća prazan objekat
-    } catch (error) {
-      console.log("Error updating user language level: " + error);
-      return new UserLanguageLevel();  // Vraća prazan objekat u slučaju greške
-    }
-  }
-
-  // Brisanje jezika i nivoa za korisnika
-  async deleteUserLanguageLevel(userId: number, jezik: string): Promise<void> {
-    try {
-      const query = `
-        DELETE FROM user_language_levels
-        WHERE user_id = ? AND jezik = ?
-      `;
-      
-      const [result] = await db.execute<ResultSetHeader>(query, [userId, jezik]);
-
-      if (result.affectedRows === 0) {
-        console.log("No record found to delete.");
-      }
-    } catch (error) {
-      console.log("Error deleting user language level: " + error);
-    }
-  }
+}
+  // Ovde možeš dodati update, delete itd.
 }
