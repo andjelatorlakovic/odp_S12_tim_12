@@ -12,6 +12,7 @@ import { IUserService } from './Domain/services/users/IUserService';
 import { UserService } from './Services/users/UserService';
 import { LanguageLevelController } from './WebAPI/Controllers/LanguageLevelController';  
 import { UserLanguageLevelController } from './WebAPI/Controllers/UserLanguage';
+import { KvizController } from './WebAPI/Controllers/QuizContoller';
 
 require('dotenv').config();
 
@@ -32,13 +33,15 @@ const authController = new AuthController(authService);
 const languagesController = new LanguagesController();
 const userController = new UserController(userService);
 const languageLevelController = new LanguageLevelController();
-const userLanguageLevelController = new UserLanguageLevelController(); // <-- ovde instanciramo
+const userLanguageLevelController = new UserLanguageLevelController();
+const kvizController = new KvizController(); // <--- instanca kviz kontrolera
 
 // Registracija ruta
 app.use('/api/v1', authController.getRouter());
 app.use('/api/v1', languagesController.getRouter());
 app.use('/api/v1', userController.getRouter());
 app.use('/api/v1', languageLevelController.getRouter());
-app.use('/api/v1', userLanguageLevelController.getRouter()); // <-- registrujemo rute za UserLanguageLevelController
+app.use('/api/v1', userLanguageLevelController.getRouter());
+app.use('/api/v1', kvizController.getRouter());  // <--- registracija ruta za kviz
 
 export default app;

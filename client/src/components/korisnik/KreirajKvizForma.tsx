@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import knjiga from "../../assets/knjiga.png";
 import { LanguageLevelAPIService } from "../../api_services/languageLevels/LanguageLevelApiService";
+import { kvizApi } from "../../api_services/quiz/QuizApiService";
 
 type Pitanje = {
   pitanje: string;
@@ -18,37 +19,39 @@ export function KreirajKvizForma() {
     { pitanje: "", odgovori: ["", "", "", ""], tacanOdgovor: "odgovor1" },
   ]);
   const [errorMessage, setErrorMessage] = useState<string>("");
-  const [languages, setLanguages] = useState<Jezik[]>([]);  // Stanje za jezike
-  const [selectedLanguage, setSelectedLanguage] = useState<string>("");  // Stanje za odabrani jezik
-  const [levels, setLevels] = useState<string[]>([]);  // Stanje za nivoe jezika
+  const [languages, setLanguages] = useState<Jezik[]>([]);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("");
+  const [levels, setLevels] = useState<string[]>([]);
+  const [nazivKviza, setNazivKviza] = useState<string>("");
+  const [selectedLevel, setSelectedLevel] = useState<string>("");
+  const [apiMessage, setApiMessage] = useState<string>("");
 
-  const languageLevelAPIService = new LanguageLevelAPIService(); // Kreiranje instance servisa
+  const languageLevelAPIService = new LanguageLevelAPIService();
 
-  // Funkcija za dohvat jezika i nivoa sa servera
-  const fetchLanguages = async () => {
-    try {
-      const languagesWithLevels = await languageLevelAPIService.getLanguagesWithLevels();
-      setLanguages(languagesWithLevels);
-    } catch (error) {
-      console.error("Greška pri dohvaćanju jezika:", error);
-      setLanguages([]); // Postavi praznu listu ako dođe do greške
-    }
-  };
-
-  // Pozivanje funkcije za učitavanje jezika kada se komponenta učita
   useEffect(() => {
+    const fetchLanguages = async () => {
+      try {
+        const languagesWithLevels = await languageLevelAPIService.getLanguagesWithLevels();
+        setLanguages(languagesWithLevels);
+      } catch (error) {
+        console.error("Greška pri dohvaćanju jezika:", error);
+        setLanguages([]);
+      }
+    };
+
     fetchLanguages();
   }, []);
 
-  // Funkcija koja se poziva kada korisnik izabere jezik
   const handleLanguageChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const language = event.target.value;
     setSelectedLanguage(language);
-
-    // Filtriramo nivoe na osnovu odabranog jezika
-    const languageData = languages.find(lang => lang.jezik === language);
+    const languageData = languages.find((lang) => lang.jezik === language);
     if (languageData) {
       setLevels(languageData.nivoi);
+      setSelectedLevel("");
+    } else {
+      setLevels([]);
+      setSelectedLevel("");
     }
   };
 
@@ -61,7 +64,7 @@ export function KreirajKvizForma() {
       ...pitanja,
       { pitanje: "", odgovori: ["", "", "", ""], tacanOdgovor: "odgovor1" },
     ]);
-    setErrorMessage("");  // Reset greške
+    setErrorMessage("");
   };
 
   const handleQuestionChange = (index: number, field: "pitanje", value: string) => {
@@ -84,25 +87,52 @@ export function KreirajKvizForma() {
 
   const canCreateQuiz = pitanja.length >= 3;
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setApiMessage("");
+
+    if (!nazivKviza.trim() || !selectedLanguage || !selectedLevel) {
+      setApiMessage("Molimo popunite sva obavezna polja: naziv kviza, jezik i nivo.");
+      return;
+    }
+
+    if (!canCreateQuiz) {
+      return;
+    }
+
+    try {
+      const response = await kvizApi.kreirajKviz(nazivKviza, selectedLanguage, selectedLevel);
+      if (response.success) {
+        setApiMessage("Kviz uspešno kreiran!");
+        setNazivKviza("");
+        setSelectedLanguage("");
+        setSelectedLevel("");
+        setPitanja([{ pitanje: "", odgovori: ["", "", "", ""], tacanOdgovor: "odgovor1" }]);
+        setLevels([]);
+        setErrorMessage("");
+      } else {
+        setApiMessage(response.message || "Došlo je do greške prilikom kreiranja kviza.");
+      }
+    } catch (error) {
+      setApiMessage("Greška pri slanju podataka na server.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white">
-      {/* Zaglavlje */}
       <div className="fixed top-0 left-0 w-screen box-border px-5 py-2 bg-[#f3e5ff] shadow-md flex items-center justify-center gap-2 z-20">
         <img src={knjiga} alt="knjiga" className="w-20 h-auto" />
         <h1 className="text-[60px] text-[#8f60bf] font-bold">Ucilingo</h1>
       </div>
 
-      {/* Glavni sadržaj */}
       <div className="pt-[140px] px-6">
         <h2 className="text-4xl font-semibold text-center text-[#8f60bf] mb-10">
           Kreiraj novi kviz
         </h2>
 
-        {/* Forma za kreiranje kviza */}
         <div className="bg-[#f3e5ff] border border-purple-300 rounded-xl shadow-md p-6 max-w-3xl mx-auto">
           <h3 className="text-2xl font-bold text-[#8f60bf] mb-4">Podaci o kvizu</h3>
-          <form className="space-y-4">
-            {/* Unos naziva kviza */}
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="quizName" className="block text-gray-700 font-semibold mb-2">
                 Naziv kviza
@@ -113,10 +143,11 @@ export function KreirajKvizForma() {
                 name="quizName"
                 placeholder="Unesite naziv kviza"
                 className="w-full p-2 border border-purple-300 rounded-md bg-white"
+                value={nazivKviza}
+                onChange={(e) => setNazivKviza(e.target.value)}
               />
             </div>
 
-            {/* Odabir jezika */}
             <div>
               <label htmlFor="jezik" className="block text-gray-700 font-semibold mb-2">
                 Izaberi jezik
@@ -126,7 +157,7 @@ export function KreirajKvizForma() {
                 name="jezik"
                 className="w-full p-2 border border-purple-300 rounded-md bg-white"
                 value={selectedLanguage}
-                onChange={handleLanguageChange}  // Pozivamo funkciju kada korisnik izabere jezik
+                onChange={handleLanguageChange}
               >
                 <option value="">Izaberite jezik</option>
                 {languages.map((lang, index) => (
@@ -137,7 +168,6 @@ export function KreirajKvizForma() {
               </select>
             </div>
 
-            {/* Odabir nivoa znanja */}
             <div>
               <label htmlFor="nivo" className="block text-gray-700 font-semibold mb-2">
                 Izaberi nivo znanja
@@ -146,27 +176,22 @@ export function KreirajKvizForma() {
                 id="nivo"
                 name="nivo"
                 className="w-full p-2 border border-purple-300 rounded-md bg-white"
+                value={selectedLevel}
+                onChange={(e) => setSelectedLevel(e.target.value)}
               >
-                {levels.length > 0 ? (
-                  levels.map((level, index) => (
-                    <option key={index} value={level}>
-                      {level}
-                    </option>
-                  ))
-                ) : (
-                  <option value="">Prvo izaberite jezik</option>
-                )}
+                <option value="">Izaberite nivo</option>
+                {levels.map((level, index) => (
+                  <option key={index} value={level}>
+                    {level}
+                  </option>
+                ))}
               </select>
             </div>
 
-            {/* Unos pitanja i odgovora */}
             {pitanja.map((pitanje, index) => (
               <div key={index} className="space-y-4">
                 <div>
-                  <label
-                    htmlFor={`pitanje-${index}`}
-                    className="block text-gray-700 font-semibold mb-2"
-                  >
+                  <label htmlFor={`pitanje-${index}`} className="block text-gray-700 font-semibold mb-2">
                     Pitanje {index + 1}
                   </label>
                   <input
@@ -176,13 +201,10 @@ export function KreirajKvizForma() {
                     placeholder="Unesite pitanje"
                     className="w-full p-2 border border-purple-300 rounded-md bg-white"
                     value={pitanje.pitanje}
-                    onChange={(e) =>
-                      handleQuestionChange(index, "pitanje", e.target.value)
-                    }
+                    onChange={(e) => handleQuestionChange(index, "pitanje", e.target.value)}
                   />
                 </div>
 
-                {/* Odgovori za pitanje */}
                 <div className="space-y-2">
                   {pitanje.odgovori.map((odgovor, i) => (
                     <input
@@ -193,19 +215,13 @@ export function KreirajKvizForma() {
                       placeholder={`Odgovor ${i + 1}`}
                       className="w-full p-2 border border-purple-300 rounded-md bg-white"
                       value={odgovor}
-                      onChange={(e) =>
-                        handleAnswerChange(index, i, e.target.value)
-                      }
+                      onChange={(e) => handleAnswerChange(index, i, e.target.value)}
                     />
                   ))}
                 </div>
 
-                {/* Odabir tačnog odgovora */}
                 <div>
-                  <label
-                    htmlFor={`tacanOdgovor-${index}`}
-                    className="block text-gray-700 font-semibold mb-2"
-                  >
+                  <label htmlFor={`tacanOdgovor-${index}`} className="block text-gray-700 font-semibold mb-2">
                     Izaberi tačan odgovor
                   </label>
                   <select
@@ -213,9 +229,7 @@ export function KreirajKvizForma() {
                     name={`tacanOdgovor-${index}`}
                     className="w-full p-2 border border-purple-300 rounded-md bg-white"
                     value={pitanje.tacanOdgovor}
-                    onChange={(e) =>
-                      handleCorrectAnswerChange(index, e.target.value)
-                    }
+                    onChange={(e) => handleCorrectAnswerChange(index, e.target.value)}
                   >
                     {pitanje.odgovori.map((_, i) => (
                       <option key={i} value={`odgovor${i + 1}`}>
@@ -227,14 +241,10 @@ export function KreirajKvizForma() {
               </div>
             ))}
 
-            {/* Poruka o grešci */}
             {errorMessage && (
-              <div className="text-red-500 text-sm mt-4">
-                {errorMessage}
-              </div>
+              <div className="text-red-500 text-sm mt-4">{errorMessage}</div>
             )}
 
-            {/* Dugme za dodavanje pitanja */}
             {pitanja.length < 6 && (
               <div className="flex justify-start mt-6">
                 <button
@@ -247,16 +257,27 @@ export function KreirajKvizForma() {
               </div>
             )}
 
-            {/* Dugme za slanje forme (onemogućeno ako nije uneto bar 3 pitanja) */}
             <div className="flex justify-end mt-6">
               <button
                 type="submit"
                 className="bg-[#8f60bf] text-white px-6 py-3 rounded-md hover:bg-white hover:text-[#8f60bf] border border-[#8f60bf] transition"
-                disabled={!canCreateQuiz}
               >
                 Kreiraj kviz
               </button>
             </div>
+
+            {apiMessage && (
+              <div
+                className={`mt-4 text-center text-sm ${
+                  apiMessage.toLowerCase().includes("greška") || apiMessage.toLowerCase().includes("došlo")
+                    ? "text-red-600"
+                    : "text-green-600"
+                }`}
+              >
+                {apiMessage}
+              </div>
+            )}
+
             {!canCreateQuiz && (
               <div className="text-red-500 text-sm mt-4">
                 Potrebno je uneti najmanje 3 pitanja da biste kreirali kviz.

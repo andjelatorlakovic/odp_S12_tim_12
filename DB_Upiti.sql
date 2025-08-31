@@ -17,6 +17,14 @@ CREATE TABLE IF NOT EXISTS levels (
     naziv VARCHAR(10) NOT NULL UNIQUE
 
 );
+CREATE TABLE IF NOT EXISTS kvizovi (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  naziv_kviza VARCHAR(255) NOT NULL,
+  jezik VARCHAR(50) NOT NULL,
+  nivo_znanja VARCHAR(10) NOT NULL,
+  FOREIGN KEY (jezik, nivo_znanja) REFERENCES language_levels(jezik, naziv) ON DELETE CASCADE,
+  UNIQUE (naziv_kviza, jezik, nivo_znanja) 
+);
 INSERT INTO levels (naziv)
 VALUES ('A1'),
        ('A2'),
