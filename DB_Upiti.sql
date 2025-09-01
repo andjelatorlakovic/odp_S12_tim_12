@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS kvizovi (
   jezik VARCHAR(50) NOT NULL,
   nivo_znanja VARCHAR(10) NOT NULL,
   FOREIGN KEY (jezik, nivo_znanja) REFERENCES language_levels(jezik, naziv) ON DELETE CASCADE,
-  UNIQUE (naziv_kviza, jezik, nivo_znanja) 
+  UNIQUE (id, jezik, nivo_znanja) 
 );
 CREATE TABLE IF NOT EXISTS answers (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -32,6 +32,21 @@ CREATE TABLE IF NOT EXISTS answers (
   tacan BOOLEAN NOT NULL DEFAULT FALSE,        
   FOREIGN KEY (pitanje_id) REFERENCES questions(id) ON DELETE CASCADE
 );
+CREATE TABLE IF NOT EXISTS user_quiz_results (
+    user_id INT NOT NULL,
+    kviz_id INT NOT NULL,
+    jezik VARCHAR(20) NOT NULL,
+    nivo VARCHAR(20) NOT NULL,
+    procenat_tacnih_odgovora DECIMAL(5,2) NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    
+    FOREIGN KEY (kviz_id) REFERENCES kvizovi(id) ON DELETE CASCADE,
+    
+    FOREIGN KEY (kviz_id, jezik, nivo) REFERENCES kvizovi(id, jezik, nivo_znanja) ON DELETE CASCADE,
+
+    FOREIGN KEY (user_id, jezik, nivo) REFERENCES user_language_levels(user_id, jezik, nivo) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS questions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     kviz_id INT NOT NULL,
@@ -55,7 +70,7 @@ CREATE TABLE IF NOT EXISTS user_language_levels (
     user_id INT,
     jezik VARCHAR(20),
     nivo VARCHAR(20),
-    PRIMARY KEY (user_id, jezik),
+    PRIMARY KEY (user_id, jezik,nivo),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (jezik, nivo) REFERENCES language_levels(jezik, naziv) ON DELETE CASCADE
 );

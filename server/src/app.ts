@@ -5,24 +5,23 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Repozitorijumi
-
 import { UserRepository } from './Domain/repositories/users/UserRepository';
 import { QuestionRepository } from './Domain/repositories/questions/QuestionRepository';
 import { AnswerRepository } from './Domain/repositories/answers/AnswerRepository';
 import { UserLanguageLevelRepository } from './Domain/repositories/userLanguage/UserLanguageRepository';
 import { KvizRepository } from './Domain/repositories/quiz/QuizRepository';
+import { UserQuizResultRepository } from './Domain/repositories/userQuiz/UserQuizRepository';
 
 // Servisi
 import { IAuthService } from './Domain/services/auth/IAuthService';
 import { AuthService } from './Services/auth/AuthService';
-
 import { IUserService } from './Domain/services/users/IUserService';
 import { UserService } from './Services/users/UserService';
-
 import { QuestionService } from './Services/questions/QuestionService';
 import { AnswerService } from './Services/answers/AnswerService';
 import { UserLanguageLevelService } from './Services/userLanguages/UserLanguageService';
-
+import { KvizService } from './Services/quiz/QuizService';
+import { UserQuizResultService } from './Services/userQuiz/UserQuizService';
 
 // Kontroleri
 import { AuthController } from './WebAPI/Controllers/AuthController';
@@ -33,8 +32,9 @@ import { UserLanguageLevelController } from './WebAPI/Controllers/UserLanguage';
 import { KvizController } from './WebAPI/Controllers/QuizContoller';
 import { QuestionController } from './WebAPI/Controllers/QuestionController';
 import { AnswerController } from './WebAPI/Controllers/AnswerController';
-import { KvizService } from './Services/quiz/QuizService';
+
 import { IUserRepository } from './Database/repositories/user/IUserRepository';
+import { UserQuizResultController } from './WebAPI/Controllers/UserQuizController';
 
 // Express aplikacija
 const app = express();
@@ -49,6 +49,7 @@ const questionRepository = new QuestionRepository();
 const answerRepository = new AnswerRepository();
 const userLanguageLevelRepository = new UserLanguageLevelRepository();
 const kvizRepository = new KvizRepository();
+const userQuizResultRepository = new UserQuizResultRepository();
 
 // Inicijalizacija servisa
 const authService: IAuthService = new AuthService(userRepository);
@@ -57,6 +58,7 @@ const questionService = new QuestionService(questionRepository);
 const answerService = new AnswerService(answerRepository);
 const userLanguageLevelService = new UserLanguageLevelService(userLanguageLevelRepository);
 const kvizService = new KvizService(kvizRepository);
+const userQuizResultService = new UserQuizResultService(userQuizResultRepository);
 
 // Inicijalizacija kontrolera
 const authController = new AuthController(authService);
@@ -64,9 +66,10 @@ const languagesController = new LanguagesController();
 const userController = new UserController(userService);
 const languageLevelController = new LanguageLevelController();
 const userLanguageLevelController = new UserLanguageLevelController(userLanguageLevelService);
-const kvizController = new KvizController(kvizService); // Promenjeno: koristi service
+const kvizController = new KvizController(kvizService);
 const questionController = new QuestionController(questionService);
 const answerController = new AnswerController(answerService);
+const userQuizResultController = new UserQuizResultController(userQuizResultService);
 
 // Registracija ruta
 app.use('/api/v1', authController.getRouter());
@@ -77,6 +80,6 @@ app.use('/api/v1', userLanguageLevelController.getRouter());
 app.use('/api/v1', kvizController.getRouter());
 app.use('/api/v1', questionController.getRouter());
 app.use('/api/v1', answerController.getRouter());
+app.use('/api/v1', userQuizResultController.getRouter()); // <--- UserQuiz ruta
 
-// Izvoz aplikacije
 export default app;

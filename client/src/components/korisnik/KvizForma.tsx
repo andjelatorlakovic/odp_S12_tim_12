@@ -3,11 +3,11 @@ import { useLocation } from "react-router-dom";
 import { userLanguageLevelApi } from "../../api_services/userLanguage/UserLanguageApiService";
 import { jwtDecode } from "jwt-decode";
 import { kvizApi } from "../../api_services/quiz/QuizApiService";
+import { UserQuizApiService } from "../../api_services/userQuiz/UserQuizApiService";
 
 import knjiga from "../../assets/knjiga.png";
 import { QuestionAPIService } from "../../api_services/questions/QuestionsApiService";
 import { AnswerAPIService } from "../../api_services/answers/AnswerApiService";
-
 
 interface Kviz {
   id: number;
@@ -45,6 +45,7 @@ function getUserIdFromToken(): number | null {
 
 const questionApiService = new QuestionAPIService();
 const answerApiService = new AnswerAPIService();
+const userQuizApi = new UserQuizApiService();
 
 export function KvizForma() {
   const location = useLocation();
@@ -65,8 +66,6 @@ export function KvizForma() {
   const [errorPitanja, setErrorPitanja] = useState<string | null>(null);
 
   const [odgovoriZaPitanja, setOdgovoriZaPitanja] = useState<Record<number, Answer[]>>({});
-
-  // korisnikovi odgovori
   const [odabraniOdgovori, setOdabraniOdgovori] = useState<Record<number, number>>({});
   const [rezultat, setRezultat] = useState<number | null>(null);
   const [kvizZavrsen, setKvizZavrsen] = useState(false);
@@ -78,13 +77,13 @@ export function KvizForma() {
     }));
   };
 
-  const zavrsiKviz = () => {
-    let brojTacnih = 0;
+  const zavrsiKviz = async () => {
+    if (!selectedKvizId) return;
 
+    let brojTacnih = 0;
     for (const pitanjeId in odabraniOdgovori) {
       const odgovorId = odabraniOdgovori[pitanjeId];
       const odgovori = odgovoriZaPitanja[Number(pitanjeId)];
-
       if (odgovori) {
         const odg = odgovori.find((o) => o.id === odgovorId);
         if (odg && odg.tacan) {
@@ -95,6 +94,30 @@ export function KvizForma() {
 
     setRezultat(brojTacnih);
     setKvizZavrsen(true);
+
+    // Čuvanje rezultata
+    const userId = getUserIdFromToken();
+    if (!userId || !language || !nivo) return;
+
+    const procenatTacnih = (brojTacnih / pitanja.length) * 100;
+
+    try {
+      const response = await userQuizApi.kreirajRezultat(
+        userId,
+        selectedKvizId,
+        language,
+        nivo,
+        procenatTacnih
+      );
+
+      if (response.success) {
+        console.log("Rezultat uspešno sačuvan:", response.data);
+      } else {
+        console.warn("Neuspešno čuvanje rezultata:", response.message);
+      }
+    } catch (error) {
+      console.error("Greška pri čuvanju rezultata:", error);
+    }
   };
 
   const nazadNaKvizove = () => {
@@ -181,7 +204,6 @@ export function KvizForma() {
         setPitanja(pitanjaResponse);
 
         const odgovoriMap: Record<number, Answer[]> = {};
-
         await Promise.all(
           pitanjaResponse.map(async (pitanje) => {
             const odgovori = await answerApiService.dobaviOdgovoreZaPitanje(pitanje.id);
@@ -216,11 +238,9 @@ export function KvizForma() {
         </h2>
 
         {loading && <p className="text-center">Učitavanje nivoa jezika...</p>}
-
         {!loading && error && <p className="text-center text-red-600 mb-6">{error}</p>}
 
         {loadingKvizovi && <p className="text-center text-purple-700">Učitavanje kvizova...</p>}
-
         {!loadingKvizovi && errorKvizovi && (
           <p className="text-center text-red-600">{errorKvizovi}</p>
         )}
