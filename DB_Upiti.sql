@@ -62,7 +62,22 @@ CREATE TABLE IF NOT EXISTS user_language_levels (
 
 INSERT INTO user_language (user_id, jezik_id)
 VALUES (1, 2)
- 
+CREATE TABLE IF NOT EXISTS user_quiz_results (
+    user_id INT NOT NULL,
+    kviz_id INT NOT NULL,
+    jezik VARCHAR(20) NOT NULL,
+    nivo VARCHAR(20) NOT NULL,
+    procenat_tacnih_odgovora DECIMAL(5,2) NOT NULL,
+    
+    PRIMARY KEY (user_id, kviz_id),
+
+    FOREIGN KEY (kviz_id) REFERENCES kvizovi(id) ON DELETE CASCADE,
+
+    FOREIGN KEY (kviz_id, jezik, nivo) REFERENCES kvizovi(id, jezik, nivo_znanja) ON DELETE CASCADE,
+
+    FOREIGN KEY (user_id, jezik, nivo) REFERENCES user_language_levels(user_id, jezik, nivo) ON DELETE CASCADE
+);
+
 
 INSERT INTO languages (id, jezik) VALUES (1, 'Engleski');
 INSERT INTO languages (id, jezik) VALUES (2, 'Nemački');

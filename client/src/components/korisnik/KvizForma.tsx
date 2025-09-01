@@ -3,13 +3,28 @@ import { useLocation } from "react-router-dom";
 import { userLanguageLevelApi } from "../../api_services/userLanguage/UserLanguageApiService";
 import { jwtDecode } from "jwt-decode";
 import { kvizApi } from "../../api_services/quiz/QuizApiService";
+
 import knjiga from "../../assets/knjiga.png";
+import { QuestionAPIService } from "../../api_services/questions/QuestionsApiService";
+import { AnswerAPIService } from "../../api_services/answers/AnswerApiService";
+
 
 interface Kviz {
   id: number;
   naziv_kviza: string;
   jezik: string;
   nivo_znanja: string;
+}
+
+interface Question {
+  id: number;
+  tekst_pitanja: string;
+}
+
+interface Answer {
+  id: number;
+  tekst_odgovora: string;
+  tacan: boolean;
 }
 
 function getUserIdFromToken(): number | null {
@@ -28,6 +43,9 @@ function getUserIdFromToken(): number | null {
   }
 }
 
+const questionApiService = new QuestionAPIService();
+const answerApiService = new AnswerAPIService();
+
 export function KvizForma() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
@@ -42,6 +60,51 @@ export function KvizForma() {
   const [errorKvizovi, setErrorKvizovi] = useState<string | null>(null);
 
   const [selectedKvizId, setSelectedKvizId] = useState<number | null>(null);
+  const [pitanja, setPitanja] = useState<Question[]>([]);
+  const [loadingPitanja, setLoadingPitanja] = useState(false);
+  const [errorPitanja, setErrorPitanja] = useState<string | null>(null);
+
+  const [odgovoriZaPitanja, setOdgovoriZaPitanja] = useState<Record<number, Answer[]>>({});
+
+  // korisnikovi odgovori
+  const [odabraniOdgovori, setOdabraniOdgovori] = useState<Record<number, number>>({});
+  const [rezultat, setRezultat] = useState<number | null>(null);
+  const [kvizZavrsen, setKvizZavrsen] = useState(false);
+
+  const handleOdgovorChange = (pitanjeId: number, odgovorId: number) => {
+    setOdabraniOdgovori((prev) => ({
+      ...prev,
+      [pitanjeId]: odgovorId,
+    }));
+  };
+
+  const zavrsiKviz = () => {
+    let brojTacnih = 0;
+
+    for (const pitanjeId in odabraniOdgovori) {
+      const odgovorId = odabraniOdgovori[pitanjeId];
+      const odgovori = odgovoriZaPitanja[Number(pitanjeId)];
+
+      if (odgovori) {
+        const odg = odgovori.find((o) => o.id === odgovorId);
+        if (odg && odg.tacan) {
+          brojTacnih++;
+        }
+      }
+    }
+
+    setRezultat(brojTacnih);
+    setKvizZavrsen(true);
+  };
+
+  const nazadNaKvizove = () => {
+    setSelectedKvizId(null);
+    setPitanja([]);
+    setOdgovoriZaPitanja({});
+    setOdabraniOdgovori({});
+    setRezultat(null);
+    setKvizZavrsen(false);
+  };
 
   useEffect(() => {
     const userId = getUserIdFromToken();
@@ -92,9 +155,7 @@ export function KvizForma() {
           setErrorKvizovi(null);
         } else {
           setKvizovi([]);
-          setErrorKvizovi(
-            response.message || "Nema kvizova za dati nivo i jezik."
-          );
+          setErrorKvizovi(response.message || "Nema kvizova za dati nivo i jezik.");
         }
       })
       .catch(() => {
@@ -103,6 +164,40 @@ export function KvizForma() {
       })
       .finally(() => setLoadingKvizovi(false));
   }, [language, nivo]);
+
+  useEffect(() => {
+    if (!selectedKvizId) {
+      setPitanja([]);
+      setOdgovoriZaPitanja({});
+      return;
+    }
+
+    setLoadingPitanja(true);
+    setErrorPitanja(null);
+
+    questionApiService
+      .dobaviPitanjaZaKviz(selectedKvizId)
+      .then(async (pitanjaResponse) => {
+        setPitanja(pitanjaResponse);
+
+        const odgovoriMap: Record<number, Answer[]> = {};
+
+        await Promise.all(
+          pitanjaResponse.map(async (pitanje) => {
+            const odgovori = await answerApiService.dobaviOdgovoreZaPitanje(pitanje.id);
+            odgovoriMap[pitanje.id] = odgovori;
+          })
+        );
+
+        setOdgovoriZaPitanja(odgovoriMap);
+      })
+      .catch(() => {
+        setPitanja([]);
+        setOdgovoriZaPitanja({});
+        setErrorPitanja("Greška pri dohvatanju pitanja za kviz.");
+      })
+      .finally(() => setLoadingPitanja(false));
+  }, [selectedKvizId]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -122,53 +217,97 @@ export function KvizForma() {
 
         {loading && <p className="text-center">Učitavanje nivoa jezika...</p>}
 
-        {!loading && error && (
-          <p className="text-center text-red-600 mb-6">{error}</p>
-        )}
+        {!loading && error && <p className="text-center text-red-600 mb-6">{error}</p>}
 
-        {loadingKvizovi && (
-          <p className="text-center text-purple-700">Učitavanje kvizova...</p>
-        )}
+        {loadingKvizovi && <p className="text-center text-purple-700">Učitavanje kvizova...</p>}
 
         {!loadingKvizovi && errorKvizovi && (
           <p className="text-center text-red-600">{errorKvizovi}</p>
         )}
 
         {!loadingKvizovi && kvizovi.length > 0 && (
-          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 max-w-5xl mx-auto">
-            {kvizovi.map((kviz) => (
-              <div
-                key={kviz.id}
-                onClick={() =>
-                  setSelectedKvizId((prev) => (prev === kviz.id ? null : kviz.id))
-                }
-                className={`bg-[#f3e5ff] border border-purple-300 rounded-xl shadow-md p-6 hover:shadow-lg transition cursor-pointer ${
-                  selectedKvizId === kviz.id ? "ring-2 ring-[#8f60bf]" : ""
-                }`}
-              >
-                <h3 className="text-2xl font-bold text-[#8f60bf]">
-                  {kviz.naziv_kviza}
-                </h3>
+          <>
+            <div className="grid gap-6 grid-cols-1 md:grid-cols-2 max-w-5xl mx-auto mb-10">
+              {kvizovi.map((kviz) => (
+                <div
+                  key={kviz.id}
+                  onClick={() => {
+                    if (!selectedKvizId) setSelectedKvizId(kviz.id);
+                  }}
+                  className={`bg-[#f3e5ff] border border-purple-300 rounded-xl shadow-md p-6 cursor-pointer select-none ${
+                    selectedKvizId === kviz.id ? "ring-2 ring-[#8f60bf]" : ""
+                  } ${selectedKvizId ? "opacity-50 pointer-events-none" : ""}`}
+                >
+                  <h3 className="text-2xl font-bold text-[#8f60bf]">{kviz.naziv_kviza}</h3>
+                  <p>
+                    <strong>Jezik:</strong> {kviz.jezik}
+                  </p>
+                  <p>
+                    <strong>Nivo znanja:</strong> {kviz.nivo_znanja}
+                  </p>
+                </div>
+              ))}
+            </div>
 
-                {selectedKvizId === kviz.id && (
-                  <div className="mt-4 bg-white border border-purple-200 rounded-md p-4 text-sm text-gray-800">
-                    <p><strong>Jezik:</strong> {kviz.jezik}</p>
-                    <p><strong>Nivo znanja:</strong> {kviz.nivo_znanja}</p>
-                    <button
-                      className="mt-4 bg-[#8f60bf] text-white px-4 py-2 rounded-md hover:bg-white hover:text-[#8f60bf] border border-[#8f60bf] transition"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        alert(`Započinje se kviz ID ${kviz.id}`);
-                        // navigate(`/kviz/${kviz.id}`); // <- ubaci ako imaš rutu za to
-                      }}
-                    >
-                      Započni kviz
-                    </button>
-                  </div>
-                )}
+            {/* Ako je kviz završen */}
+            {kvizZavrsen && rezultat !== null && (
+              <div className="text-center space-y-4 mt-10">
+                <p className="text-lg font-bold text-green-600">
+                  Tačnih odgovora: {rezultat} / {pitanja.length} (
+                  {((rezultat / pitanja.length) * 100).toFixed(2)}%)
+                </p>
+                <button
+                  onClick={nazadNaKvizove}
+                  className="bg-[#8f60bf] text-white font-semibold px-8 py-3 rounded-xl shadow-md hover:bg-[#764ba2] transition"
+                >
+                  Nazad na kvizove
+                </button>
               </div>
-            ))}
-          </div>
+            )}
+
+            {/* Ako kviz nije završen, prikaži pitanja */}
+            {!kvizZavrsen && !loadingPitanja && pitanja.length > 0 && (
+              <div className="max-w-5xl mx-auto space-y-8">
+                {pitanja.map((pitanje, index) => (
+                  <div
+                    key={pitanje.id}
+                    className="bg-white border border-purple-300 rounded-lg p-6 shadow-md"
+                  >
+                    <h4 className="text-xl font-semibold text-[#8f60bf] mb-4">
+                      {index + 1}. {pitanje.tekst_pitanja}
+                    </h4>
+                    <div className="space-y-2">
+                      {(odgovoriZaPitanja[pitanje.id] || []).map((odgovor) => (
+                        <label
+                          key={odgovor.id}
+                          className="flex items-center space-x-2 text-gray-800 cursor-pointer"
+                        >
+                          <input
+                            type="radio"
+                            name={`pitanje-${pitanje.id}`}
+                            value={odgovor.id}
+                            checked={odabraniOdgovori[pitanje.id] === odgovor.id}
+                            onChange={() => handleOdgovorChange(pitanje.id, odgovor.id)}
+                            className="form-radio text-[#8f60bf]"
+                          />
+                          <span>{odgovor.tekst_odgovora}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+
+                <div className="text-center mt-10">
+                  <button
+                    onClick={zavrsiKviz}
+                    className="bg-[#8f60bf] text-white font-semibold px-8 py-3 rounded-xl shadow-md hover:bg-[#764ba2] transition"
+                  >
+                    Završi kviz
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {!loadingKvizovi && !errorKvizovi && kvizovi.length === 0 && nivo && (

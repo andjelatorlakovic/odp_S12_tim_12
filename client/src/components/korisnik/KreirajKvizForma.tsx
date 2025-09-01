@@ -68,8 +68,8 @@ export function KreirajKvizForma() {
 
   // Dodavanje pitanja
   const handleAddQuestion = () => {
-    if (pitanja.length >= 6) {
-      setErrorMessage("Максимално 6 питања по квизу!");
+    if (pitanja.length >= 14) {
+      setErrorMessage("Максимално 14 питања по квизу!");
       return;
     }
     setPitanja([
@@ -131,7 +131,7 @@ export function KreirajKvizForma() {
     return true;
   };
 
-  const canCreateQuiz = pitanja.length >= 1;
+  const canCreateQuiz = pitanja.length >= 14;
 
   // Podnošenje forme
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -144,10 +144,7 @@ export function KreirajKvizForma() {
       return;
     }
 
-    if (!canCreateQuiz) {
-      setApiMessage("Потребно је унети најмање 3 питања да бисте креирали квиз.");
-      return;
-    }
+
 
     if (!validateQuestions()) {
       return;
