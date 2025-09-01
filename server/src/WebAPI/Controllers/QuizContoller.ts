@@ -1,5 +1,4 @@
 import { Router, Request, Response } from 'express';
-
 import { validacijaPodatakaKviz } from '../validators/quiz/QuizValidators';
 import { authenticate } from '../../Middlewares/autentification/AuthMiddleware';
 import { KvizService } from '../../Services/quiz/QuizService';
@@ -39,7 +38,12 @@ export class KvizController {
 
   private async dobaviKvizPoId(req: Request, res: Response): Promise<void> {
     try {
-      const id = Number(req.params.id);
+      const id = Number(req.query.id);
+      if (isNaN(id)) {
+        res.status(400).json({ success: false, message: 'Nije prosleđen validan ID.' });
+        return;
+      }
+
       const kviz = await this.kvizService.dobaviKvizPoId(id);
 
       if (kviz.id !== 0) {
@@ -84,7 +88,14 @@ export class KvizController {
         return;
       }
 
-      const kvizovi = await this.kvizService.dobaviKvizovePoJezikuINivou(jezik, nivo_znanja);
+      // Dohvatamo userId iz authenticate middleware-a
+      const userId = req.user?.id;
+      if (!userId) {
+        res.status(401).json({ success: false, message: 'Korisnik nije autentifikovan.' });
+        return;
+      }
+
+      const kvizovi = await this.kvizService.dobaviKvizovePoJezikuINivou(userId, jezik, nivo_znanja);
       res.status(200).json({ success: true, data: kvizovi });
     } catch (error) {
       console.error("Greška pri filtriranju kvizova po jeziku i nivou:", error);
@@ -117,7 +128,12 @@ export class KvizController {
 
   private async obrisiKviz(req: Request, res: Response): Promise<void> {
     try {
-      const id = Number(req.params.id);
+      const id = Number(req.query.id);
+      if (isNaN(id)) {
+        res.status(400).json({ success: false, message: 'Nije prosleđen validan ID.' });
+        return;
+      }
+
       const rezultat = await this.kvizService.obrisiKviz(id);
 
       if (rezultat) {

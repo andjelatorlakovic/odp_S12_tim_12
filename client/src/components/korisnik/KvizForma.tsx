@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { userLanguageLevelApi } from "../../api_services/userLanguage/UserLanguageApiService";
-import { jwtDecode } from "jwt-decode";
+import {jwtDecode} from "jwt-decode";
 import { kvizApi } from "../../api_services/quiz/QuizApiService";
 import { UserQuizApiService } from "../../api_services/userQuiz/UserQuizApiService";
 
@@ -29,10 +29,7 @@ interface Answer {
 
 function getUserIdFromToken(): number | null {
   const token = localStorage.getItem("authToken");
-  if (!token) {
-    console.warn("Token nije pronađen u localStorage.");
-    return null;
-  }
+  if (!token) return null;
 
   try {
     const decoded: any = jwtDecode(token);
@@ -127,6 +124,28 @@ export function KvizForma() {
     setOdabraniOdgovori({});
     setRezultat(null);
     setKvizZavrsen(false);
+
+    // Osvježavanje liste kvizova
+    const userId = getUserIdFromToken();
+    if (!userId || !language || !nivo) return;
+
+    setLoadingKvizovi(true);
+    kvizApi
+      .dobaviKvizovePoJezikuINivou(language, nivo)
+      .then((response) => {
+        if (response.success && response.data) {
+          setKvizovi(response.data);
+          setErrorKvizovi(null);
+        } else {
+          setKvizovi([]);
+          setErrorKvizovi(response.message || "Nema kvizova za dati nivo i jezik.");
+        }
+      })
+      .catch(() => {
+        setKvizovi([]);
+        setErrorKvizovi("Greška pri dohvatanju kvizova.");
+      })
+      .finally(() => setLoadingKvizovi(false));
   };
 
   useEffect(() => {
@@ -164,12 +183,12 @@ export function KvizForma() {
   }, [language]);
 
   useEffect(() => {
-    if (!nivo || !language) {
-      setKvizovi([]);
-      return;
-    }
+    if (!nivo || !language || selectedKvizId) return;
 
     setLoadingKvizovi(true);
+    const userId = getUserIdFromToken();
+    if (!userId) return;
+
     kvizApi
       .dobaviKvizovePoJezikuINivou(language, nivo)
       .then((response) => {
@@ -186,14 +205,10 @@ export function KvizForma() {
         setErrorKvizovi("Greška pri dohvatanju kvizova.");
       })
       .finally(() => setLoadingKvizovi(false));
-  }, [language, nivo]);
+  }, [language, nivo, selectedKvizId]);
 
   useEffect(() => {
-    if (!selectedKvizId) {
-      setPitanja([]);
-      setOdgovoriZaPitanja({});
-      return;
-    }
+    if (!selectedKvizId) return;
 
     setLoadingPitanja(true);
     setErrorPitanja(null);
@@ -240,100 +255,95 @@ export function KvizForma() {
         {loading && <p className="text-center">Učitavanje nivoa jezika...</p>}
         {!loading && error && <p className="text-center text-red-600 mb-6">{error}</p>}
 
-        {loadingKvizovi && <p className="text-center text-purple-700">Učitavanje kvizova...</p>}
-        {!loadingKvizovi && errorKvizovi && (
-          <p className="text-center text-red-600">{errorKvizovi}</p>
+        {kvizZavrsen && rezultat !== null && (
+          <div className="text-center space-y-4 mt-10">
+            <p className="text-lg font-bold text-green-600">
+              Tačnih odgovora: {rezultat} / {pitanja.length} (
+              {((rezultat / pitanja.length) * 100).toFixed(2)}%)
+            </p>
+            <button
+              onClick={nazadNaKvizove}
+              className="bg-[#8f60bf] text-white font-semibold px-8 py-3 rounded-xl shadow-md hover:bg-[#764ba2] transition"
+            >
+              Nazad na kvizove
+            </button>
+          </div>
         )}
 
-        {!loadingKvizovi && kvizovi.length > 0 && (
+        {!kvizZavrsen && (
           <>
-            <div className="grid gap-6 grid-cols-1 md:grid-cols-2 max-w-5xl mx-auto mb-10">
-              {kvizovi.map((kviz) => (
-                <div
-                  key={kviz.id}
-                  onClick={() => {
-                    if (!selectedKvizId) setSelectedKvizId(kviz.id);
-                  }}
-                  className={`bg-[#f3e5ff] border border-purple-300 rounded-xl shadow-md p-6 cursor-pointer select-none ${
-                    selectedKvizId === kviz.id ? "ring-2 ring-[#8f60bf]" : ""
-                  } ${selectedKvizId ? "opacity-50 pointer-events-none" : ""}`}
-                >
-                  <h3 className="text-2xl font-bold text-[#8f60bf]">{kviz.naziv_kviza}</h3>
-                  <p>
-                    <strong>Jezik:</strong> {kviz.jezik}
-                  </p>
-                  <p>
-                    <strong>Nivo znanja:</strong> {kviz.nivo_znanja}
-                  </p>
-                </div>
-              ))}
-            </div>
+            {loadingKvizovi && <p className="text-center text-purple-700">Učitavanje kvizova...</p>}
+            {!loadingKvizovi && errorKvizovi && (
+              <p className="text-center text-red-600">{errorKvizovi}</p>
+            )}
 
-            {/* Ako je kviz završen */}
-            {kvizZavrsen && rezultat !== null && (
-              <div className="text-center space-y-4 mt-10">
-                <p className="text-lg font-bold text-green-600">
-                  Tačnih odgovora: {rezultat} / {pitanja.length} (
-                  {((rezultat / pitanja.length) * 100).toFixed(2)}%)
-                </p>
-                <button
-                  onClick={nazadNaKvizove}
-                  className="bg-[#8f60bf] text-white font-semibold px-8 py-3 rounded-xl shadow-md hover:bg-[#764ba2] transition"
-                >
-                  Nazad na kvizove
-                </button>
+            {!loadingKvizovi && !errorKvizovi && kvizovi.length > 0 && (
+              <div className="grid gap-6 grid-cols-1 md:grid-cols-2 max-w-5xl mx-auto mb-10">
+                {kvizovi.map((kviz) => (
+                  <div
+                    key={kviz.id}
+                    onClick={() => {
+                      if (!selectedKvizId) setSelectedKvizId(kviz.id);
+                    }}
+                    className={`bg-[#f3e5ff] border border-purple-300 rounded-xl shadow-md p-6 cursor-pointer select-none ${
+                      selectedKvizId === kviz.id ? "ring-2 ring-[#8f60bf]" : ""
+                    } ${selectedKvizId ? "opacity-50 pointer-events-none" : ""}`}
+                  >
+                    <h3 className="text-2xl font-bold text-[#8f60bf]">{kviz.naziv_kviza}</h3>
+                    <p>
+                      <strong>Jezik:</strong> {kviz.jezik}
+                    </p>
+                    <p>
+                      <strong>Nivo znanja:</strong> {kviz.nivo_znanja}
+                    </p>
+                  </div>
+                ))}
               </div>
             )}
 
-            {/* Ako kviz nije završen, prikaži pitanja */}
-            {!kvizZavrsen && !loadingPitanja && pitanja.length > 0 && (
-              <div className="max-w-5xl mx-auto space-y-8">
-                {pitanja.map((pitanje, index) => (
-                  <div
-                    key={pitanje.id}
-                    className="bg-white border border-purple-300 rounded-lg p-6 shadow-md"
-                  >
-                    <h4 className="text-xl font-semibold text-[#8f60bf] mb-4">
-                      {index + 1}. {pitanje.tekst_pitanja}
-                    </h4>
-                    <div className="space-y-2">
-                      {(odgovoriZaPitanja[pitanje.id] || []).map((odgovor) => (
-                        <label
-                          key={odgovor.id}
-                          className="flex items-center space-x-2 text-gray-800 cursor-pointer"
-                        >
-                          <input
-                            type="radio"
-                            name={`pitanje-${pitanje.id}`}
-                            value={odgovor.id}
-                            checked={odabraniOdgovori[pitanje.id] === odgovor.id}
-                            onChange={() => handleOdgovorChange(pitanje.id, odgovor.id)}
-                            className="form-radio text-[#8f60bf]"
-                          />
-                          <span>{odgovor.tekst_odgovora}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-
-                <div className="text-center mt-10">
-                  <button
-                    onClick={zavrsiKviz}
-                    className="bg-[#8f60bf] text-white font-semibold px-8 py-3 rounded-xl shadow-md hover:bg-[#764ba2] transition"
-                  >
-                    Završi kviz
-                  </button>
-                </div>
-              </div>
+            {!loadingKvizovi && kvizovi.length === 0 && (
+              <p className="text-center text-gray-600">
+                Nema dostupnih kvizova za tvoj nivo i jezik.
+              </p>
             )}
           </>
         )}
 
-        {!loadingKvizovi && !errorKvizovi && kvizovi.length === 0 && nivo && (
-          <p className="text-center text-gray-600">
-            Nema dostupnih kvizova za tvoj nivo i jezik.
-          </p>
+        {/* Prikaz pitanja */}
+        {!kvizZavrsen && !loadingPitanja && pitanja.length > 0 && (
+          <div className="max-w-5xl mx-auto space-y-8">
+            {pitanja.map((pitanje, index) => (
+              <div key={pitanje.id} className="bg-white border border-purple-300 rounded-lg p-6 shadow-md">
+                <h4 className="text-xl font-semibold text-[#8f60bf] mb-4">
+                  {index + 1}. {pitanje.tekst_pitanja}
+                </h4>
+                <div className="space-y-2">
+                  {(odgovoriZaPitanja[pitanje.id] || []).map((odgovor) => (
+                    <label key={odgovor.id} className="flex items-center space-x-2 text-gray-800 cursor-pointer">
+                      <input
+                        type="radio"
+                        name={`pitanje-${pitanje.id}`}
+                        value={odgovor.id}
+                        checked={odabraniOdgovori[pitanje.id] === odgovor.id}
+                        onChange={() => handleOdgovorChange(pitanje.id, odgovor.id)}
+                        className="form-radio text-[#8f60bf]"
+                      />
+                      <span>{odgovor.tekst_odgovora}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            <div className="text-center mt-10">
+              <button
+                onClick={zavrsiKviz}
+                className="bg-[#8f60bf] text-white font-semibold px-8 py-3 rounded-xl shadow-md hover:bg-[#764ba2] transition"
+              >
+                Završi kviz
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>

@@ -13,7 +13,6 @@ export class KvizService implements IKvizService {
     try {
       const postoji = await this.kvizRepository.getByNazivJezikNivo(naziv_kviza, jezik, nivo_znanja);
       if (postoji.id !== 0) {
-        // Već postoji kviz sa tim podacima
         return new QuizDto();
       }
 
@@ -38,10 +37,7 @@ export class KvizService implements IKvizService {
   async dobaviSveKvizove(): Promise<QuizDto[]> {
     try {
       const kvizovi = await this.kvizRepository.getAllKvizovi();
-
-      if (!kvizovi || kvizovi.length === 0) {
-        return [];
-      }
+      if (!kvizovi || kvizovi.length === 0) return [];
 
       return kvizovi.map(kviz => new QuizDto(kviz.id, kviz.naziv_kviza, kviz.jezik, kviz.nivo_znanja));
     } catch (error) {
@@ -53,10 +49,7 @@ export class KvizService implements IKvizService {
   async dobaviKvizPoId(id: number): Promise<QuizDto> {
     try {
       const kviz = await this.kvizRepository.getById(id);
-
-      if (kviz.id !== 0) {
-        return new QuizDto(kviz.id, kviz.naziv_kviza, kviz.jezik, kviz.nivo_znanja);
-      }
+      if (kviz.id !== 0) return new QuizDto(kviz.id, kviz.naziv_kviza, kviz.jezik, kviz.nivo_znanja);
 
       return new QuizDto();
     } catch (error) {
@@ -68,10 +61,7 @@ export class KvizService implements IKvizService {
   async dobaviKvizPoNazivJezikNivo(naziv_kviza: string, jezik: string, nivo_znanja: string): Promise<QuizDto> {
     try {
       const kviz = await this.kvizRepository.getByNazivJezikNivo(naziv_kviza, jezik, nivo_znanja);
-
-      if (kviz.id !== 0) {
-        return new QuizDto(kviz.id, kviz.naziv_kviza, kviz.jezik, kviz.nivo_znanja);
-      }
+      if (kviz.id !== 0) return new QuizDto(kviz.id, kviz.naziv_kviza, kviz.jezik, kviz.nivo_znanja);
 
       return new QuizDto();
     } catch (error) {
@@ -80,13 +70,11 @@ export class KvizService implements IKvizService {
     }
   }
 
-  async dobaviKvizovePoJezikuINivou(jezik: string, nivo_znanja: string): Promise<QuizDto[]> {
+  // Nova funkcija: dobavlja kvizove koje korisnik još nije radio
+  async dobaviKvizovePoJezikuINivou(userId: number, jezik: string, nivo_znanja: string): Promise<QuizDto[]> {
     try {
-      const kvizovi = await this.kvizRepository.getByJezikINivo(jezik, nivo_znanja);
-
-      if (!kvizovi || kvizovi.length === 0) {
-        return [];
-      }
+      const kvizovi = await this.kvizRepository.getAvailableForUser(userId, jezik, nivo_znanja);
+      if (!kvizovi || kvizovi.length === 0) return [];
 
       return kvizovi.map(kviz => new QuizDto(kviz.id, kviz.naziv_kviza, kviz.jezik, kviz.nivo_znanja));
     } catch (error) {
@@ -98,10 +86,7 @@ export class KvizService implements IKvizService {
   async obrisiKviz(id: number): Promise<boolean> {
     try {
       const kviz = await this.kvizRepository.getById(id);
-      if (kviz.id === 0) {
-        // Kviz ne postoji
-        return false;
-      }
+      if (kviz.id === 0) return false;
 
       return await this.kvizRepository.deleteById(id);
     } catch (error) {

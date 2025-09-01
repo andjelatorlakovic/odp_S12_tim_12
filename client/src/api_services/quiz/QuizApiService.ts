@@ -67,13 +67,8 @@ export const kvizApi = {
     try {
       const token = getToken();
       const config = token
-        ? {
-            headers: { Authorization: `Bearer ${token}` },
-            params: { naziv_kviza, jezik, nivo_znanja },
-          }
-        : {
-            params: { naziv_kviza, jezik, nivo_znanja },
-          };
+        ? { headers: { Authorization: `Bearer ${token}` }, params: { naziv_kviza, jezik, nivo_znanja } }
+        : { params: { naziv_kviza, jezik, nivo_znanja } };
       const res = await axios.get<ApiResponseKviz>(API_URL_GET_NAZ_JEZ_NIV, config);
       return res.data;
     } catch (error) {
@@ -89,13 +84,8 @@ export const kvizApi = {
     try {
       const token = getToken();
       const config = token
-        ? {
-            headers: { Authorization: `Bearer ${token}` },
-            params: { jezik, nivo_znanja },
-          }
-        : {
-            params: { jezik, nivo_znanja },
-          };
+        ? { headers: { Authorization: `Bearer ${token}` }, params: { jezik, nivo_znanja } }
+        : { params: { jezik, nivo_znanja } };
       const res = await axios.get<ApiResponseKvizList>(API_URL_FILTER, config);
       return res.data;
     } catch (error) {
