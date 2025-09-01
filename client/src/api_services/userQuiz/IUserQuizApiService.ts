@@ -1,4 +1,4 @@
-import type { ApiResponseDelete, ApiResponseUserQuiz, ApiResponseUserQuizList } from "../../types/userQuiz/ApiResponseUserQuiz";
+import type { ApiResponseDelete, ApiResponseKvizCount, ApiResponseUserQuiz, ApiResponseUserQuizList } from "../../types/userQuiz/ApiResponseUserQuiz";
 
 
 export interface IUserQuizApiService {
@@ -15,4 +15,5 @@ export interface IUserQuizApiService {
   ): Promise<ApiResponseUserQuiz>;
   azurirajProcenat(userId: number, kvizId: number, procenat: number): Promise<ApiResponseUserQuiz>;
   obrisiRezultat(userId: number, kvizId: number): Promise<ApiResponseDelete>;
+  brojKvizovaSa85(userId: number, jezik: string): Promise<ApiResponseKvizCount>;
 }

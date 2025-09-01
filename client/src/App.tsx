@@ -11,6 +11,7 @@ import BlokirajKorisnikaStranica from './pages/moderator/BlokirajKorisnikaStrani
 import ListaBlokiranihStranica from './pages/moderator/ListaBlokiranihKorisnikaStranica';
 import KreirajKvizStranica from './pages/korisnik/KreirajKvizStranica';
 import KvizStranica from './pages/korisnik/KvizStranica';
+import UnaprediNivoKorisnikaStranica from './pages/moderator/UnaprediNivoKorisnikaStranica';
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
         <Route path="dodaj-jezik" element={<DodajNoviJezikStranica />} />
         <Route path="blokiraj-korisnika" element={<BlokirajKorisnikaStranica />} /> 
          <Route path="lista-blokiranih" element={<ListaBlokiranihStranica />} /> 
+         <Route path="uredi-nivo" element={<UnaprediNivoKorisnikaStranica />} />
       </Route>
 
 

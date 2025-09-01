@@ -44,9 +44,12 @@ export function ModeratorForma() {
                             Postavi nivoe znanja (A1, A2, B1...) za svaki jezik.
                         </p>
                         <div className="flex justify-end">
-                            <button className="bg-[#8f60bf] text-white px-4 py-2 rounded-md hover:bg-white hover:text-[#8f60bf] border border-[#8f60bf] transition flex flex-col justify-between h-full">
+                             <Link
+                                to="uredi-nivo"
+                                className="bg-[#8f60bf] text-white px-4 py-2 rounded-md hover:bg-white hover:text-[#8f60bf] border border-[#8f60bf] transition flex items-center justify-center"
+                            >
                                 Uredi nivoe
-                            </button>
+                            </Link>
                         </div>
                     </div>
 

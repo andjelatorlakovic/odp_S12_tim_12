@@ -20,4 +20,6 @@ export interface IUserQuizResultService {
   obrisiRezultat(userId: number, kvizId: number): Promise<boolean>;
 
   azurirajProcenat(userId: number, kvizId: number, procenat: number): Promise<boolean>;
+
+  brojKvizovaSa85(userId: number, jezik: string): Promise<number>;
 }

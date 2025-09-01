@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Importing useNavigate hook
 import { languageApi } from "../../api_services/languages/LanguageApiService";
 import { LanguageLevelAPIService } from "../../api_services/languageLevels/LanguageLevelApiService";
 import { validacijaPodatakaJezik } from "../../api_services/validators/languages/LanguageValidator";
@@ -15,6 +16,7 @@ export default function DodajNoviJezikForma() {
   const [brojNivoi, setBrojNivoi] = useState<number | string>("");
 
   const nivoiOpcije = ["A1", "A2", "B1", "B2", "C1", "C2"];
+  const navigate = useNavigate(); // useNavigate hook to navigate
 
   const podnesiFormu = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,6 +136,14 @@ export default function DodajNoviJezikForma() {
           )}
         </form>
       </div>
+
+      {/* Back Button */}
+      <button
+        onClick={() => navigate(-1)} // Navigate back
+        className="mt-6 w-full py-3 bg-[#8f60bf] text-white font-semibold text-lg rounded-md hover:bg-white hover:text-[#8f60bf] border-2 border-[#8f60bf] transition"
+      >
+        Nazad
+      </button>
     </div>
   );
 }

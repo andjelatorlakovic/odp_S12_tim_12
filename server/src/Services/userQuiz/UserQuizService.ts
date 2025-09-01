@@ -146,4 +146,14 @@ export class UserQuizResultService implements IUserQuizResultService {
       return false;
     }
   }
+
+async brojKvizovaSa85(userId: number, jezik: string): Promise<number> {
+  try {
+    const brojKvizova = await this.userQuizResultRepository.countQuizzesAbove85(userId, jezik);
+    return brojKvizova; // Vraća broj kvizova sa više od 85%
+  } catch (error) {
+    console.error("Greška prilikom brojanja kvizova sa više od 85.5% tačnih odgovora:", error);
+    return 0; // Ako dođe do greške, vraća 0
+  }
+}
 }

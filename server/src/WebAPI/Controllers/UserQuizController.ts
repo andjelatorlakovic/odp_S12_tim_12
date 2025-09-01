@@ -22,10 +22,31 @@ export class UserQuizResultController {
     this.router.post('/rezultat', authenticate, this.kreirajRezultat.bind(this));
     this.router.put('/azurirajProcenat', authenticate, this.azurirajProcenat.bind(this));
     this.router.delete('/obrisiRezultat', authenticate, this.obrisiRezultat.bind(this));
+    this.router.get('/brojKvizovaSa85', authenticate, this.brojKvizovaSa85.bind(this));
   }
 
   public getRouter(): Router {
     return this.router;
+  }
+
+   private async brojKvizovaSa85(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = Number(req.query.userId);
+      const jezik = String(req.query.jezik);
+
+      if (isNaN(userId) || !jezik) {
+        res.status(400).json({ success: false, message: "Nisu poslati validni parametri" });
+        return;
+      }
+
+      // Poziv metode iz UserQuizResultService za brojanje kvizova
+      const brojKvizova = await this.userQuizResultService.brojKvizovaSa85(userId, jezik);
+
+      res.status(200).json({ success: true, data: brojKvizova });
+    } catch (error) {
+      console.error("Greška pri brojanju kvizova sa više od 85.5%:", error);
+      res.status(500).json({ success: false, message: "Greška pri brojanju kvizova sa više od 85.5%" });
+    }
   }
 
   private async dobaviSveRezultate(req: Request, res: Response): Promise<void> {

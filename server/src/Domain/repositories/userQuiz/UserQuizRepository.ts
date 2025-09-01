@@ -23,6 +23,29 @@ export class UserQuizResultRepository implements IUserQuizResultRepository {
     }
   }
 
+async countQuizzesAbove85(userId: number, jezik: string): Promise<number> {
+  try {
+    const query = `
+      SELECT user_id, jezik, COUNT(*) AS broj_kviza
+      FROM user_quiz_results
+      WHERE user_id = ? AND jezik = ?
+      AND procenat_tacnih_odgovora > 85.5
+      GROUP BY user_id, jezik
+      HAVING COUNT(*) >= 3;
+    `;
+    const [rows] = await db.execute<RowDataPacket[]>(query, [userId, jezik]);
+
+    // Proveri da li postoji rezultat u odgovoru
+    if (rows.length > 0) {
+      return rows[0].broj_kviza; // Vraća broj kvizova koji ispunjavaju uslove
+    }
+    return 0; // Ako nema odgovarajućih kvizova
+  } catch (error) {
+    console.log("Error counting quizzes above 85%: " + error);
+    return 0;
+  }
+}
+
   async createResult(result: UserQuizResult): Promise<UserQuizResult> {
     try {
       const query = `

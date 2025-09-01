@@ -26,3 +26,9 @@ export interface ApiResponseUserQuizList {
   message?: string;
   data: UserQuizResultData[];
 }
+
+export interface ApiResponseKvizCount {
+  success: boolean;
+  data: number; // Broj kvizova sa više od 85.5% tačnih odgovora
+  message?: string;
+}

@@ -20,6 +20,8 @@ export interface IUserQuizResultRepository {
   // Izbriši rezultat po userId i kvizId
   deleteByUserAndKviz(userId: number, kvizId: number): Promise<boolean>;
 
+  countQuizzesAbove85(userId: number, jezik: string): Promise<number>;
+
   // Ažuriraj procenat tačnih odgovora
   updateProcenat(userId: number, kvizId: number, procenat: number): Promise<boolean>;
 }
