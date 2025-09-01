@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Repozitorijumi
-import { IUserRepository } from './Domain/repositories/users/IUserRepository';
+
 import { UserRepository } from './Domain/repositories/users/UserRepository';
 import { QuestionRepository } from './Domain/repositories/questions/QuestionRepository';
 import { AnswerRepository } from './Domain/repositories/answers/AnswerRepository';
@@ -34,6 +34,7 @@ import { KvizController } from './WebAPI/Controllers/QuizContoller';
 import { QuestionController } from './WebAPI/Controllers/QuestionController';
 import { AnswerController } from './WebAPI/Controllers/AnswerController';
 import { KvizService } from './Services/quiz/QuizService';
+import { IUserRepository } from './Database/repositories/user/IUserRepository';
 
 // Express aplikacija
 const app = express();

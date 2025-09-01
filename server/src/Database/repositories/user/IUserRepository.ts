@@ -1,4 +1,5 @@
-import { User } from "../../models/User";
+import { User } from "../../../Domain/models/User";
+
 
 /**
  * Repository interface za upravljanje korisnicima

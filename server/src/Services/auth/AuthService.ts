@@ -1,6 +1,7 @@
+import { IUserRepository } from "../../Database/repositories/user/IUserRepository";
 import { UserAuthDataDto } from "../../Domain/DTOs/auth/UserAuthDataDto";
 import { User } from "../../Domain/models/User";
-import { IUserRepository } from "../../Domain/repositories/users/IUserRepository";
+
 import { IAuthService } from "../../Domain/services/auth/IAuthService";
 import bcrypt from "bcryptjs";
 

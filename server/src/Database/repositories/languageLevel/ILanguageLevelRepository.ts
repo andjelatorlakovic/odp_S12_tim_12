@@ -1,4 +1,5 @@
-import { LanguageLevel } from "../../models/LagnuageLevel";
+import { LanguageLevel } from "../../../Domain/models/LagnuageLevel";
+
 
 export interface ILanguageLevelRepository
 {

@@ -12,7 +12,7 @@ export default function DodajNoviJezikForma() {
   const [nivoi, setNivoi] = useState<string[]>([]);
   const [greska, setGreska] = useState("");
   const [uspesno, setUspesno] = useState(false);
-  const [brojNivoi, setBrojNivoi] = useState(1);
+  const [brojNivoi, setBrojNivoi] = useState<number | string>("");
 
   const nivoiOpcije = ["A1", "A2", "B1", "B2", "C1", "C2"];
 
@@ -28,8 +28,12 @@ export default function DodajNoviJezikForma() {
       return;
     }
 
-    // ➕ Sačuvaj kopiju nivoa pre resetovanja stanja
-    const nivoiZaDodavanje = [...nivoi];
+    // Provera da li su nivoe selektovani
+    if (!brojNivoi || brojNivoi === "") {
+      setGreska("Морате одабрати бар 1 ниво.");
+      return;
+    }
+    const nivoiZaDodavanje = nivoiOpcije.slice(0, Number(brojNivoi));
 
     // Dodaj jezik
     const odgovorJezik = await languageApi.dodajJezik(jezik.trim(), nivoiZaDodavanje.join(", "));
@@ -41,7 +45,7 @@ export default function DodajNoviJezikForma() {
       // Resetuj formu
       setJezik("");
       setNivoi([]);
-      setBrojNivoi(1);
+      setBrojNivoi("");
       setUspesno(true);
 
       // Dodaj svaki nivo posebno
@@ -58,9 +62,8 @@ export default function DodajNoviJezikForma() {
   };
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedLevels = Array.from({ length: Number(e.target.value) }, (_, i) => nivoiOpcije[i]);
-    setBrojNivoi(Number(e.target.value));
-    setNivoi(selectedLevels);
+    const selectedValue = e.target.value;
+    setBrojNivoi(selectedValue);
   };
 
   return (
@@ -94,6 +97,7 @@ export default function DodajNoviJezikForma() {
             onChange={handleSelectChange}
             className="w-full px-4 bg-white py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400 mb-4"
           >
+            <option value="" disabled>~~ Izaberi nivoe ~~</option> {/* Placeholder opcija */}
             <option value={1}>1 nivo</option>
             <option value={2}>2 nivoa</option>
             <option value={3}>3 nivoa</option>
@@ -110,7 +114,7 @@ export default function DodajNoviJezikForma() {
               multiple
               className="w-full px-4 bg-white py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
             >
-              {nivoiOpcije.slice(0, brojNivoi).map((nivo, index) => (
+              {nivoiOpcije.slice(0, Number(brojNivoi)).map((nivo, index) => (
                 <option key={index} value={nivo}>{nivo}</option>
               ))}
             </select>
@@ -125,7 +129,7 @@ export default function DodajNoviJezikForma() {
 
           {uspesno && (
             <p className="text-green-700 text-center mt-4">
-              Jezik je uspešno dodat!
+              Језик је успешно додат!
             </p>
           )}
         </form>

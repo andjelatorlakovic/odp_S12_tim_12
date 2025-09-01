@@ -1,7 +1,7 @@
 import { Language } from '../../models/Language';
 import db from "../../../Database/connection/DbConnectionPool";
-import { ILanguageRepository } from './ILanguagesRepository';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
+import { ILanguageRepository } from '../../../Database/repositories/language/ILanguagesRepository';
 
 
 export class LanguagesRepository implements ILanguageRepository {

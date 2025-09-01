@@ -1,7 +1,7 @@
-import { ILanguageLevelRepository } from "./ILanguageLevelRepository";
 import { LanguageLevel } from "../../../Domain/models/LagnuageLevel";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
 import db from "../../../Database/connection/DbConnectionPool";
+import { ILanguageLevelRepository } from "../../../Database/repositories/languageLevel/ILanguageLevelRepository";
 
 export class LanguageLevelRepository implements ILanguageLevelRepository {
  

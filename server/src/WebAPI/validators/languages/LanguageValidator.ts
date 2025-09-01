@@ -2,7 +2,7 @@ import { RezultatValidacije } from '../../../Domain/types/ValidationResult';
 
 export function validacijaPodatakaAuth(jezik?: string): RezultatValidacije {
   if (!jezik) {
-    return { uspesno: false, poruka: 'Jezik je obavezan.' };
+    return { uspesno: false, poruka: 'Језик је обавезан.' };
   }
 
   if (jezik.length < 3) {

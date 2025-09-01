@@ -34,48 +34,54 @@ const podnesiFormu = async (e: React.FormEvent) => {
     return;
   }
 
-  const odgovor = await authApi.prijava(korisnickoIme, lozinka);
-
-  // Ova linija menja tip zbog TS greške
-  const data = odgovor.data as unknown as AuthResponseData;
-
-  let token: string;
-
-  if (typeof data === "string") {
-    token = data;
-  } else if (data.token && typeof data.token === "string") {
-    token = data.token;
-  } else {
-    setGreska("Nepoznat format tokena.");
-    return;
-  }
-
   try {
-  const claims = jwtDecode<JwtTokenClaims>(token);
+    const odgovor = await authApi.prijava(korisnickoIme, lozinka);
+    const data = odgovor.data as unknown as AuthResponseData;
+    let token: string;
 
-  SačuvajVrednostPoKljuču('authToken', token);  // Čuvanje tokena u localStorage
+    // Provera tipa podataka
+    if (typeof data === "string") {
+      token = data;
+    } else if (data.token && typeof data.token === "string") {
+      token = data.token;
+    } else {
+      setGreska("Nepoznat format tokena.");
+      return;
+    }
 
-  login(token);
-  setBlokiran(claims.blokiran);
+    // Dalja obrada tokena
+    try {
+      const claims = jwtDecode<JwtTokenClaims>(token);
 
-  if (claims.blokiran) {
-    setGreska("Vaš nalog je blokiran. Imaćete ograničen pristup.");
+      // Čuvanje tokena u localStorage
+      SačuvajVrednostPoKljuču("authToken", token);
+      
+      // Logovanje korisnika
+      login(token);
+      setBlokiran(claims.blokiran);
+
+      if (claims.blokiran) {
+        setGreska("Vaš nalog je blokiran. Imaćete ograničen pristup.");
+      }
+
+      if (claims.uloga === "moderator") {
+        navigate("/moderator-dashboard");
+      } else if (claims.uloga === "korisnik") {
+        navigate("/korisnik-dashboard");
+      } else {
+        navigate("/");
+      }
+
+      if (onUlogovan) onUlogovan();
+    } catch (error) {
+      console.error("Greška prilikom dekodiranja tokena: ", error);
+      setGreska("Token je neispravan.");
+    }
+  } catch (error) {
+    console.error("Greška prilikom prijave: ", error);
+    setGreska("Неисправни подаци.");
   }
-
-  if (claims.uloga === "moderator") {
-    navigate("/moderator-dashboard");
-  } else if (claims.uloga === "korisnik") {
-    navigate("/korisnik-dashboard");
-  } else {
-    navigate("/");
-  }
-
-  if (onUlogovan) onUlogovan();
-} catch (error) {
-  setGreska("Token je neispravan.");
-}
 };
-
 
   return (
     <div className="min-h-screen bg-white">

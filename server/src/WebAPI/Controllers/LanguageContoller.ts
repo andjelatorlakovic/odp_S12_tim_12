@@ -58,7 +58,7 @@ export class LanguagesController {
         // Ako je jezik već postojao ili došlo je do greške
         res.status(400).json({
           success: false,
-          message: 'Jezik već postoji ili došlo je do greške prilikom dodavanja.',
+          message: 'Језик већ постоји или је дошло до грешке приликом додавања.',
         });
       }
     } catch (error) {

@@ -1,6 +1,7 @@
+import { IUserRepository } from "../../Database/repositories/user/IUserRepository";
 import { UserDto } from "../../Domain/DTOs/users/UserDto";
 import { User } from "../../Domain/models/User";
-import { IUserRepository } from "../../Domain/repositories/users/IUserRepository";
+
 import { IUserService } from "../../Domain/services/users/IUserService";
 
 export class UserService implements IUserService {

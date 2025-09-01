@@ -5,7 +5,10 @@ import { LanguageLevelAPIService } from "../../api_services/languageLevels/Langu
 import { kvizApi } from "../../api_services/quiz/QuizApiService";
 import { QuestionAPIService } from "../../api_services/questions/QuestionsApiService";
 import { AnswerAPIService } from "../../api_services/answers/AnswerApiService";
+import { validacijaPodatakaOdgovora } from "../../api_services/validators/answers/AnswerValidator";
+import { validacijaPodatakaPitanja } from "../../api_services/validators/questions/QuestionsValidator";
 
+// Tipovi
 type Pitanje = {
   pitanje: string;
   odgovori: string[];
@@ -35,6 +38,7 @@ export function KreirajKvizForma() {
   const questionAPIService = new QuestionAPIService();
   const answerAPIService = new AnswerAPIService();
 
+  // Učitavanje jezika i nivoa
   useEffect(() => {
     const fetchLanguages = async () => {
       try {
@@ -45,10 +49,10 @@ export function KreirajKvizForma() {
         setLanguages([]);
       }
     };
-
     fetchLanguages();
   }, []);
 
+  // Promena jezika
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const lang = e.target.value;
     setSelectedLanguage(lang);
@@ -62,9 +66,10 @@ export function KreirajKvizForma() {
     }
   };
 
+  // Dodavanje pitanja
   const handleAddQuestion = () => {
     if (pitanja.length >= 6) {
-      setErrorMessage("Maksimalno 6 pitanja po kvizu.");
+      setErrorMessage("Максимално 6 питања по квизу!");
       return;
     }
     setPitanja([
@@ -74,61 +79,73 @@ export function KreirajKvizForma() {
     setErrorMessage("");
   };
 
+  // Promena pitanja
   const handleQuestionChange = (index: number, value: string) => {
     const copy = [...pitanja];
     copy[index].pitanje = value;
     setPitanja(copy);
   };
 
+  // Promena odgovora
   const handleAnswerChange = (qIndex: number, aIndex: number, value: string) => {
     const copy = [...pitanja];
     copy[qIndex].odgovori[aIndex] = value;
     setPitanja(copy);
   };
 
+  // Promena tačnog odgovora
   const handleCorrectAnswerChange = (index: number, value: string) => {
     const copy = [...pitanja];
     copy[index].tacanOdgovor = value;
     setPitanja(copy);
   };
 
-  // Validacija - sva polja ne smeju biti prazna i mora biti izabran tacan odgovor
+  // Validacija pitanja
   const validateQuestions = (): boolean => {
     for (let i = 0; i < pitanja.length; i++) {
       const p = pitanja[i];
-      if (!p.pitanje.trim()) {
-        setErrorMessage(`Pitanje ${i + 1} ne sme biti prazno.`);
+
+      // Validacija za pitanje
+      const validacijaPitanja = validacijaPodatakaPitanja(p.pitanje);
+      if (!validacijaPitanja.uspesno) {
+        setErrorMessage(`Питање ${i + 1}: ${validacijaPitanja.poruka}`);
         return false;
       }
+
+      // Validacija odgovora
       for (let j = 0; j < p.odgovori.length; j++) {
-        if (!p.odgovori[j].trim()) {
-          setErrorMessage(`Odgovor ${j + 1} na pitanju ${i + 1} ne sme biti prazan.`);
+        const validacija = validacijaPodatakaOdgovora(p.odgovori[j]);
+        if (!validacija.uspesno) {
+          setErrorMessage(`Питање ${i + 1}, одговор ${j + 1}: ${validacija.poruka}`);
           return false;
         }
       }
+
       if (!p.tacanOdgovor) {
-        setErrorMessage(`Izaberite tačan odgovor za pitanje ${i + 1}.`);
+        setErrorMessage(`Изаберите тачан одговор за питање ${i + 1}.`);
         return false;
       }
     }
+
     setErrorMessage("");
     return true;
   };
 
-  const canCreateQuiz = pitanja.length >= 3;
+  const canCreateQuiz = pitanja.length >= 1;
 
+  // Podnošenje forme
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setApiMessage("");
     setErrorMessage("");
 
     if (!nazivKviza.trim() || !selectedLanguage || !selectedLevel) {
-      setApiMessage("Molimo popunite sva obavezna polja: naziv kviza, jezik i nivo.");
+      setApiMessage("Молимо попуните сва обавезна поља: назив квиза, језик, ниво.");
       return;
     }
 
     if (!canCreateQuiz) {
-      setApiMessage("Potrebno je uneti najmanje 3 pitanja da biste kreirali kviz.");
+      setApiMessage("Потребно је унети најмање 3 питања да бисте креирали квиз.");
       return;
     }
 
@@ -137,22 +154,20 @@ export function KreirajKvizForma() {
     }
 
     try {
-      // Kreiraj kviz prvo
+      // Kreiraj kviz
       const response = await kvizApi.kreirajKviz(nazivKviza, selectedLanguage, selectedLevel);
-
       if (!response.success || !response.data) {
-        setApiMessage(response.message || "Došlo je do greške prilikom kreiranja kviza.");
+        setApiMessage(response.message || "Дошло је до грешке приликом креирања квиза.");
         return;
       }
 
       const createdQuizId = response.data.id;
 
-      // Kreiraj pitanja i njihove odgovore
+      // Kreiranje pitanja i odgovora
       for (const pitanje of pitanja) {
         const pitanjeResponse = await questionAPIService.kreirajPitanje(createdQuizId, pitanje.pitanje);
-
         if (!pitanjeResponse.success || !pitanjeResponse.data) {
-          setApiMessage("Greška pri kreiranju pitanja.");
+          setApiMessage("Грешка при креирању питања.");
           return;
         }
 
@@ -161,12 +176,11 @@ export function KreirajKvizForma() {
         for (let i = 0; i < pitanje.odgovori.length; i++) {
           const odgovorTekst = pitanje.odgovori[i];
           const tacan = pitanje.tacanOdgovor === `odgovor${i + 1}`;
-
           await answerAPIService.kreirajOdgovor(createdQuestionId, odgovorTekst, tacan);
         }
       }
 
-      setApiMessage("Kviz, pitanja i odgovori uspešno kreirani!");
+      setApiMessage("Квиз, питања и одговори успешно креирани!");
 
       // Reset forme
       setNazivKviza("");
@@ -176,8 +190,8 @@ export function KreirajKvizForma() {
       setLevels([]);
       setErrorMessage("");
     } catch (error) {
-      setApiMessage("Greška pri slanju podataka na server.");
       console.error(error);
+      setApiMessage("Грешка при слању података на сервер.");
     }
   };
 
@@ -194,7 +208,6 @@ export function KreirajKvizForma() {
         </h2>
 
         <div className="bg-[#f3e5ff] border border-purple-300 rounded-xl shadow-md p-6 max-w-3xl mx-auto">
-          <h3 className="text-2xl font-bold text-[#8f60bf] mb-4">Podaci o kvizu</h3>
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="quizName" className="block text-gray-700 font-semibold mb-2">

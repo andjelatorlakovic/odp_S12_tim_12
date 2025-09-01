@@ -1,4 +1,5 @@
-import { Language } from "../../models/Language";
+import { Language } from "../../../Domain/models/Language";
+
 
 export interface ILanguageRepository
 {

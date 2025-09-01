@@ -60,7 +60,7 @@ export class UserController {
 
       await this.userService.blokirajKorisnike(userIds);
 
-      res.status(200).json({ success: true, message: "Korisnici uspešno blokirani." });
+      res.status(200).json({ success: true, message: "Корисници успешно блокирани." });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Nepoznata greška";
       res.status(500).json({ success: false, message: errorMessage });
@@ -78,7 +78,7 @@ export class UserController {
 
     await this.userService.odblokirajKorisnike(userIds);  // obavezno ovde pozovi odblokirajKorisnike
 
-    res.status(200).json({ success: true, message: "Korisnik uspešno odblokiran." });
+    res.status(200).json({ success: true, message: "Корисник успешно одблокиран." });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Nepoznata greška";
     res.status(500).json({ success: false, message: errorMessage });

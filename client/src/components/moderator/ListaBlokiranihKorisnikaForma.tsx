@@ -61,7 +61,7 @@ export default function ListaBlokiranihKorisnikaForma() {
 
       // Ukloni korisnika iz liste nakon odblokiranja
       setKorisnici((prev) => prev.filter((k) => k.id !== id));
-      setPoruka("Korisnik uspešno odblokiran.");
+      setPoruka("Корисник успешно блокиран.");
     } catch (err) {
       setPoruka(err instanceof Error ? err.message : "Nepoznata greška");
     } finally {

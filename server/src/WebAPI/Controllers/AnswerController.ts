@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
-import { authenticate } from '../../Middlewares/autentification/AuthMiddleware';
-import { AnswerService } from '../../Services/answers/AnswerService';
+import { AnswerService } from '../../Services/answers/AnswerService'; // prilagodi putanju
+import { validacijaPodatakaOdgovora } from '../validators/answers/AnswerValidator';
 
 export class AnswerController {
   private router = Router();
@@ -12,9 +12,9 @@ export class AnswerController {
     // Definisanje ruta
     this.router.get('/answersAll', this.dobaviSveOdgovore);
     this.router.post('/answerAdd', this.kreirajOdgovor);
-    this.router.get('/answerGetId', authenticate, this.dobaviOdgovorPoId);
-    this.router.get('/answersForQuestion', authenticate, this.dobaviOdgovoreZaPitanje);
-    this.router.delete('/answerDelete', authenticate, this.obrisiOdgovor);
+    this.router.get('/answerGetId/:id', this.dobaviOdgovorPoId);
+    this.router.get('/answersForQuestion/:pitanje_id', this.dobaviOdgovoreZaPitanje);
+    this.router.delete('/answerDelete/:id', this.obrisiOdgovor);
   }
 
   getRouter() {
@@ -35,6 +35,18 @@ export class AnswerController {
     try {
       const { pitanje_id, tekst_odgovora, tacan } = req.body;
 
+      // Validacija pitanje_id
+      if (!pitanje_id || isNaN(Number(pitanje_id)) || Number(pitanje_id) <= 0) {
+        return res.status(400).json({ success: false, message: 'Neispravan ID pitanja.' });
+      }
+
+      // Validacija tekst_odgovora
+      const rezultat = validacijaPodatakaOdgovora(tekst_odgovora);
+      if (!rezultat.uspesno) {
+        return res.status(400).json({ success: false, message: rezultat.poruka });
+      }
+
+      // Kreiraj odgovor
       const noviOdgovor = await this.answerService.kreirajOdgovor(
         Number(pitanje_id),
         tekst_odgovora,
@@ -42,13 +54,13 @@ export class AnswerController {
       );
 
       if (noviOdgovor.id !== 0) {
-        res.status(201).json({
+        return res.status(201).json({
           success: true,
           message: 'Odgovor uspešno kreiran',
           data: noviOdgovor,
         });
       } else {
-        res.status(400).json({
+        return res.status(400).json({
           success: false,
           message: 'Došlo je do greške prilikom kreiranja odgovora.',
         });
@@ -63,12 +75,16 @@ export class AnswerController {
     try {
       const id = Number(req.params.id);
 
+      if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ message: 'Neispravan ID odgovora' });
+      }
+
       const odgovor = await this.answerService.dobaviOdgovorPoId(id);
 
       if (odgovor.id !== 0) {
-        res.status(200).json(odgovor);
+        return res.status(200).json(odgovor);
       } else {
-        res.status(404).json({ message: 'Odgovor nije pronađen' });
+        return res.status(404).json({ message: 'Odgovor nije pronađen' });
       }
     } catch (error) {
       console.error('Greška pri dohvatanju odgovora po ID:', error);
@@ -80,7 +96,7 @@ export class AnswerController {
     try {
       const pitanje_id = Number(req.params.pitanje_id);
 
-      if (isNaN(pitanje_id)) {
+      if (isNaN(pitanje_id) || pitanje_id <= 0) {
         return res.status(400).json({ message: 'Neispravan ID pitanja' });
       }
 
@@ -96,12 +112,16 @@ export class AnswerController {
     try {
       const id = Number(req.params.id);
 
+      if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ success: false, message: 'Neispravan ID odgovora' });
+      }
+
       const obrisano = await this.answerService.obrisiOdgovor(id);
 
       if (obrisano) {
-        res.status(200).json({ success: true, message: 'Odgovor uspešno obrisan' });
+        return res.status(200).json({ success: true, message: 'Odgovor uspešno obrisan' });
       } else {
-        res.status(404).json({ success: false, message: 'Odgovor nije pronađen' });
+        return res.status(404).json({ success: false, message: 'Odgovor nije pronađen' });
       }
     } catch (error) {
       console.error('Greška pri brisanju odgovora:', error);
