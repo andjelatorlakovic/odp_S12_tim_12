@@ -24,6 +24,7 @@ export class UserQuizResultController {
 
     // Nova ruta za dohvatanje kvizova sa procenat tacnih > 85 i brojem kvizova > 3
     this.router.get('/kvizoviPreko85SaBrojemVecimOdTri', this.dobaviKvizoveSaProcentomPreko85SaBrojemVecimOdTri.bind(this));
+     this.router.get('/brojKvizovaPoUseru', this.dobaviBrojKvizovaPoUseru.bind(this));
   }
 
   public getRouter(): Router {
@@ -40,7 +41,15 @@ export class UserQuizResultController {
       res.status(500).json({ success: false, message: "Greška pri dohvatanju svih rezultata" });
     }
   }
-
+private async dobaviBrojKvizovaPoUseru(req: Request, res: Response): Promise<void> {
+  try {
+    const rezultati = await this.userQuizResultService.dobaviBrojKvizovaPoUseru();
+    res.status(200).json({ success: true, data: rezultati });
+  } catch (error) {
+    console.error("Greška pri dohvatanju broja kvizova po korisnicima:", error);
+    res.status(500).json({ success: false, message: "Greška pri dohvatanju broja kvizova" });
+  }
+}
   private async dobaviRezultatPoUserIKviz(req: Request, res: Response): Promise<void> {
     try {
       const userId = Number(req.query.userId);

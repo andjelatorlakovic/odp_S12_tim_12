@@ -3,34 +3,51 @@ import { useNavigate } from 'react-router-dom';
 import knjiga from '../../assets/knjiga.png';
 import panda from '../../assets/panda.png';
 import { LanguageLevelAPIService } from '../../api_services/languageLevels/LanguageLevelApiService';
+import { UserQuizApiService } from '../../api_services/userQuiz/UserQuizApiService';  // Novi API servis za kvizove
 
 type JezikSaNivoima = {
   jezik: string;
   nivoi: string[];
 };
 
+type UserQuizCount = {
+  username: string;
+  quizCount: number;
+};
+
 function PocetnaStranica() {
   const navigate = useNavigate();
   const [jezici, setJezici] = useState<JezikSaNivoima[]>([]);
+  const [userQuizCounts, setUserQuizCounts] = useState<UserQuizCount[]>([]);
   const apiService = new LanguageLevelAPIService();
+  const userQuizApiService = new UserQuizApiService();  // Kreiramo instancu UserQuizApiService
 
   useEffect(() => {
-    const fetchLanguages = async () => {
+    const fetchLanguagesAndQuizCounts = async () => {
       try {
-        const response: JezikSaNivoima[] = await apiService.getLanguagesWithLevels();
+        // Pozivamo API za jezike sa nivoima
+        const languagesResponse: JezikSaNivoima[] = await apiService.getLanguagesWithLevels();
 
-        const processed = response.map(lang => ({
-          jezik: lang.jezik,
-          nivoi: lang.nivoi.length > 0 ? lang.nivoi : ['Nema nivoa'],
-        }));
+        // Dobijamo broj kvizova po korisnicima
+        const quizCountResponse = await userQuizApiService.dobaviBrojKvizovaPoUseru();
 
-        setJezici(processed);
+        // Filtriramo jezike koji imaju nivoe
+        const jeziciSaNivoima = languagesResponse.filter(lang => lang.nivoi.length > 0);
+        setJezici(jeziciSaNivoima);
+
+        // Filtriramo korisnike koji imaju kvizove > 0, sortimo ih po broju kvizova i prikazujemo samo prvih 3
+        const filteredUserQuizCounts = quizCountResponse.data
+          .filter(user => user.quizCount > 0)  // Prikazujemo samo korisnike sa više od 0 kvizova
+          .sort((a, b) => b.quizCount - a.quizCount)  // Sortiramo po broju kvizova u opadajućem redosledu
+          .slice(0, 5);  // Prikazujemo samo prvih 3 korisnika
+
+        setUserQuizCounts(filteredUserQuizCounts);
       } catch (error) {
-        console.error("❌ Greška pri dohvatanju jezika:", error);
+        console.error("❌ Greška pri dohvatanju jezika ili broja kvizova:", error);
       }
     };
 
-    fetchLanguages();
+    fetchLanguagesAndQuizCounts();
   }, []);
 
   return (
@@ -65,8 +82,8 @@ function PocetnaStranica() {
         </div>
       </div>
 
-      {/* Sekcija sa jezicima – na dnu stranice */}
-      <div className="bg-white py-12 px-6 mt-10 flex flex-col items-center gap-4">
+      {/* Sekcija sa jezicima */}
+      <div className="bg-white py-12 px-6 mt-10">
         <h3 className="text-3xl font-bold text-center text-[#8f60bf] mb-6">
           Dostupni jezici i njihovi nivoi
         </h3>
@@ -74,12 +91,10 @@ function PocetnaStranica() {
         {jezici.map((lang, index) => (
           <div
             key={index}
-            className="w-full lg:w-4/5 xl:w-3/4 bg-[#f3e5ff] border-2 border-[#8f60bf] rounded-2xl p-4 shadow-md hover:shadow-lg transition flex justify-between items-center"
+            className="w-full bg-[#f3e5ff] border-2 border-[#8f60bf] rounded-2xl p-4 shadow-md hover:shadow-lg transition flex justify-between items-center mb-4"
           >
-            {/* Leva strana – ime jezika */}
             <div className="text-xl font-semibold text-[#8f60bf]">{lang.jezik}</div>
 
-            {/* Desna strana – nivoi */}
             <div className="flex flex-wrap gap-2">
               {lang.nivoi.map((nivo, idx) => (
                 <span
@@ -90,6 +105,20 @@ function PocetnaStranica() {
                 </span>
               ))}
             </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Sekcija sa statistikom korisnika */}
+      <div className="bg-white py-12 px-6 mt-10">
+        <h3 className="text-3xl font-bold text-center text-[#8f60bf] mb-6">
+          Statistika najaktivnijih korisnika
+        </h3>
+
+        {userQuizCounts.map((user, index) => (
+          <div key={index} className="bg-[#f3e5ff] border-2 border-[#8f60bf] rounded-2xl p-4 shadow-md mb-4 flex justify-between items-center">
+            <div className="text-xl font-semibold text-[#8f60bf]">{user.username}</div>
+            <div className="text-lg font-semibold text-[#8f60bf]">{user.quizCount} kviza</div>
           </div>
         ))}
       </div>

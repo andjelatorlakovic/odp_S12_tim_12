@@ -195,4 +195,27 @@ HAVING
       return [];
     }
   }
+async getQuizCountByUser(): Promise<{ username: string, quizCount: number }[]> {
+  try {
+    // Upit za dobijanje korisničkog imena i broja kvizova za svakog korisnika
+    const query = `
+       SELECT u.korisnickoIme, COUNT(uqr.kviz_id) AS quiz_count
+  FROM users u
+  LEFT JOIN user_quiz_results uqr ON u.id = uqr.user_id
+  WHERE u.blokiran = false AND u.uloga != 'moderator'
+  GROUP BY u.id
+    `;
+    
+    const [rows] = await db.execute<RowDataPacket[]>(query);
+
+    // Mapiraj rezultate i vrati korisničko ime sa brojem kvizova
+    return rows.map(row => ({
+      username: row.korisnickoIme, // ili row.username ako je to naziv u bazi
+      quizCount: row.quiz_count
+    }));
+  } catch (error) {
+    console.log("Error getting quiz count by user: " + error);
+    return [];
+  }
+}
 }

@@ -1,4 +1,5 @@
 import { UserQuizSummaryDto } from "../../Domain/DTOs/userQuiz/UserLevelDto";
+import { UserQuizCountDto } from "../../Domain/DTOs/userQuiz/UserQuizCountDto";
 import { UserQuizResultDto } from "../../Domain/DTOs/userQuiz/UserQuizDto";
 import { UserQuizResultRepository } from "../../Domain/repositories/userQuiz/UserQuizRepository";
 
@@ -157,7 +158,25 @@ export class UserQuizResultService implements IUserQuizResultService {
       return 0; // Ako dođe do greške, vraća 0
     }
   }
+ async dobaviBrojKvizovaPoUseru(): Promise<UserQuizCountDto[]> {
+    try {
+      // Pozivamo metodu iz repozitorijuma
+      const rezultati = await this.userQuizResultRepository.getQuizCountByUser();
 
+      // Ako nema rezultata, vraćamo prazan niz
+      if (!rezultati || rezultati.length === 0) {
+        return [];
+      }
+
+      // Mapiranje rezultata u DTO
+      return rezultati.map(
+        (r) => new UserQuizCountDto(r.username, r.quizCount)
+      );
+    } catch (error) {
+      console.error("Greška prilikom dobijanja broja kvizova po korisnicima:", error);
+      return []; // U slučaju greške vraćamo prazan niz
+    }
+  }
   // NOVA METODA koju si tražio
 async dobaviKvizoveSaProcentomPreko85SaBrojemVecimOdTri(): Promise<UserQuizSummaryDto[]> {
   try {

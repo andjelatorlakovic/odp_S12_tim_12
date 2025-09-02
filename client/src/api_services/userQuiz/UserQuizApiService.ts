@@ -6,6 +6,7 @@ import type {
   ApiResponseKvizStatistika
 } from "../../types/userQuiz/ApiResponseUserQuiz";
 import type { IUserQuizApiService } from "./IUserQuizApiService";
+import type { ApiResponseQuizCountList } from "../../types/userQuiz/ApiResponseQuizCount";
 
 const API_URL_REZULTATI = import.meta.env.VITE_API_URL + "rezultati";
 const API_URL_REZULTAT = import.meta.env.VITE_API_URL + "rezultat";
@@ -14,7 +15,7 @@ const API_URL_REZULTATI_KVIZ = import.meta.env.VITE_API_URL + "rezultatiKviz";
 const API_URL_AZURIRAJ_PROCENT = import.meta.env.VITE_API_URL + "azurirajProcenat";
 const API_URL_OBRISI_REZULTAT = import.meta.env.VITE_API_URL + "obrisiRezultat";
 const API_URL_KVIZOVI_PREKO_85_BROJ_3 = import.meta.env.VITE_API_URL + "kvizoviPreko85SaBrojemVecimOdTri";
-
+const API_URL_BROJ_KVIZOVA_PO_USERU = import.meta.env.VITE_API_URL + "brojKvizovaPoUseru"; 
 const getToken = () => localStorage.getItem("authToken");
 
 export class UserQuizApiService implements IUserQuizApiService {
@@ -35,7 +36,19 @@ export class UserQuizApiService implements IUserQuizApiService {
     const response = await axios.get<ApiResponseUserQuizList>(this.apiUrlRezultati, this.getConfig());
     return response.data;
   }
-
+ async dobaviBrojKvizovaPoUseru(): Promise<ApiResponseQuizCountList> {
+    try {
+      const response = await axios.get<ApiResponseQuizCountList>(API_URL_BROJ_KVIZOVA_PO_USERU, {
+        headers: {
+          Authorization: `Bearer ${getToken()}`
+        }
+      });
+      return response.data; // Vraćamo podatke o kvizovima
+    } catch (error) {
+      console.error("Greška pri dohvatanju broja kvizova:", error);
+      throw error; // Bacamo grešku dalje
+    }
+  }
   async dobaviRezultatPoUserIKviz(userId: number, kvizId: number): Promise<ApiResponseUserQuiz> {
     const response = await axios.get<ApiResponseUserQuiz>(this.apiUrlRezultat, {
       ...this.getConfig(),
@@ -96,4 +109,5 @@ export class UserQuizApiService implements IUserQuizApiService {
     const response = await axios.get<ApiResponseKvizStatistika>(this.apiUrlKvizoviPreko85Broj3, this.getConfig());
     return response.data;
   }
+  
 }
