@@ -1,28 +1,32 @@
 import type { ApiResponseLanguageLevel } from '../../types/languageLevels/ApiResponseLanguageLevel';
 import type { JezikSaNivoima } from '../../types/languageLevels/ApiResponseLanguageWithLevel';
 import type { ILanguageLevelAPIService } from './ILanguageLevelApiService';
+import type { LanguageLevelsDto } from '../../models/languageLevels/LanguageLevelsDto'; // DTO interface
 import axios from 'axios';
 
-// Endpointe
+// Endpoints
 const API_URL_ADD: string = import.meta.env.VITE_API_URL + "addLanguageLevel";
 const API_URL_WITH_LEVELS: string = import.meta.env.VITE_API_URL + "languagesWithLevels";
+const API_URL_LEVELS_BY_LANGUAGE: string = import.meta.env.VITE_API_URL + "levels"; // query param
 
-// Funkcija za token
+// Token helper
 const getToken = () => localStorage.getItem('authToken');
 
 export class LanguageLevelAPIService implements ILanguageLevelAPIService {
   private apiUrlAdd: string;
   private apiUrlWithLevels: string;
+  private apiUrlLevelsByLanguage: string;
 
   constructor() {
     this.apiUrlAdd = API_URL_ADD;
     this.apiUrlWithLevels = API_URL_WITH_LEVELS;
+    this.apiUrlLevelsByLanguage = API_URL_LEVELS_BY_LANGUAGE;
   }
+
   getAllLanguageLevels(): Promise<ApiResponseLanguageLevel> {
     throw new Error('Method not implemented.');
   }
 
-  // Dodavanje jezika sa nivoom
   async dodajLanguageLevel(jezik: string, naziv: string): Promise<ApiResponseLanguageLevel> {
     try {
       const token = getToken();
@@ -35,13 +39,11 @@ export class LanguageLevelAPIService implements ILanguageLevelAPIService {
     }
   }
 
-  // Dohvat svih jezika sa svim nivoima
   async getLanguagesWithLevels(): Promise<JezikSaNivoima[]> {
     try {
       const token = getToken();
       const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
 
-      // Server vraća direktno niz objekata, ne data polje
       const response = await axios.get<JezikSaNivoima[]>(this.apiUrlWithLevels, config);
 
       return response.data.map(lang => ({
@@ -51,6 +53,22 @@ export class LanguageLevelAPIService implements ILanguageLevelAPIService {
     } catch (error) {
       console.error("❌ Greška pri dohvatanju jezika sa nivoima:", error);
       return [];
+    }
+  }
+
+  // Dohvati nivoe za dati jezik (query parametar)
+  async getLevelsByLanguage(jezik: string): Promise<LanguageLevelsDto> {
+    try {
+      const token = getToken();
+      const config = token 
+        ? { headers: { Authorization: `Bearer ${token}` }, params: { jezik } } 
+        : { params: { jezik } };
+
+      const response = await axios.get<LanguageLevelsDto>(this.apiUrlLevelsByLanguage, config);
+      return response.data;
+    } catch (error) {
+      console.error(`❌ Greška pri dohvatanju nivoa za jezik "${jezik}":`, error);
+      return { jezik, nivoi: ['Nema nivoa'] };
     }
   }
 }

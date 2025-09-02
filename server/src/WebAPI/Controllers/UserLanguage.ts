@@ -19,12 +19,32 @@ export class UserLanguageLevelController {
     this.router.get('/userLanguagesMissing', this.getLanguagesUserDoesNotHave);
     this.router.get('/userLanguageByUserAndLanguage', this.getByUserAndLanguage);
     this.router.get('/userLanguageByUserLanguageAndLevel', this.getByUserLanguageAndLevel);
+        this.router.put('/updateKrajNivoa', this.updateKrajNivoa);
   }
 
   getRouter() {
     return this.router;
   }
+private updateKrajNivoa = async (req: Request, res: Response) => {
+    try {
+      const { userId, jezik, nivo } = req.body;
 
+      if (!userId || !jezik || !nivo) {
+        return res.status(400).json({ success: false, message: 'Nisu prosleđeni svi potrebni parametri.' });
+      }
+
+      const updated = await this.userLanguageLevelService.updateKrajNivoa(userId, jezik, nivo);
+
+      if (updated) {
+        res.status(200).json({ success: true, message: 'Datum krajNivoa uspešno ažuriran.' });
+      } else {
+        res.status(404).json({ success: false, message: 'Nije pronađen zapis za ažuriranje.' });
+      }
+    } catch (error) {
+      console.error('Greška pri ažuriranju datuma krajNivoa:', error);
+      res.status(500).json({ success: false, message: 'Greška pri ažuriranju datuma krajNivoa.' });
+    }
+  };
   private createUserLanguageLevel = async (req: Request, res: Response) => {
     try {
       const { userId, jezik, nivo } = req.body;

@@ -7,7 +7,6 @@ import type {
 } from "../../types/userQuiz/ApiResponseUserQuiz";
 import type { IUserQuizApiService } from "./IUserQuizApiService";
 
-// Endpointi
 const API_URL_REZULTATI = import.meta.env.VITE_API_URL + "rezultati";
 const API_URL_REZULTAT = import.meta.env.VITE_API_URL + "rezultat";
 const API_URL_REZULTATI_USER = import.meta.env.VITE_API_URL + "rezultatiUser";
@@ -16,7 +15,6 @@ const API_URL_AZURIRAJ_PROCENT = import.meta.env.VITE_API_URL + "azurirajProcena
 const API_URL_OBRISI_REZULTAT = import.meta.env.VITE_API_URL + "obrisiRezultat";
 const API_URL_KVIZOVI_PREKO_85_BROJ_3 = import.meta.env.VITE_API_URL + "kvizoviPreko85SaBrojemVecimOdTri";
 
-// Funkcija za token
 const getToken = () => localStorage.getItem("authToken");
 
 export class UserQuizApiService implements IUserQuizApiService {

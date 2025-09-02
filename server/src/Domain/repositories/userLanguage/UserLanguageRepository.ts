@@ -44,13 +44,29 @@ export class UserLanguageLevelRepository implements IUserLanguageLevelRepository
       return [];
     }
   }
+async updateKrajNivoa(userId: number, jezik: string, nivo: string): Promise<boolean> {
+    try {
+      const query = `
+        UPDATE user_language_levels
+        SET krajNivoa = NOW()
+        WHERE user_id = ? AND jezik = ? AND nivo = ?
+      `;
 
+      const [result] = await db.execute<ResultSetHeader>(query, [userId, jezik, nivo]);
+
+      // ResultSetHeader ima affectedRows da proveriš koliko redova je ažurirano
+      return result.affectedRows > 0;
+    } catch (error) {
+      console.error("Error updating krajNivoa:", error);
+      return false;
+    }
+  }
   // Nova metoda: Dohvatanje jezika za korisnika (bez nivoa) da se proveri da li već postoji jezik
   async getByUserAndLanguage(userId: number, jezik: string): Promise<UserLanguageLevel> {
     try {
       const query = `
         SELECT * FROM user_language_levels
-        WHERE user_id = ? AND jezik = ?
+        WHERE user_id = ? AND jezik = ? AND krajNivoa IS NULL
       `;
       const [rows] = await db.execute<RowDataPacket[]>(query, [userId, jezik]);
 
@@ -70,7 +86,7 @@ export class UserLanguageLevelRepository implements IUserLanguageLevelRepository
   async createUserLanguageLevel(userLanguageLevel: UserLanguageLevel): Promise<UserLanguageLevel> {
   try {
     // Provera da li korisnik već ima taj jezik (bilo koji nivo)
-    const existing = await this.getByUserAndLanguage(userLanguageLevel.userId, userLanguageLevel.jezik);
+    const existing = await this.getByUserLanguageAndLevel(userLanguageLevel.userId, userLanguageLevel.jezik,userLanguageLevel.nivo);
     if (existing.userId!==0) {
       // Korisnik već ima dati jezik (bilo koji nivo)
       console.warn(`Korisnik već ima jezik ${userLanguageLevel.jezik}`);

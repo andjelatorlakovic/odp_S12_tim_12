@@ -48,7 +48,7 @@ export class UserLanguageLevelService implements IUserLanguageLevelService {
     nivo: string
   ): Promise<UserLanguageLevelDto> {
     // Provera da li korisnik već ima dati jezik (bilo koji nivo)
-    const existing = await this.userLanguageLevelRepository.getByUserAndLanguage(userId, jezik);
+    const existing = await this.userLanguageLevelRepository.getByUserLanguageAndLevel(userId, jezik,nivo);
     if (existing.userId !== 0) {
       // Korisnik već ima dati jezik (bilo koji nivo)
       return new UserLanguageLevelDto(); // Možeš i baciti grešku ako želiš
@@ -63,6 +63,8 @@ export class UserLanguageLevelService implements IUserLanguageLevelService {
 
     return new UserLanguageLevelDto(); // Ako nešto pođe po zlu
   }
-
+ async updateKrajNivoa(userId: number, jezik: string, nivo: string): Promise<boolean> {
+    return await this.userLanguageLevelRepository.updateKrajNivoa(userId, jezik, nivo);
+  }
   // Opciono: ovde možeš dodati metode za update, delete itd.
 }

@@ -159,19 +159,25 @@ export class UserQuizResultService implements IUserQuizResultService {
   }
 
   // NOVA METODA koju si tražio
- async dobaviKvizoveSaProcentomPreko85SaBrojemVecimOdTri(): Promise<UserQuizSummaryDto[]> {
+async dobaviKvizoveSaProcentomPreko85SaBrojemVecimOdTri(): Promise<UserQuizSummaryDto[]> {
   try {
     const rezultati = await this.userQuizResultRepository.getQuizzesAbove85Grouped();
 
-    // Pretvaranje plain objekata u instance klase UserQuizSummaryDto
+    // Provera da li je rezultat prazan
+    if (!rezultati || rezultati.length === 0) {
+      return []; // Vraća prazan niz ako nema rezultata
+    }
+
+    // Mapiranje SQL rezultata u DTO objekte
     const mappedResults = rezultati.map(
-      (r: any) => new UserQuizSummaryDto(r.userId, r.jezik, r.nivo, r.brojKviza)
+      (r: any) => new UserQuizSummaryDto(r.user_id, r.jezik, r.nivo, r.broj_kviza)
     );
 
     return mappedResults;
   } catch (error) {
-    console.error("Greška prilikom dobijanja kvizova sa procentom preko 85.5 i brojem većim od 3:", error);
-    return [];
+    console.error("Greška prilikom dobijanja kvizova sa procentom preko 85 i brojem većim od 3:", error);
+    return []; // Vraća prazan niz u slučaju greške
   }
 }
+
 }

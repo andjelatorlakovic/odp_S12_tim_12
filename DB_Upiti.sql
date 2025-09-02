@@ -53,6 +53,9 @@ CREATE TABLE IF NOT EXISTS questions (
     tekst_pitanja TEXT NOT NULL,
     FOREIGN KEY (kviz_id) REFERENCES kvizovi(id) ON DELETE CASCADE
 );
+UPDATE user_language_levels
+SET krajNivoa = NOW()
+WHERE user_id = ? AND jezik = ? AND nivo = ?;
 
 INSERT INTO levels (naziv)
 VALUES ('A1'),
@@ -65,7 +68,9 @@ CREATE TABLE IF NOT EXISTS languages (
     id INT PRIMARY KEY AUTO_INCREMENT,
     jezik VARCHAR(50) NOT NULL UNIQUE
 );
-
+ALTER TABLE user_language_levels
+ADD COLUMN pocetakNivoa DATE DEFAULT CURRENT_DATE,
+ADD COLUMN krajNivoa DATE NULL;
 CREATE TABLE IF NOT EXISTS user_language_levels (
     user_id INT,
     jezik VARCHAR(20),

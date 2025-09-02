@@ -4,8 +4,8 @@ import db from "../../../Database/connection/DbConnectionPool";
 import { ILanguageLevelRepository } from "../../../Database/repositories/languageLevel/ILanguageLevelRepository";
 
 export class LanguageLevelRepository implements ILanguageLevelRepository {
- 
-async getLanguagesWithLevels(): Promise<{ jezik: string; nivoi: string[] }[]> {
+
+  async getLanguagesWithLevels(): Promise<{ jezik: string; nivoi: string[] }[]> {
     try {
       const query = `
         SELECT l.jezik, ll.naziv AS nivo
@@ -30,13 +30,31 @@ async getLanguagesWithLevels(): Promise<{ jezik: string; nivoi: string[] }[]> {
     }
   }
 
-  // Create new language level entry
+  async getLevelsByLanguage(jezik: string): Promise<string[]> {
+    try {
+      const query = `
+        SELECT naziv AS nivo
+        FROM language_levels
+        WHERE jezik = ?
+        ORDER BY naziv
+      `;
+
+      const [rows] = await db.execute<RowDataPacket[]>(query, [jezik]);
+
+      // Izvlačimo samo nivoe iz rezultata
+      return rows.map(row => row.nivo);
+    } catch (error) {
+      console.error(`Greška pri učitavanju nivoa za jezik ${jezik}:`, error);
+      return [];
+    }
+  }
+
   async createLanguageLevels(languageLevel: LanguageLevel): Promise<LanguageLevel> {
     try {
       const query = `
-      INSERT INTO language_levels (jezik, naziv)
-      VALUES (?, ?)
-    `;
+        INSERT INTO language_levels (jezik, naziv)
+        VALUES (?, ?)
+      `;
 
       const [result] = await db.execute<ResultSetHeader>(query, [
         languageLevel.jezik,
@@ -49,11 +67,9 @@ async getLanguagesWithLevels(): Promise<{ jezik: string; nivoi: string[] }[]> {
         console.error("Unos nije uspeo: Nema pogođenih redova (affectedRows = 0)");
         return new LanguageLevel();
       }
-
     } catch (error) {
-      console.error('Greška prilikom izvršavanja SQL upita:', error); // Dodajemo detaljniji log greške
-      return new LanguageLevel(); // Vraćamo prazan objekat ako dođe do greške
+      console.error('Greška prilikom izvršavanja SQL upita:', error);
+      return new LanguageLevel();
     }
   }
-
 }

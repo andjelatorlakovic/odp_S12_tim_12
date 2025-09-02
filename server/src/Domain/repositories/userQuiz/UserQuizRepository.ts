@@ -157,11 +157,29 @@ export class UserQuizResultRepository implements IUserQuizResultRepository {
   async getQuizzesAbove85Grouped(): Promise<{ user_id: number; jezik: string; nivo: string; broj_kviza: number }[]> {
     try {
       const query = `
-        SELECT user_id, jezik, nivo, COUNT(*) AS broj_kviza
-        FROM user_quiz_results
-        WHERE procenat_tacnih_odgovora > 85.5
-        GROUP BY user_id, jezik, nivo
-        HAVING COUNT(*) >= 3
+        SELECT 
+    uqr.user_id, 
+    uqr.jezik, 
+    uqr.nivo, 
+    COUNT(*) AS broj_kviza
+FROM 
+    user_quiz_results uqr
+WHERE 
+    uqr.procenat_tacnih_odgovora > 85.5
+GROUP BY 
+    uqr.user_id, uqr.jezik, uqr.nivo
+HAVING 
+    COUNT(*) >= 3
+    AND NOT EXISTS (
+        SELECT 1
+        FROM user_language_levels ull
+        WHERE 
+            ull.user_id = uqr.user_id
+            AND ull.jezik = uqr.jezik
+            AND ull.nivo = uqr.nivo
+            AND ull.krajNivoa IS not NULL
+    );
+
       `;
 
       const [rows] = await db.query<RowDataPacket[]>(query);

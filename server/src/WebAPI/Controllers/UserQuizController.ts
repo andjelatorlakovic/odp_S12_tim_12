@@ -158,13 +158,14 @@ export class UserQuizResultController {
   }
 
   // NOVI METOD ZA DOBAVLJANJE KVIZOVA SA PROCENTOM PREKO 85 I BROJEM > 3
-  private async dobaviKvizoveSaProcentomPreko85SaBrojemVecimOdTri(req: Request, res: Response): Promise<void> {
-    try {
-      const rezultati = await this.userQuizResultService.dobaviKvizoveSaProcentomPreko85SaBrojemVecimOdTri();
-      res.status(200).json({ success: true, data: rezultati });
-    } catch (error) {
-      console.error("Greška pri dohvatanju kvizova sa procentom preko 85 i brojem većim od 3:", error);
-      res.status(500).json({ success: false, message: "Greška pri dohvatanju kvizova" });
-    }
+private async dobaviKvizoveSaProcentomPreko85SaBrojemVecimOdTri(req: Request, res: Response): Promise<void> {
+  try {
+    const rezultati = await this.userQuizResultService.dobaviKvizoveSaProcentomPreko85SaBrojemVecimOdTri();
+    res.status(200).json({ success: true, data: rezultati });
+  } catch (error) {
+    console.error("Greška pri dohvatanju kvizova sa procentom preko 85 i brojem većim od 3:", error);
+    res.status(500).json({ success: false, message: "Greška pri dohvatanju kvizova" });
   }
+}
+
 }

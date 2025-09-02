@@ -3,7 +3,6 @@ import { LanguageLevelRepository } from '../../Domain/repositories/languageLevel
 import { LanguageLevelService } from '../../Services/languageLevels/LanguageLevelService';
 import { authenticate } from '../../Middlewares/autentification/AuthMiddleware';
 
-
 export class LanguageLevelController {
   private router = Router();
   private languageLevelRepository = new LanguageLevelRepository();
@@ -12,11 +11,12 @@ export class LanguageLevelController {
   constructor() {
     this.languageLevelService = new LanguageLevelService(this.languageLevelRepository);
 
-    // Postavljamo rute sa middleware-om
     this.router.get('/languageLevels', authenticate, this.getLanguageLevels);
     this.router.post('/addLanguageLevel', authenticate, this.dodajLanguageLevel);
-     this.router.get("/languagesWithLevels", this.getLanguagesWithLevels);
+    this.router.get('/languagesWithLevels', this.getLanguagesWithLevels);
 
+    // Ruta sa query parametrom
+    this.router.get('/levels', this.getLevelsByLanguage);
   }
 
   getRouter() {
@@ -24,7 +24,6 @@ export class LanguageLevelController {
   }
 
   private getLanguageLevels = async (req: Request, res: Response) => {
-
     try {
       const languageLevels = await this.languageLevelRepository.getLanguagesWithLevels();
       res.json(languageLevels);
@@ -33,14 +32,17 @@ export class LanguageLevelController {
       res.status(500).json({ message: 'Greška pri dohvaćanju jezik-nivo parova' });
     }
   };
-private getLanguagesWithLevels = async (req: Request, res: Response) => {
+
+  private getLanguagesWithLevels = async (req: Request, res: Response) => {
     try {
       const data = await this.languageLevelService.getLanguagesWithLevels();
       res.status(200).json(data);
     } catch (error) {
+      console.error('Greška pri učitavanju jezika sa nivoima:', error);
       res.status(500).json({ message: "Greška pri učitavanju jezika sa nivoima" });
     }
   };
+
   private dodajLanguageLevel = async (req: Request, res: Response) => {
     try {
       const { jezik, naziv } = req.body;
@@ -64,4 +66,25 @@ private getLanguagesWithLevels = async (req: Request, res: Response) => {
       res.status(500).json({ message: 'Greška pri dodavanju jezik-nivo para.' });
     }
   };
+
+  private getLevelsByLanguage = async (req: Request, res: Response) => {
+  const jezik = req.query.jezik as string;
+
+  if (!jezik) {
+    return res.status(400).json({ message: "Jezik nije prosleđen." });
+  }
+
+  try {
+    const languageLevelsDto = await this.languageLevelService.getLevelsByLanguage(jezik);
+
+    // Vraćamo samo niz nivoa, a ne ceo DTO objekat
+    res.status(200).json({
+      jezik,
+      nivoi: languageLevelsDto.nivoi  // ovde samo niz stringova, ne ceo objekat
+    });
+  } catch (error) {
+    console.error("Greška pri dohvaćanju nivoa za jezik:", error);
+    res.status(500).json({ message: "Greška pri dohvaćanju nivoa za dati jezik." });
+  }
+};
 }

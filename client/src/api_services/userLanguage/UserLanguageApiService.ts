@@ -5,7 +5,7 @@ const API_BASE = import.meta.env.VITE_API_URL;
 const API_URL_ADD = API_BASE + "userLanguagesAdd";
 const API_URL_MISSING = API_BASE + "userLanguagesMissing";
 const API_URL_BY_USER_AND_LANGUAGE = API_BASE + "userLanguageByUserAndLanguage";
-
+const API_URL_UPDATE_KRAJ_NIVOA = API_BASE + "updateKrajNivoa";
 const getToken = () => localStorage.getItem("authToken");
 
 export const userLanguageLevelApi = {
@@ -24,7 +24,27 @@ export const userLanguageLevelApi = {
       return { success: false, message, data: null };
     }
   },
+ async updateKrajNivoa(userId: number, jezik: string, nivo: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const token = getToken();
+      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
 
+      const response = await axios.put<{ success: boolean; message: string }>(
+        API_URL_UPDATE_KRAJ_NIVOA,
+        { userId, jezik, nivo },
+        config
+      );
+
+      return response.data;
+    } catch (error) {
+      let message = "Greška pri ažuriranju datuma kraj nivoa.";
+      if (axios.isAxiosError(error)) {
+        message = error.response?.data?.message || message;
+      }
+      console.error("❌", message, error);
+      return { success: false, message };
+    }
+  },
   async getLanguagesUserDoesNotHave(userId: number): Promise<ApiResponseLanguagesList> {
     try {
       const token = getToken();
