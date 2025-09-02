@@ -1,3 +1,4 @@
+import { UserQuizSummaryDto } from "../../Domain/DTOs/userQuiz/UserLevelDto";
 import { UserQuizResultDto } from "../../Domain/DTOs/userQuiz/UserQuizDto";
 import { UserQuizResultRepository } from "../../Domain/repositories/userQuiz/UserQuizRepository";
 
@@ -147,13 +148,30 @@ export class UserQuizResultService implements IUserQuizResultService {
     }
   }
 
-async brojKvizovaSa85(userId: number, jezik: string): Promise<number> {
+  async brojKvizovaSa85(userId: number, jezik: string): Promise<number> {
+    try {
+      const brojKvizova = await this.userQuizResultRepository.countQuizzesAbove85(userId, jezik);
+      return brojKvizova; // Vraća broj kvizova sa više od 85%
+    } catch (error) {
+      console.error("Greška prilikom brojanja kvizova sa više od 85.5% tačnih odgovora:", error);
+      return 0; // Ako dođe do greške, vraća 0
+    }
+  }
+
+  // NOVA METODA koju si tražio
+ async dobaviKvizoveSaProcentomPreko85SaBrojemVecimOdTri(): Promise<UserQuizSummaryDto[]> {
   try {
-    const brojKvizova = await this.userQuizResultRepository.countQuizzesAbove85(userId, jezik);
-    return brojKvizova; // Vraća broj kvizova sa više od 85%
+    const rezultati = await this.userQuizResultRepository.getQuizzesAbove85Grouped();
+
+    // Pretvaranje plain objekata u instance klase UserQuizSummaryDto
+    const mappedResults = rezultati.map(
+      (r: any) => new UserQuizSummaryDto(r.userId, r.jezik, r.nivo, r.brojKviza)
+    );
+
+    return mappedResults;
   } catch (error) {
-    console.error("Greška prilikom brojanja kvizova sa više od 85.5% tačnih odgovora:", error);
-    return 0; // Ako dođe do greške, vraća 0
+    console.error("Greška prilikom dobijanja kvizova sa procentom preko 85.5 i brojem većim od 3:", error);
+    return [];
   }
 }
 }

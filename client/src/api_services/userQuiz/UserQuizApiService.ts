@@ -3,7 +3,7 @@ import type {
   ApiResponseDelete,
   ApiResponseUserQuiz,
   ApiResponseUserQuizList,
-ApiResponseKvizCount   // Dodajemo novi tip za odgovor brojanja
+  ApiResponseKvizStatistika
 } from "../../types/userQuiz/ApiResponseUserQuiz";
 import type { IUserQuizApiService } from "./IUserQuizApiService";
 
@@ -14,7 +14,7 @@ const API_URL_REZULTATI_USER = import.meta.env.VITE_API_URL + "rezultatiUser";
 const API_URL_REZULTATI_KVIZ = import.meta.env.VITE_API_URL + "rezultatiKviz";
 const API_URL_AZURIRAJ_PROCENT = import.meta.env.VITE_API_URL + "azurirajProcenat";
 const API_URL_OBRISI_REZULTAT = import.meta.env.VITE_API_URL + "obrisiRezultat";
-const API_URL_BROJ_KVIZOVA_SA_85 = import.meta.env.VITE_API_URL + "brojKvizovaSa85"; // Dodali smo endpoint
+const API_URL_KVIZOVI_PREKO_85_BROJ_3 = import.meta.env.VITE_API_URL + "kvizoviPreko85SaBrojemVecimOdTri";
 
 // Funkcija za token
 const getToken = () => localStorage.getItem("authToken");
@@ -26,7 +26,7 @@ export class UserQuizApiService implements IUserQuizApiService {
   private apiUrlRezultatiKviz = API_URL_REZULTATI_KVIZ;
   private apiUrlAzurirajProcent = API_URL_AZURIRAJ_PROCENT;
   private apiUrlObrisiRezultat = API_URL_OBRISI_REZULTAT;
-  private apiUrlBrojKvizovaSa85 = API_URL_BROJ_KVIZOVA_SA_85; // Dodali smo URL za brojanje kvizova
+  private apiUrlKvizoviPreko85Broj3 = API_URL_KVIZOVI_PREKO_85_BROJ_3;
 
   private getConfig() {
     const token = getToken();
@@ -94,13 +94,8 @@ export class UserQuizApiService implements IUserQuizApiService {
     return response.data;
   }
 
-async brojKvizovaSa85(userId: number, jezik: string): Promise<ApiResponseKvizCount> {
-    const response = await axios.get<ApiResponseKvizCount>(this.apiUrlBrojKvizovaSa85, {
-      ...this.getConfig(),
-      params: { userId, jezik } // Ovdje šaljemo userId i jezik kao parametre
-    });
-
+  async dobaviKvizoveSaProcentomPreko85SaBrojemVecimOdTri(): Promise<ApiResponseKvizStatistika> {
+    const response = await axios.get<ApiResponseKvizStatistika>(this.apiUrlKvizoviPreko85Broj3, this.getConfig());
     return response.data;
-}
-
+  }
 }

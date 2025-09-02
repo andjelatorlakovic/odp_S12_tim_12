@@ -3,7 +3,6 @@ import { authenticate } from '../../Middlewares/autentification/AuthMiddleware';
 import { UserQuizResultService } from '../../Services/userQuiz/UserQuizService';
 import { validacijaPodatakaUserQuiz } from '../validators/userQuiz/UserQuizValidator';
 
-
 export class UserQuizResultController {
   private router: Router;
   private userQuizResultService: UserQuizResultService;
@@ -22,33 +21,16 @@ export class UserQuizResultController {
     this.router.post('/rezultat', authenticate, this.kreirajRezultat.bind(this));
     this.router.put('/azurirajProcenat', authenticate, this.azurirajProcenat.bind(this));
     this.router.delete('/obrisiRezultat', authenticate, this.obrisiRezultat.bind(this));
-    this.router.get('/brojKvizovaSa85', authenticate, this.brojKvizovaSa85.bind(this));
+
+    // Nova ruta za dohvatanje kvizova sa procenat tacnih > 85 i brojem kvizova > 3
+    this.router.get('/kvizoviPreko85SaBrojemVecimOdTri', this.dobaviKvizoveSaProcentomPreko85SaBrojemVecimOdTri.bind(this));
   }
 
   public getRouter(): Router {
     return this.router;
   }
 
-   private async brojKvizovaSa85(req: Request, res: Response): Promise<void> {
-    try {
-      const userId = Number(req.query.userId);
-      const jezik = String(req.query.jezik);
-
-      if (isNaN(userId) || !jezik) {
-        res.status(400).json({ success: false, message: "Nisu poslati validni parametri" });
-        return;
-      }
-
-      // Poziv metode iz UserQuizResultService za brojanje kvizova
-      const brojKvizova = await this.userQuizResultService.brojKvizovaSa85(userId, jezik);
-
-      res.status(200).json({ success: true, data: brojKvizova });
-    } catch (error) {
-      console.error("Greška pri brojanju kvizova sa više od 85.5%:", error);
-      res.status(500).json({ success: false, message: "Greška pri brojanju kvizova sa više od 85.5%" });
-    }
-  }
-
+  
   private async dobaviSveRezultate(req: Request, res: Response): Promise<void> {
     try {
       const rezultati = await this.userQuizResultService.dobaviSveRezultate();
@@ -172,6 +154,17 @@ export class UserQuizResultController {
     } catch (error) {
       console.error("Greška pri ažuriranju procenta:", error);
       res.status(500).json({ success: false, message: "Greška pri ažuriranju procenta" });
+    }
+  }
+
+  // NOVI METOD ZA DOBAVLJANJE KVIZOVA SA PROCENTOM PREKO 85 I BROJEM > 3
+  private async dobaviKvizoveSaProcentomPreko85SaBrojemVecimOdTri(req: Request, res: Response): Promise<void> {
+    try {
+      const rezultati = await this.userQuizResultService.dobaviKvizoveSaProcentomPreko85SaBrojemVecimOdTri();
+      res.status(200).json({ success: true, data: rezultati });
+    } catch (error) {
+      console.error("Greška pri dohvatanju kvizova sa procentom preko 85 i brojem većim od 3:", error);
+      res.status(500).json({ success: false, message: "Greška pri dohvatanju kvizova" });
     }
   }
 }

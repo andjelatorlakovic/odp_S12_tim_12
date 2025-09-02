@@ -1,4 +1,3 @@
-
 import db from '../../../Database/connection/DbConnectionPool';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { IUserQuizResultRepository } from '../../../Database/repositories/userQuiz/IUserQuizRepository';
@@ -23,28 +22,27 @@ export class UserQuizResultRepository implements IUserQuizResultRepository {
     }
   }
 
-async countQuizzesAbove85(userId: number, jezik: string): Promise<number> {
-  try {
-    const query = `
-      SELECT user_id, jezik, COUNT(*) AS broj_kviza
-      FROM user_quiz_results
-      WHERE user_id = ? AND jezik = ?
-      AND procenat_tacnih_odgovora > 85.5
-      GROUP BY user_id, jezik
-      HAVING COUNT(*) >= 3;
-    `;
-    const [rows] = await db.execute<RowDataPacket[]>(query, [userId, jezik]);
+  async countQuizzesAbove85(userId: number, jezik: string): Promise<number> {
+    try {
+      const query = `
+        SELECT user_id, jezik, COUNT(*) AS broj_kviza
+        FROM user_quiz_results
+        WHERE user_id = ? AND jezik = ?
+        AND procenat_tacnih_odgovora > 85.5
+        GROUP BY user_id, jezik
+        HAVING COUNT(*) >= 3;
+      `;
+      const [rows] = await db.execute<RowDataPacket[]>(query, [userId, jezik]);
 
-    // Proveri da li postoji rezultat u odgovoru
-    if (rows.length > 0) {
-      return rows[0].broj_kviza; // Vraća broj kvizova koji ispunjavaju uslove
+      if (rows.length > 0) {
+        return rows[0].broj_kviza;
+      }
+      return 0;
+    } catch (error) {
+      console.log("Error counting quizzes above 85%: " + error);
+      return 0;
     }
-    return 0; // Ako nema odgovarajućih kvizova
-  } catch (error) {
-    console.log("Error counting quizzes above 85%: " + error);
-    return 0;
   }
-}
 
   async createResult(result: UserQuizResult): Promise<UserQuizResult> {
     try {
@@ -152,6 +150,31 @@ async countQuizzesAbove85(userId: number, jezik: string): Promise<number> {
     } catch (error) {
       console.log("Error updating procenat: " + error);
       return false;
+    }
+  }
+
+  // Nova metoda koju si tražio
+  async getQuizzesAbove85Grouped(): Promise<{ user_id: number; jezik: string; nivo: string; broj_kviza: number }[]> {
+    try {
+      const query = `
+        SELECT user_id, jezik, nivo, COUNT(*) AS broj_kviza
+        FROM user_quiz_results
+        WHERE procenat_tacnih_odgovora > 85.5
+        GROUP BY user_id, jezik, nivo
+        HAVING COUNT(*) >= 3
+      `;
+
+      const [rows] = await db.query<RowDataPacket[]>(query);
+
+      return rows.map(row => ({
+        user_id: row.user_id,
+        jezik: row.jezik,
+        nivo: row.nivo,
+        broj_kviza: row.broj_kviza
+      }));
+    } catch (error) {
+      console.log("Error getting quizzes above 85.5% grouped: " + error);
+      return [];
     }
   }
 }

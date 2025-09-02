@@ -32,3 +32,15 @@ export interface ApiResponseKvizCount {
   data: number; // Broj kvizova sa više od 85.5% tačnih odgovora
   message?: string;
 }
+export interface KvizStatistika {
+  user_id: number;
+  jezik: string;
+  nivo: string;
+  broj_kviza: number;  // broj pojavljivanja gde je procenat > 85
+}
+
+export interface ApiResponseKvizStatistika {
+  data: KvizStatistika[];
+  status: string;
+  message?: string;
+}
