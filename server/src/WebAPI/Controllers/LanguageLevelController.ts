@@ -13,10 +13,10 @@ export class LanguageLevelController {
 
     this.router.get('/languageLevels', authenticate, this.getLanguageLevels);
     this.router.post('/addLanguageLevel', authenticate, this.dodajLanguageLevel);
-    this.router.get('/languagesWithLevels', this.getLanguagesWithLevels);
+    this.router.get('/languagesWithLevels', authenticate,this.getLanguagesWithLevels);
 
     // Ruta sa query parametrom
-    this.router.get('/levels', this.getLevelsByLanguage);
+    this.router.get('/levels',authenticate, this.getLevelsByLanguage);
   }
 
   getRouter() {

@@ -110,5 +110,49 @@ async updateKrajNivoa(userId: number, jezik: string, nivo: string): Promise<bool
     return new UserLanguageLevel();
   }
 }
-  // Ovde možeš dodati update, delete itd.
+  async getFinishedLevelsByUsername(korisnickoIme: string): Promise<{
+  korisnickoIme: string;
+  jezik: string;
+  nivo: string;
+  pocetakNivoa: Date;
+  krajNivoa: Date;
+  dani: number;
+}[]> {
+  try {
+    const query = `
+      SELECT 
+        u.korisnickoIme,
+        ull.jezik,
+        ull.nivo,
+        ull.pocetakNivoa,
+        ull.krajNivoa,
+        DATEDIFF(ull.krajNivoa, ull.pocetakNivoa) AS dani
+      FROM 
+        user_language_levels ull
+      JOIN 
+        users u ON ull.user_id = u.id
+      WHERE 
+        u.korisnickoIme = ? 
+        AND ull.pocetakNivoa IS NOT NULL 
+        AND ull.krajNivoa IS NOT NULL
+      ORDER BY 
+        ull.jezik, ull.nivo
+    `;
+
+    const [rows] = await db.execute<RowDataPacket[]>(query, [korisnickoIme]);
+
+    return rows.map(row => ({
+      korisnickoIme: row.korisnickoIme,
+      jezik: row.jezik,
+      nivo: row.nivo,
+      pocetakNivoa: row.pocetakNivoa,
+      krajNivoa: row.krajNivoa,
+      dani: row.dani, // broj dana
+    }));
+  } catch (error) {
+    console.error("Error getting finished levels by username:", error);
+    return [];
+  }
+}
+
 }

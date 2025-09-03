@@ -12,6 +12,8 @@ import ListaBlokiranihStranica from './pages/moderator/ListaBlokiranihKorisnikaS
 import KreirajKvizStranica from './pages/korisnik/KreirajKvizStranica';
 import KvizStranica from './pages/korisnik/KvizStranica';
 import UnaprediNivoKorisnikaStranica from './pages/moderator/UnaprediNivoKorisnikaStranica';
+import RezultatiStranica from './pages/korisnik/RezultatiStranica';
+import PrikaziNapredakStranica from './pages/korisnik/PrikaziNapredakStranica';
 
 function App() {
   return (
@@ -20,6 +22,8 @@ function App() {
 
       <Route path="/prijava" element={<PrijavaStranica authApi={authApi} />} />
       <Route path="/registracija" element={<RegistracijaStranica authApi={authApi} />} />
+       <Route path="/prikazi-napredak/:username" element={<PrikaziNapredakStranica />} />
+
 
       {/* Zaštićene rute */}
       <Route
@@ -32,6 +36,8 @@ function App() {
         >
           <Route path="kreiraj-kviz" element={<KreirajKvizStranica />} />
            <Route path="kviz" element={<KvizStranica />} />
+           <Route path="moji-rezultati" element={<RezultatiStranica />} />
+           
        </Route>
 
       <Route

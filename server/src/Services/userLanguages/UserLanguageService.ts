@@ -1,3 +1,4 @@
+import { FinishedLanguageLevelDto } from "../../Domain/DTOs/userLanguage/FinishedLanguageLevelDto";
 import { UserLanguageLevelDto } from "../../Domain/DTOs/userLanguage/UserLanguageDto";
 import { UserLanguageLevel } from "../../Domain/models/UserLanguageLevel";
 import { UserLanguageLevelRepository } from "../../Domain/repositories/userLanguage/UserLanguageRepository";
@@ -66,5 +67,31 @@ export class UserLanguageLevelService implements IUserLanguageLevelService {
  async updateKrajNivoa(userId: number, jezik: string, nivo: string): Promise<boolean> {
     return await this.userLanguageLevelRepository.updateKrajNivoa(userId, jezik, nivo);
   }
-  // Opciono: ovde možeš dodati metode za update, delete itd.
+  async getFinishedLevelsByUsername(korIme: string): Promise<FinishedLanguageLevelDto[]> {
+  const levels = await this.userLanguageLevelRepository.getFinishedLevelsByUsername(korIme);
+
+  if (levels.length === 0) {
+  return [];
+}
+  return levels.map(level => {
+    const start = new Date(level.pocetakNivoa);
+    const end = new Date(level.krajNivoa);
+
+    // Postavi oba datuma na početak dana (00:00:00)
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+
+    const diffTime = end.getTime() - start.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) +1;
+
+    return new FinishedLanguageLevelDto(
+      level.korisnickoIme,
+      level.jezik,
+      level.nivo,
+      new Date(level.pocetakNivoa),
+      new Date(level.krajNivoa),
+      diffDays
+    );
+  });
+}
 }

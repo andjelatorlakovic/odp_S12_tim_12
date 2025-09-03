@@ -29,6 +29,7 @@ interface Answer {
 
 function getUserIdFromToken(): number | null {
   const token = localStorage.getItem("authToken");
+  console.log(token);
   if (!token) return null;
 
   try {

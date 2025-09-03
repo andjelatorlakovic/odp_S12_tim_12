@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
     lozinka VARCHAR(500) NOT NULL,
     blokiran BOOLEAN NOT NULL DEFAULT FALSE
 );
+npm install chart.js react-chartjs-2
 CREATE TABLE IF NOT EXISTS levels (
     id INT PRIMARY KEY AUTO_INCREMENT,
     naziv VARCHAR(10) NOT NULL UNIQUE

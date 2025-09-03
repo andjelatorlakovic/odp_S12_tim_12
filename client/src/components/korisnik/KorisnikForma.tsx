@@ -24,6 +24,7 @@ export function KorisnikForma() {
 
   const getUserFromToken = (): JwtPayload | null => {
     const token = localStorage.getItem("authToken");
+    console.log(token);
     if (!token) return null;
     try {
       const decoded = jwtDecode<JwtPayload>(token);

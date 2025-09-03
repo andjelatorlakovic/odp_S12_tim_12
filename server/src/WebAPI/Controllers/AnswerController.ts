@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { AnswerService } from '../../Services/answers/AnswerService'; // prilagodi putanju
 import { validacijaPodatakaOdgovora } from '../validators/answers/AnswerValidator';
+import { authenticate } from '../../Middlewares/autentification/AuthMiddleware';
 
 export class AnswerController {
   private router = Router();
@@ -10,11 +11,11 @@ export class AnswerController {
     this.answerService = answerService;
 
     // Definisanje ruta
-    this.router.get('/answersAll', this.dobaviSveOdgovore);
-    this.router.post('/answerAdd', this.kreirajOdgovor);
-    this.router.get('/answerGetId/:id', this.dobaviOdgovorPoId);
-    this.router.get('/answersForQuestion/:pitanje_id', this.dobaviOdgovoreZaPitanje);
-    this.router.delete('/answerDelete/:id', this.obrisiOdgovor);
+    this.router.get('/answersAll',authenticate, this.dobaviSveOdgovore);
+    this.router.post('/answerAdd', authenticate,this.kreirajOdgovor);
+    this.router.get('/answerGetId/:id',authenticate, this.dobaviOdgovorPoId);
+    this.router.get('/answersForQuestion/:pitanje_id',authenticate, this.dobaviOdgovoreZaPitanje);
+    this.router.delete('/answerDelete/:id',authenticate, this.obrisiOdgovor);
   }
 
   getRouter() {

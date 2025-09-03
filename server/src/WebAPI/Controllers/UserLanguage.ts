@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 
 import { UserLanguageLevelService } from '../../Services/userLanguages/UserLanguageService';
-
+import { authenticate } from '../../Middlewares/autentification/AuthMiddleware';
 export class UserLanguageLevelController {
   private router = Router();
   private userLanguageLevelService: UserLanguageLevelService;
@@ -15,17 +15,18 @@ export class UserLanguageLevelController {
     });
 
     // Postavljamo rute
-    this.router.post('/userLanguagesAdd', this.createUserLanguageLevel);
-    this.router.get('/userLanguagesMissing', this.getLanguagesUserDoesNotHave);
-    this.router.get('/userLanguageByUserAndLanguage', this.getByUserAndLanguage);
-    this.router.get('/userLanguageByUserLanguageAndLevel', this.getByUserLanguageAndLevel);
-        this.router.put('/updateKrajNivoa', this.updateKrajNivoa);
+    this.router.post('/userLanguagesAdd',authenticate, this.createUserLanguageLevel);
+    this.router.get('/userLanguagesMissing',authenticate, this.getLanguagesUserDoesNotHave);
+    this.router.get('/userLanguageByUserAndLanguage',authenticate, this.getByUserAndLanguage);
+    this.router.get('/userLanguageByUserLanguageAndLevel',authenticate, this.getByUserLanguageAndLevel);
+    this.router.put('/updateKrajNivoa',authenticate, this.updateKrajNivoa);
+    this.router.get('/userLanguagesFinished',authenticate, this.getFinishedLevelsByUsername);
   }
 
   getRouter() {
     return this.router;
   }
-private updateKrajNivoa = async (req: Request, res: Response) => {
+  private updateKrajNivoa = async (req: Request, res: Response) => {
     try {
       const { userId, jezik, nivo } = req.body;
 
@@ -132,4 +133,41 @@ private updateKrajNivoa = async (req: Request, res: Response) => {
       res.status(500).json({ success: false, message: 'Greška pri dohvatanju nivoa jezika korisnika.' });
     }
   };
+  private getFinishedLevelsByUsername = async (req: Request, res: Response) => {
+  try {
+    const korIme = req.query.korIme as string;
+
+    if (!korIme || korIme.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Nije prosleđeno korisničko ime.",
+      });
+    }
+
+    const levels = await this.userLanguageLevelService.getFinishedLevelsByUsername(korIme);
+
+    // Ako je vraćen samo jedan prazan DTO (npr. [new FinishedLanguageLevelDto()])
+    const isEmpty = levels.length === 1 && levels[0].korisnickoIme === "";
+
+    if (isEmpty) {
+      return res.status(404).json({
+        success: false,
+        message: "Nema završenih nivoa za datog korisnika.",
+        data: [],
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: levels,
+    });
+  } catch (error) {
+    console.error("Greška pri dohvatanju završenih nivoa:", error);
+    res.status(500).json({
+      success: false,
+      message: "Greška pri dohvatanju završenih nivoa korisnika.",
+    });
+  }
+};
+
 }
