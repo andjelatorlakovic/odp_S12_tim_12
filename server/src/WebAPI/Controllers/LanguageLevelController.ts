@@ -2,6 +2,9 @@ import { Router, Request, Response } from 'express';
 import { LanguageLevelRepository } from '../../Domain/repositories/languageLevels/LanguageLevelRepository';
 import { LanguageLevelService } from '../../Services/languageLevels/LanguageLevelService';
 import { authenticate } from '../../Middlewares/autentification/AuthMiddleware';
+import { RezultatValidacije } from '../../Domain/types/ValidationResult';
+import { validacijaPodatakaJezikNivo } from '../validators/languageLevel/LanguageLevelValidator';
+
 
 export class LanguageLevelController {
   private router = Router();
@@ -13,10 +16,8 @@ export class LanguageLevelController {
 
     this.router.get('/languageLevels', authenticate, this.getLanguageLevels);
     this.router.post('/addLanguageLevel', authenticate, this.dodajLanguageLevel);
-    this.router.get('/languagesWithLevels', authenticate,this.getLanguagesWithLevels);
-
-    // Ruta sa query parametrom
-    this.router.get('/levels',authenticate, this.getLevelsByLanguage);
+    this.router.get('/languagesWithLevels', this.getLanguagesWithLevels);
+    this.router.get('/levels', authenticate, this.getLevelsByLanguage);
   }
 
   getRouter() {
@@ -47,6 +48,15 @@ export class LanguageLevelController {
     try {
       const { jezik, naziv } = req.body;
 
+      // ➕ Validacija podataka
+      const rezultatValidacije: RezultatValidacije = validacijaPodatakaJezikNivo(jezik, naziv);
+      if (!rezultatValidacije.uspesno) {
+        return res.status(400).json({
+          success: false,
+          message: rezultatValidacije.poruka
+        });
+      }
+
       const noviLanguageLevel = await this.languageLevelService.dodavanjeLanguageLevel(jezik, naziv);
 
       if (noviLanguageLevel.jezik !== "") {
@@ -68,23 +78,22 @@ export class LanguageLevelController {
   };
 
   private getLevelsByLanguage = async (req: Request, res: Response) => {
-  const jezik = req.query.jezik as string;
+    const jezik = req.query.jezik as string;
 
-  if (!jezik) {
-    return res.status(400).json({ message: "Jezik nije prosleđen." });
-  }
+    if (!jezik) {
+      return res.status(400).json({ message: "Jezik nije prosleđen." });
+    }
 
-  try {
-    const languageLevelsDto = await this.languageLevelService.getLevelsByLanguage(jezik);
+    try {
+      const languageLevelsDto = await this.languageLevelService.getLevelsByLanguage(jezik);
 
-    // Vraćamo samo niz nivoa, a ne ceo DTO objekat
-    res.status(200).json({
-      jezik,
-      nivoi: languageLevelsDto.nivoi  // ovde samo niz stringova, ne ceo objekat
-    });
-  } catch (error) {
-    console.error("Greška pri dohvaćanju nivoa za jezik:", error);
-    res.status(500).json({ message: "Greška pri dohvaćanju nivoa za dati jezik." });
-  }
-};
+      res.status(200).json({
+        jezik,
+        nivoi: languageLevelsDto.nivoi
+      });
+    } catch (error) {
+      console.error("Greška pri dohvaćanju nivoa za jezik:", error);
+      res.status(500).json({ message: "Greška pri dohvaćanju nivoa za dati jezik." });
+    }
+  };
 }

@@ -1,6 +1,6 @@
 import { RezultatValidacije } from '../../../Domain/types/ValidationResult';
 
-export function validacijaPodataka(jezik?: string, nivo?: string): RezultatValidacije {
+export function validacijaPodatakaJezikNivo(jezik?: string, nivo?: string): RezultatValidacije {
   if (!jezik) {
     return { uspesno: false, poruka: 'Језик је обавезан.' };
   }
