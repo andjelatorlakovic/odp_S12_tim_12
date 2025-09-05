@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { userLanguageLevelApi } from "../../api_services/userLanguage/UserLanguageApiService";
-import { jwtDecode } from "jwt-decode";
 import { kvizApi } from "../../api_services/quiz/QuizApiService";
 import knjiga from "../../assets/knjiga.png";
 import type { IQuestionAPIService } from "../../api_services/questions/IQuestionsApiService";
-import type { IAnswerAPIService } from "../../api_services/answers/IAnswerApiService";
 import type { IUserQuizApiService } from "../../api_services/userQuiz/IUserQuizApiService";
+import type { IAnswerAPIService } from "../../api_services/answers/IAnswerApiService";
+import { useAuth } from "../../hooks/auth/useAuthHook";
 
-interface KvizFomaProps{
-questionApiService :IQuestionAPIService;
-answerApiService : IAnswerAPIService;
-userQuizApi : IUserQuizApiService;
+
+interface KvizFomaProps {
+  questionApiService: IQuestionAPIService;
+  answerApiService: IAnswerAPIService;
+  userQuizApi: IUserQuizApiService;
 }
+
 interface Kviz {
   id: number;
   naziv_kviza: string;
@@ -31,27 +33,18 @@ interface Answer {
   tacan: boolean;
 }
 
-function getUserIdFromToken(): number | null {
-  const token = localStorage.getItem("authToken");
-  if (!token) return null;
-
-  try {
-    const decoded: any = jwtDecode(token);
-    return decoded.userId || decoded.id || null;
-  } catch (error) {
-    console.error("Greška pri dekodiranju tokena:", error);
-    return null;
-  }
-}
-
 export function KvizForma({
   questionApiService,
   answerApiService,
   userQuizApi,
-}: KvizFomaProps)  {
+}: KvizFomaProps) {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const language = params.get("language") || "";
+
+  // Use auth hook to get user and token:
+  const { user, token } = useAuth();
+  const userId = user?.id || null;
 
   const [nivo, setNivo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -97,8 +90,6 @@ export function KvizForma({
     setKvizZavrsen(true);
 
     // Čuvanje rezultata
-    const userId = getUserIdFromToken();
-    const token = localStorage.getItem("authToken");
     if (!userId || !language || !nivo || !token) return;
 
     const procenatTacnih = (brojTacnih / pitanja.length) * 100;
@@ -110,7 +101,7 @@ export function KvizForma({
         language,
         nivo,
         procenatTacnih,
-        token // prosleđivanje tokena
+        token // token from auth hook
       );
 
       if (response.success) {
@@ -132,13 +123,11 @@ export function KvizForma({
     setKvizZavrsen(false);
 
     // Osvježavanje liste kvizova
-    const userId = getUserIdFromToken();
-    const token = localStorage.getItem("authToken");
     if (!userId || !language || !nivo || !token) return;
 
     setLoadingKvizovi(true);
     kvizApi
-      .dobaviKvizovePoJezikuINivou(language, nivo, token) // Prosleđivanje tokena
+      .dobaviKvizovePoJezikuINivou(language, nivo, token) // token from auth hook
       .then((response) => {
         if (response.success && response.data) {
           setKvizovi(response.data);
@@ -156,8 +145,6 @@ export function KvizForma({
   };
 
   useEffect(() => {
-    const userId = getUserIdFromToken();
-
     if (!userId) {
       setError("Korisnik nije ulogovan.");
       setNivo(null);
@@ -170,9 +157,15 @@ export function KvizForma({
       return;
     }
 
+    if (!token) {
+      setError("Korisnik nije ulogovan.");
+      setNivo(null);
+      return;
+    }
+
     setLoading(true);
     userLanguageLevelApi
-      .getByUserAndLanguage(userId, language, localStorage.getItem("authToken")!) // Prosleđivanje tokena
+      .getByUserAndLanguage(userId, language, token)
       .then((response) => {
         if (response.success && response.data) {
           setNivo(response.data.nivo);
@@ -187,18 +180,15 @@ export function KvizForma({
         setError("Greška pri učitavanju podataka.");
       })
       .finally(() => setLoading(false));
-  }, [language]);
+  }, [language, userId, token]);
 
   useEffect(() => {
     if (!nivo || !language || selectedKvizId) return;
-
-    setLoadingKvizovi(true);
-    const userId = getUserIdFromToken();
-    const token = localStorage.getItem("authToken");
     if (!userId || !token) return;
 
+    setLoadingKvizovi(true);
     kvizApi
-      .dobaviKvizovePoJezikuINivou(language, nivo, token) // Prosleđivanje tokena
+      .dobaviKvizovePoJezikuINivou(language, nivo, token)
       .then((response) => {
         if (response.success && response.data) {
           setKvizovi(response.data);
@@ -213,30 +203,28 @@ export function KvizForma({
         setErrorKvizovi("Greška pri dohvatanju kvizova.");
       })
       .finally(() => setLoadingKvizovi(false));
-  }, [language, nivo, selectedKvizId]);
+  }, [language, nivo, selectedKvizId, userId, token]);
 
   useEffect(() => {
     if (!selectedKvizId) return;
-
-    setLoadingPitanja(true);
-    setErrorPitanja(null);
-
-    const token = localStorage.getItem("authToken");
     if (!token) {
       setError("Korisnik nije ulogovan.");
       setLoadingPitanja(false);
       return;
     }
 
+    setLoadingPitanja(true);
+    setErrorPitanja(null);
+
     questionApiService
-      .dobaviPitanjaZaKviz(selectedKvizId, token) // Prosljeđivanje tokena
+      .dobaviPitanjaZaKviz(selectedKvizId, token)
       .then(async (pitanjaResponse) => {
         setPitanja(pitanjaResponse);
 
         const odgovoriMap: Record<number, Answer[]> = {};
         await Promise.all(
           pitanjaResponse.map(async (pitanje) => {
-            const odgovori = await answerApiService.dobaviOdgovoreZaPitanje(pitanje.id, token); // Prosljeđivanje tokena
+            const odgovori = await answerApiService.dobaviOdgovoreZaPitanje(pitanje.id, token);
             odgovoriMap[pitanje.id] = odgovori;
           })
         );
@@ -249,7 +237,7 @@ export function KvizForma({
         setErrorPitanja("Greška pri dohvatanju pitanja za kviz.");
       })
       .finally(() => setLoadingPitanja(false));
-  }, [selectedKvizId]);
+  }, [selectedKvizId, token]);
 
   return (
     <div className="min-h-screen bg-white">

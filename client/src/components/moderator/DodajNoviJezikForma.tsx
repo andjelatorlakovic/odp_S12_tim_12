@@ -1,78 +1,76 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Importing useNavigate hook
+import { useNavigate } from "react-router-dom";
 import { languageApi } from "../../api_services/languages/LanguageApiService";
-import { LanguageLevelAPIService } from "../../api_services/languageLevels/LanguageLevelApiService";
 import { validacijaPodatakaJezik } from "../../api_services/validators/languages/LanguageValidator";
 import knjiga from "../../assets/knjiga.png";
+import type { ILanguageLevelAPIService } from "../../api_services/languageLevels/ILanguageLevelApiService";
+import { useAuth } from "../../hooks/auth/useAuthHook"; // Import useAuth
 
-// Instanciraj servis za nivoe
-const languageLevelApi = LanguageLevelAPIService;
+interface DodajJezikFormaProps {
+  languageLevelApi: ILanguageLevelAPIService;
+}
 
-export default function DodajNoviJezikForma() {
+export default function DodajNoviJezikForma({ languageLevelApi }: DodajJezikFormaProps) {
   const [jezik, setJezik] = useState("");
-  const [nivoi, setNivoi] = useState<string[]>([]);
   const [greska, setGreska] = useState("");
   const [uspesno, setUspesno] = useState(false);
   const [brojNivoi, setBrojNivoi] = useState<number | string>("");
 
   const nivoiOpcije = ["A1", "A2", "B1", "B2", "C1", "C2"];
-  const navigate = useNavigate(); // useNavigate hook to navigate
+  const navigate = useNavigate();
+
+  const { token } = useAuth(); // Uzmi token iz useAuth hooka
 
   const podnesiFormu = async (e: React.FormEvent) => {
     e.preventDefault();
     setGreska("");
     setUspesno(false);
 
+    // Validacija jezika
     const validacija = validacijaPodatakaJezik(jezik);
-
     if (!validacija.uspesno) {
       setGreska(validacija.poruka);
       return;
     }
 
-    // Provera da li su nivoe selektovani
+    // Validacija broja nivoa
     if (!brojNivoi || brojNivoi === "") {
       setGreska("Морате одабрати бар 1 ниво.");
       return;
     }
+
     const nivoiZaDodavanje = nivoiOpcije.slice(0, Number(brojNivoi));
 
-    // Uzimanje tokena sa localStorage
-    const token = localStorage.getItem("authToken");
     if (!token) {
       setGreska("Token nije pronađen.");
       return;
     }
 
-    // Dodaj jezik
+    // Dodaj jezik preko languageApi
     const odgovorJezik = await languageApi.dodajJezik(jezik.trim(), nivoiZaDodavanje.join(", "), token);
-    console.log("API odgovorJezik:", odgovorJezik);
 
-    if (odgovorJezik.success) {
-      console.log("Dodajem nivoe:", nivoiZaDodavanje);
-
-      // Resetuj formu
-      setJezik("");
-      setNivoi([]);
-      setBrojNivoi("");
-      setUspesno(true);
-
-      // Dodaj svaki nivo posebno
-      for (let nivo of nivoiZaDodavanje) {
-        const odgovorNivo = await languageLevelApi.dodajLanguageLevel(jezik.trim(), nivo, token);
-        if (!odgovorNivo.success) {
-          setGreska(`Greška pri dodavanju nivoa: ${nivo}`);
-          return;
-        }
-      }
-    } else {
+    if (!odgovorJezik.success) {
       setGreska(odgovorJezik.message);
+      return;
     }
+
+    // Dodaj nivoe preko languageLevelApi, koristi jezik, naziv nivoa i token
+    for (const nivo of nivoiZaDodavanje) {
+      const odgovorNivo = await languageLevelApi.dodajLanguageLevel(jezik.trim(), nivo, token);
+      if (!odgovorNivo.success) {
+        setGreska(`Greška pri dodavanju nivoa: ${nivo}`);
+        return;
+      }
+    }
+
+    // Resetuj formu i prikaži poruku uspeha
+    setJezik("");
+    setBrojNivoi("");
+    setUspesno(true);
   };
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedValue = e.target.value;
-    setBrojNivoi(selectedValue);
+    setBrojNivoi(e.target.value);
   };
 
   return (
@@ -106,7 +104,7 @@ export default function DodajNoviJezikForma() {
             onChange={handleSelectChange}
             className="w-full px-4 bg-white py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400 mb-4"
           >
-            <option value="" disabled>~~ Izaberi nivoe ~~</option> {/* Placeholder opcija */}
+            <option value="" disabled>~~ Izaberi nivoe ~~</option>
             <option value={1}>1 nivo</option>
             <option value={2}>2 nivoa</option>
             <option value={3}>3 nivoa</option>
@@ -116,18 +114,18 @@ export default function DodajNoviJezikForma() {
           </select>
 
           <label className="block text-lg text-gray-800 mb-2">Odabrani nivoi:</label>
-          <div className="mb-4">
-            <select
-              value={nivoi}
-              onChange={(e) => setNivoi(Array.from(e.target.selectedOptions, option => option.value))}
-              multiple
-              className="w-full px-4 bg-white py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
-            >
-              {nivoiOpcije.slice(0, Number(brojNivoi)).map((nivo, index) => (
-                <option key={index} value={nivo}>{nivo}</option>
-              ))}
-            </select>
-          </div>
+          <select
+            multiple
+            disabled
+            value={nivoiOpcije.slice(0, Number(brojNivoi))}
+            className="w-full px-4 bg-white py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400 mb-4 cursor-not-allowed"
+          >
+            {nivoiOpcije.slice(0, Number(brojNivoi)).map((nivo, index) => (
+              <option key={index} value={nivo}>
+                {nivo}
+              </option>
+            ))}
+          </select>
 
           <button
             type="submit"
@@ -146,7 +144,7 @@ export default function DodajNoviJezikForma() {
 
       {/* Back Button */}
       <button
-        onClick={() => navigate(-1)} // Navigate back
+        onClick={() => navigate(-1)}
         className="mt-6 w-full py-3 bg-[#8f60bf] text-white font-semibold text-lg rounded-md hover:bg-white hover:text-[#8f60bf] border-2 border-[#8f60bf] transition"
       >
         Nazad

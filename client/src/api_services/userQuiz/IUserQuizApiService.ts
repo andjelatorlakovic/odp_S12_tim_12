@@ -11,9 +11,9 @@ export interface IUserQuizApiService {
   dobaviRezultatePoUser(userId: number, token: string): Promise<ApiResponseUserQuizList>;
 
   dobaviRezultatePoKviz(kvizId: number, token: string): Promise<ApiResponseUserQuizList>;
-  dobaviBrojKvizovaPoUseru(token: string): Promise<ApiResponseQuizCountList>;
+  dobaviBrojKvizovaPoUseru(): Promise<ApiResponseQuizCountList>;
   dobaviKvizoveSaProcentomPreko85SaBrojemVecimOdTri(token: string): Promise<ApiResponseKvizStatistika>;
-  dobaviZavrseneNivoePoKorisnickomImenu(korIme: string, token: string): Promise<FinishedLanguageLevelDto[]>;
+  dobaviZavrseneNivoePoKorisnickomImenu(korIme: string): Promise<FinishedLanguageLevelDto[]>;
   kreirajRezultat(
     userId: number,
     kvizId: number,

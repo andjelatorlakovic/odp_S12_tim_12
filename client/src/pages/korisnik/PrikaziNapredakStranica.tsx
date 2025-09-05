@@ -32,22 +32,14 @@ function PrikaziNapredakStranica() {
 
   const userQuizApiService = UserQuizApiService;
 
-  // Helper function to get the token from localStorage
-  const getToken = () => localStorage.getItem('authToken');
-
   useEffect(() => {
     if (username) {
       setLoading(true);
       setError(null);
       
-      const token = getToken();
-      if (!token) {
-        setError("Token nije pronađen. Morate biti prijavljeni.");
-        setLoading(false);
-        return;
-      }
+     
 
-      userQuizApiService.dobaviZavrseneNivoePoKorisnickomImenu(username, token)
+      userQuizApiService.dobaviZavrseneNivoePoKorisnickomImenu(username)
         .then(data => setUserLevels(data))
         .catch(() => setError("Greška pri dohvatanju napretka"))
         .finally(() => setLoading(false));

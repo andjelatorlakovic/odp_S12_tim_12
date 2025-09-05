@@ -5,7 +5,7 @@ import type { LanguageLevelsDto } from '../../models/languageLevels/LanguageLeve
 export interface ILanguageLevelAPIService {
   dodajLanguageLevel(jezik: string, naziv: string, token: string): Promise<ApiResponseLanguageLevel>;
 
-  getLanguagesWithLevels(token: string): Promise<JezikSaNivoima[]>;
+  getLanguagesWithLevels(): Promise<JezikSaNivoima[]>;
 
   getLevelsByLanguage(jezik: string, token: string): Promise<LanguageLevelsDto>;
 }

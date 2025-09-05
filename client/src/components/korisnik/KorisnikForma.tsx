@@ -1,49 +1,60 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import knjiga from "../../assets/knjiga.png";
-import { Link } from "react-router-dom";
-import type { JezikSaNivoima } from "../../types/languageLevels/ApiResponseLanguageWithLevel";
-import { jwtDecode } from "jwt-decode";
+
 import { userLanguageLevelApi } from "../../api_services/userLanguage/UserLanguageApiService";
+import type { JezikSaNivoima } from "../../types/languageLevels/ApiResponseLanguageWithLevel";
 import type { ILanguageLevelAPIService } from "../../api_services/languageLevels/ILanguageLevelApiService";
+import { useAuth } from "../../hooks/auth/useAuthHook";
 
-interface JwtPayload {
-  id: number;
-  blokiran?: boolean | number;
-}
-
-interface KorisnikFormaProps{
+interface KorisnikFormaProps {
   apiService: ILanguageLevelAPIService;
 }
 
-export const KorisnikForma : React.FC<KorisnikFormaProps> = ({apiService}:KorisnikFormaProps) => {
+export const KorisnikForma: React.FC<KorisnikFormaProps> = ({ apiService }) => {
   const [selectedLanguage, setSelectedLanguage] = useState("");
   const [languages, setLanguages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const { user, blokiran, token, logout } = useAuth();
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockedMessage, setBlockedMessage] = useState("");
   const navigate = useNavigate();
 
-  const getUserFromToken = (): JwtPayload | null => {
-    const token = localStorage.getItem("authToken");
-    console.log(token);
-    if (!token) return null;
+  useEffect(() => {
+    if (blokiran) {
+      setIsBlocked(true);
+      setBlockedMessage("Vaš nalog je blokiran. Možete samo pregledati rezultate.");
+    } else {
+      setIsBlocked(false);
+      setBlockedMessage("");
+    }
+  }, [blokiran]);
+
+  const fetchLanguages = async () => {
+    if (!token) {
+      console.error("Token nije pronađen. Niste ulogovani.");
+      return;
+    }
     try {
-      const decoded = jwtDecode<JwtPayload>(token);
-      return decoded;
+      const data: JezikSaNivoima[] = await apiService.getLanguagesWithLevels();
+      const jezici = data.map((item) => item.jezik);
+      setLanguages(jezici);
     } catch (error) {
-      console.error("Neuspešno dekodiranje tokena:", error);
-      return null;
+      console.error("Greška pri dohvatanju jezika sa nivoima:", error);
+      setLanguages([]);
     }
   };
+
+  useEffect(() => {
+    fetchLanguages();
+  }, [token]);
 
   const handleLanguageChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedLanguage(event.target.value);
   };
 
   const handleAddLanguage = async () => {
-    const user = getUserFromToken();
     if (!user?.id) {
       alert("Niste ulogovani.");
       return;
@@ -55,8 +66,13 @@ export const KorisnikForma : React.FC<KorisnikFormaProps> = ({apiService}:Korisn
     }
 
     setLoading(true);
-    const token = localStorage.getItem('authToken'); // Uzmi token sa localStorage
-    const response = await userLanguageLevelApi.dodajUserLanguageLevel(user.id, selectedLanguage, "A1", token!); // Prosledi token
+
+    const response = await userLanguageLevelApi.dodajUserLanguageLevel(
+      user.id,
+      selectedLanguage,
+      "A1",
+      token!
+    );
 
     setLoading(false);
 
@@ -71,31 +87,11 @@ export const KorisnikForma : React.FC<KorisnikFormaProps> = ({apiService}:Korisn
     }, 500);
   };
 
-  const fetchLanguages = async () => {
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      console.error("Token nije pronađen. Niste ulogovani.");
-      return;
-    }
-
-    try {
-      const data: JezikSaNivoima[] = await apiService.getLanguagesWithLevels(token); // Prosledi token kao argument
-      const jezici = data.map(item => item.jezik);
-      setLanguages(jezici);
-    } catch (error) {
-      console.error("Greška pri dohvatanju jezika sa nivoima:", error);
-      setLanguages([]);
-    }
+  // Dodajemo logout funkciju
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
-
-  useEffect(() => {
-    const user = getUserFromToken();
-    if (user?.blokiran === true || user?.blokiran === 1) {
-      setIsBlocked(true);
-      setBlockedMessage("Vaš nalog je blokiran. Možete samo pregledati rezultate.");
-    }
-    fetchLanguages();
-  }, []);
 
   return (
     <div className="min-h-screen bg-white">
@@ -170,11 +166,10 @@ export const KorisnikForma : React.FC<KorisnikFormaProps> = ({apiService}:Korisn
               <Link
                 to={isBlocked ? "#" : "kreiraj-kviz"}
                 onClick={(e) => isBlocked && e.preventDefault()}
-                className={`px-4 py-2 rounded-md border transition ${
-                  isBlocked
+                className={`px-4 py-2 rounded-md border transition ${isBlocked
                     ? "bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed"
                     : "bg-[#8f60bf] text-white hover:bg-white hover:text-[#8f60bf] border-[#8f60bf]"
-                }`}
+                  }`}
               >
                 Kreiraj kviz
               </Link>
@@ -195,7 +190,18 @@ export const KorisnikForma : React.FC<KorisnikFormaProps> = ({apiService}:Korisn
             </div>
           </div>
         </div>
+
+        {/* Logout dugme */}
+        {/* Logout dugme odmah ispod zaglavlja */}
+        <div className="fixed top-[20px] right-6 z-30">
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 bg-[#8f60bf] text-white rounded-md hover:bg-white hover:text-[#8f60bf] border border-[#8f60bf] transition"
+          >
+            Logout
+          </button>
+        </div>
       </div>
     </div>
   );
-}
+};

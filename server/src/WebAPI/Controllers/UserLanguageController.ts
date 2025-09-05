@@ -17,7 +17,7 @@ export class UserLanguageLevelController {
     this.router.get('/userLanguage/ByUserAndLanguage',authenticate, this.getByUserAndLanguage);
     this.router.get('/userLanguage/ByUserLanguageAndLevel',authenticate, this.getByUserLanguageAndLevel);
     this.router.put('/userLanguage/updateKrajNivoa',authenticate, this.updateKrajNivoa);
-    this.router.get('/userLanguage/Finished',authenticate, this.getFinishedLevelsByUsername);
+    this.router.get('/userLanguage/Finished', this.getFinishedLevelsByUsername);
   }
 
   public getRouter(): Router {

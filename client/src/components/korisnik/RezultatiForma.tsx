@@ -1,65 +1,39 @@
-import { useEffect, useState } from "react";
-import { jwtDecode } from "jwt-decode";
+import React, { useEffect, useState } from "react";
+
 import knjiga from "../../assets/knjiga.png";
 import type { FinishedLanguageLevelDto } from "../../models/userQuiz/FinishedLevelsDto";
 import type { IUserQuizApiService } from "../../api_services/userQuiz/IUserQuizApiService";
-
-interface JwtPayload {
-  id: number;
-  korisnickoIme: string;
-  blokiran?: boolean | number;
-}
+import { useAuth } from "../../hooks/auth/useAuthHook";
 
 interface RezultatiFormaProps {
   userQuizApi: IUserQuizApiService;
 }
 
 export function RezultatiForma({ userQuizApi }: RezultatiFormaProps) {
+  const { token, user } = useAuth();  
   const [rezultati, setRezultati] = useState<FinishedLanguageLevelDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      setError("Token nije pronađen. Morate biti prijavljeni.");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const decoded = jwtDecode<JwtPayload>(token);
-      if (!decoded.korisnickoIme) throw new Error("Username nije pronađen u tokenu.");
-      setUsername(decoded.korisnickoIme);
-      setError(null);
-    } catch {
-      setError("Neispravan token ili nedostaje korisničko ime.");
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!username) return;
-
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      setError("Nema tokena za autorizaciju.");
+    if (!user?.korisnickoIme || !token) {
+      setError("Niste prijavljeni ili nema tokena.");
       setLoading(false);
       return;
     }
 
     (async () => {
       try {
-        const data = await userQuizApi.dobaviZavrseneNivoePoKorisnickomImenu(username, token); // Prosleđivanje tokena
+        const data = await userQuizApi.dobaviZavrseneNivoePoKorisnickomImenu(user.korisnickoIme);
         setRezultati(data ?? []);
+        setError(null);
       } catch {
         setError("Greška pri dohvatanju završenih nivoa.");
       } finally {
         setLoading(false);
       }
     })();
-  }, [username, userQuizApi]);
+  }, [user, token, userQuizApi]);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -72,7 +46,7 @@ export function RezultatiForma({ userQuizApi }: RezultatiFormaProps) {
       <div className="pt-32 px-4 max-w-5xl mx-auto">
         <h2 className="text-3xl font-semibold text-center text-[#8f60bf] mb-8">
           Završeni nivoi za korisnika{" "}
-          <span className="underline">{username ?? "Nepoznato"}</span>
+          <span className="underline">{user?.korisnickoIme ?? "Nepoznato"}</span>
         </h2>
 
         {loading && <p className="text-center text-purple-700">Učitavanje podataka...</p>}

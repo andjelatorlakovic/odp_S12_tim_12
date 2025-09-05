@@ -6,14 +6,14 @@ interface Korisnik {
   id: number;
   korisnickoIme: string;
   blokiran: boolean;
-  uloga?: string; // dodato zbog filtera
+  uloga?: string; 
 }
 
 export default function BlokirajKorisnikaForma() {
   const [korisnici, setKorisnici] = useState<Korisnik[]>([]);
   const [selektovani, setSelektovani] = useState<number[]>([]);
   const [poruka, setPoruka] = useState("");
-  const navigate = useNavigate(); // Hook to navigate
+  const navigate = useNavigate(); 
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -30,7 +30,6 @@ export default function BlokirajKorisnikaForma() {
       })
       .then((data) => {
         console.log("Podaci sa servera:", data);
-        // Filtriraj korisnike da ne prikazuješ moderatore i blokirane korisnike
         const filtriraniKorisnici = data.filter(
           (k: Korisnik) => k.uloga !== "moderator" && !k.blokiran
         );
@@ -74,10 +73,10 @@ export default function BlokirajKorisnikaForma() {
 
       setPoruka("Успешно блокирани корисници.");
 
-      // Ukloni blokirane korisnike iz liste (pretpostavka da su sada blokirani)
+
       setKorisnici((prev) => prev.filter((k) => !selektovani.includes(k.id)));
 
-      // Resetuj selektovane
+   
       setSelektovani([]);
     } catch (err) {
       setPoruka(err instanceof Error ? err.message : "Nepoznata greška");

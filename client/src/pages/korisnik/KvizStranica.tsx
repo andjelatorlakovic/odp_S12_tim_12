@@ -1,3 +1,7 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/auth/useAuthHook";
+
 import type { IAnswerAPIService } from "../../api_services/answers/IAnswerApiService";
 import type { IQuestionAPIService } from "../../api_services/questions/IQuestionsApiService";
 import type { IUserQuizApiService } from "../../api_services/userQuiz/IUserQuizApiService";
@@ -14,6 +18,15 @@ export default function KvizStranica({
   answerApiService,
   userQuizApi,
 }: KvizFormaProps) {
+  const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
+
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      navigate("/login");
+    }
+  }, [isAuthenticated, user, navigate]);
+
   return (
     <div>
       <KvizForma

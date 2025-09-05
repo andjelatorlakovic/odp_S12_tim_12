@@ -22,7 +22,7 @@ import { UserQuizApiService } from './api_services/userQuiz/UserQuizApiService';
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<PocetnaStranica />} />
+      <Route path="/" element={<PocetnaStranica apiService={LanguageLevelAPIService} userQuizApiService={UserQuizApiService} />} />
 
       <Route path="/prijava" element={<PrijavaStranica authApi={authApi} />} />
       <Route path="/registracija" element={<RegistracijaStranica authApi={authApi} />} />
@@ -69,14 +69,17 @@ function App() {
           </ProtectedRoute>
         }
       >
-        <Route path="dodaj-jezik" element={<DodajNoviJezikStranica />} />
+        <Route path="dodaj-jezik" element={<DodajNoviJezikStranica languageLevelApi={LanguageLevelAPIService}/>} />
         <Route path="blokiraj-korisnika" element={<BlokirajKorisnikaStranica />} />
         <Route path="lista-blokiranih" element={<ListaBlokiranihStranica />} />
-        <Route path="uredi-nivo" element={<UnaprediNivoKorisnikaStranica />} />
+        <Route path="uredi-nivo" element={<UnaprediNivoKorisnikaStranica  userQuizApiService={UserQuizApiService} languageLevelAPIService={LanguageLevelAPIService}/>} />
       </Route>
 
       {/* Default preusmeravanje */}
-      <Route path="*" element={<Navigate to="/prijava" replace />} />
+
+      <Route path="/" element={<Navigate to="/prijava" replace />} />
+      {/* Catch-all ruta za nepostojeće stranice */}
+      <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>
   );
 }

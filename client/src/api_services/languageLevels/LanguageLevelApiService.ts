@@ -6,7 +6,7 @@ import type { ILanguageLevelAPIService } from './ILanguageLevelApiService';
 
 const API_URL: string = import.meta.env.VITE_API_URL + 'languageLevel';
 
-export const LanguageLevelAPIService : ILanguageLevelAPIService ={
+export const LanguageLevelAPIService: ILanguageLevelAPIService = {
 
   async dodajLanguageLevel(jezik: string, naziv: string, token: string): Promise<ApiResponseLanguageLevel> {
     try {
@@ -22,13 +22,10 @@ export const LanguageLevelAPIService : ILanguageLevelAPIService ={
     }
   },
 
-  async getLanguagesWithLevels(token: string): Promise<JezikSaNivoima[]> {
+  async getLanguagesWithLevels(): Promise<JezikSaNivoima[]> {
     try {
-      const response = await axios.get<JezikSaNivoima[]>(`${API_URL}/With`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.get<JezikSaNivoima[]>(`${API_URL}/With`
+      );
       return response.data.map(lang => ({
         jezik: lang.jezik,
         nivoi: lang.nivoi.length > 0 ? lang.nivoi : ['Nema nivoa'],

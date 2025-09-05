@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/auth/useAuthHook";
 import { validacijaPodatakaAuth } from "../../api_services/validators/auth/AuthValidator";
 import type { AuthFormProps } from "../../types/props/auth_form_props/AuthFormProps";
@@ -22,66 +22,65 @@ export function PrijavaForma({ authApi, onUlogovan }: PrijavaFormaProps) {
   const [korisnickoIme, setKorisnickoIme] = useState("");
   const [lozinka, setLozinka] = useState("");
   const [greska, setGreska] = useState("");
-  const { login, setBlokiran } = useAuth(); 
+  const { login, logout, setBlokiran } = useAuth();
   const navigate = useNavigate();
 
-const podnesiFormu = async (e: React.FormEvent) => {
-  e.preventDefault();
+  useEffect(() => {
+    // Izloguj korisnika čim dođe na ovu stranicu
+    logout();
+  }, []);
 
-  const validacija = validacijaPodatakaAuth(korisnickoIme, lozinka);
-  if (!validacija.uspesno) {
-    setGreska(validacija.poruka ?? "Неисправни подаци");
-    return;
-  }
+  const podnesiFormu = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  try {
-    const odgovor = await authApi.prijava(korisnickoIme, lozinka);
-    const data = odgovor.data as unknown as AuthResponseData;
-    let token: string;
-
-    // Provera tipa podataka
-    if (typeof data === "string") {
-      token = data;
-    } else if (data.token && typeof data.token === "string") {
-      token = data.token;
-    } else {
-      setGreska("Nepoznat format tokena.");
+    const validacija = validacijaPodatakaAuth(korisnickoIme, lozinka);
+    if (!validacija.uspesno) {
+      setGreska(validacija.poruka ?? "Неисправни подаци");
       return;
     }
 
-    // Dalja obrada tokena
     try {
-      const claims = jwtDecode<JwtTokenClaims>(token);
+      const odgovor = await authApi.prijava(korisnickoIme, lozinka);
+      const data = odgovor.data as unknown as AuthResponseData;
+      let token: string;
 
-      // Čuvanje tokena u localStorage
-      SačuvajVrednostPoKljuču("authToken", token);
-      
-      // Logovanje korisnika
-      login(token);
-      setBlokiran(claims.blokiran);
-
-      if (claims.blokiran) {
-        setGreska("Vaš nalog je blokiran. Imaćete ograničen pristup.");
-      }
-
-      if (claims.uloga === "moderator") {
-        navigate("/moderator-dashboard");
-      } else if (claims.uloga === "korisnik") {
-        navigate("/korisnik-dashboard");
+      if (typeof data === "string") {
+        token = data;
+      } else if (data.token && typeof data.token === "string") {
+        token = data.token;
       } else {
-        navigate("/");
+        setGreska("Nepoznat format tokena.");
+        return;
       }
 
-      if (onUlogovan) onUlogovan();
+      try {
+        const claims = jwtDecode<JwtTokenClaims>(token);
+        SačuvajVrednostPoKljuču("authToken", token);
+        login(token);
+        setBlokiran(claims.blokiran);
+
+        if (claims.blokiran) {
+          setGreska("Vaš nalog je blokiran. Imaćete ograničen pristup.");
+        }
+
+        if (claims.uloga === "moderator") {
+          navigate("/moderator-dashboard");
+        } else if (claims.uloga === "korisnik") {
+          navigate("/korisnik-dashboard");
+        } else {
+          navigate("/");
+        }
+
+        if (onUlogovan) onUlogovan();
+      } catch (error) {
+        console.error("Greška prilikom dekodiranja tokena: ", error);
+        setGreska("Token je neispravan.");
+      }
     } catch (error) {
-      console.error("Greška prilikom dekodiranja tokena: ", error);
-      setGreska("Token je neispravan.");
+      console.error("Greška prilikom prijave: ", error);
+      setGreska("Неисправни подаци.");
     }
-  } catch (error) {
-    console.error("Greška prilikom prijave: ", error);
-    setGreska("Неисправни подаци.");
-  }
-};
+  };
 
   return (
     <div className="min-h-screen bg-white">

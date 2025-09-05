@@ -3,9 +3,12 @@ import { kvizApi } from "../../api_services/quiz/QuizApiService";
 import knjiga from "../../assets/knjiga.png";
 import type { ILanguageLevelAPIService } from "../../api_services/languageLevels/ILanguageLevelApiService";
 import type { IQuestionAPIService } from "../../api_services/questions/IQuestionsApiService";
-import type { IAnswerAPIService } from "../../api_services/answers/IAnswerApiService";
+
 import { validacijaPodatakaPitanja } from "../../api_services/validators/questions/QuestionsValidator";
 import { validacijaPodatakaOdgovora } from "../../api_services/validators/answers/AnswerValidator";
+import type { IAnswerAPIService } from "../../api_services/answers/IAnswerApiService";
+import { useAuth } from "../../hooks/auth/useAuthHook";
+
 
 // Tipovi
 type Pitanje = {
@@ -30,6 +33,8 @@ export function KreirajKvizForma({
   questionAPIService,
   answerAPIService,
 }: KreirajKvizFormaProps) {
+  const { user, token, isAuthenticated } = useAuth(); 
+
   const [pitanja, setPitanja] = useState<Pitanje[]>([
     { pitanje: "", odgovori: ["", "", "", ""], tacanOdgovor: "" },
   ]);
@@ -47,13 +52,13 @@ export function KreirajKvizForma({
   useEffect(() => {
     const fetchLanguages = async () => {
       try {
-        const token = localStorage.getItem("authToken");
+        // const token = localStorage.getItem("authToken"); // Sada koristiš token iz useAuth
         if (!token) {
           setErrorMessage("Nema tokena za autorizaciju.");
           return;
         }
 
-        const langs = await languageLevelAPIService.getLanguagesWithLevels(token); // Prosleđivanje tokena
+        const langs = await languageLevelAPIService.getLanguagesWithLevels(); // Prosleđivanje tokena
         setLanguages(langs);
       } catch (error) {
         console.error("Greška pri dohvaćanju jezika:", error);
@@ -61,7 +66,7 @@ export function KreirajKvizForma({
       }
     };
     fetchLanguages();
-  }, []);
+  }, [languageLevelAPIService, token]);
 
   // Promena jezika
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -160,8 +165,7 @@ export function KreirajKvizForma({
     }
 
     try {
-      // Get token
-      const token = localStorage.getItem("authToken");
+      // const token = localStorage.getItem("authToken"); // Sada koristiš token iz useAuth
       if (!token) {
         setApiMessage("Nema tokena za autorizaciju.");
         return;

@@ -20,10 +20,10 @@ export const UserQuizApiService: IUserQuizApiService = {
     }
   },
 
-  async dobaviBrojKvizovaPoUseru(token: string): Promise<ApiResponseQuizCountList> {
+  async dobaviBrojKvizovaPoUseru(): Promise<ApiResponseQuizCountList> {
     try {
-      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-      const res = await axios.get<ApiResponseQuizCountList>(`${API_URL}/brojKvizovaPoUseru`, config);
+      
+      const res = await axios.get<ApiResponseQuizCountList>(`${API_URL}/brojKvizovaPoUseru`);
       return res.data;
     } catch (error) {
       console.error("❌ Greška pri dohvatanju broja kvizova:", error);
@@ -108,14 +108,15 @@ export const UserQuizApiService: IUserQuizApiService = {
     }
   },
 
-  async dobaviZavrseneNivoePoKorisnickomImenu(korIme: string, token: string): Promise<FinishedLanguageLevelDto[]> {
-    try {
-      const config = token ? { headers: { Authorization: `Bearer ${token}` }, params: { korIme } } : { params: { korIme } };
-      const res = await axios.get<{ success: boolean; data: FinishedLanguageLevelDto[] }>(`${API_URL_LANG}/Finished`, config);
-      return res.data.data;
-    } catch (error) {
-      console.error("❌ Greška pri dohvatanju završenih nivoa:", error);
-      throw error;
-    }
+async dobaviZavrseneNivoePoKorisnickomImenu(korIme: string): Promise<FinishedLanguageLevelDto[]> {
+  try {
+    const config = { params: { korIme } }; // samo query parametar, bez Authorization headera
+    const res = await axios.get<{ success: boolean; data: FinishedLanguageLevelDto[] }>(`${API_URL_LANG}/Finished`, config);
+    return res.data.data;
+  } catch (error) {
+    console.error("❌ Greška pri dohvatanju završenih nivoa:", error);
+    throw error;
   }
+}
+
 };

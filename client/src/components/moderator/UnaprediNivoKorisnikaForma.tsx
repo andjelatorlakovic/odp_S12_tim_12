@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import { UserQuizApiService } from "../../api_services/userQuiz/UserQuizApiService";
-import { LanguageLevelAPIService } from "../../api_services/languageLevels/LanguageLevelApiService";
+import { useAuth } from "../../hooks/auth/useAuthHook";  // Import useAuth hook
 import { userLanguageLevelApi } from "../../api_services/userLanguage/UserLanguageApiService";
 import knjiga from "../../assets/knjiga.png";
+import type { IUserQuizApiService } from "../../api_services/userQuiz/IUserQuizApiService";
+import type { ILanguageLevelAPIService } from "../../api_services/languageLevels/ILanguageLevelApiService";
+
 
 interface ApiKvizStatistika {
   userId: number;
@@ -11,7 +13,14 @@ interface ApiKvizStatistika {
   brojKviza: number;
 }
 
-export function UrediNivoeForma() {
+interface UnaprediNivoFormaProps {
+  userQuizApiService: IUserQuizApiService;
+  languageLevelAPIService: ILanguageLevelAPIService;
+}
+
+export function UrediNivoeForma({ userQuizApiService, languageLevelAPIService }: UnaprediNivoFormaProps) {
+  const { token } = useAuth(); 
+
   const [kvizovi, setKvizovi] = useState<ApiKvizStatistika[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,18 +28,11 @@ export function UrediNivoeForma() {
   const [azuriranjeStatus, setAzuriranjeStatus] = useState<Record<string, string>>({});
   const [globalniStatus, setGlobalniStatus] = useState<string | null>(null);
 
-  const userQuizApiService = UserQuizApiService;
-  const languageLevelAPIService = LanguageLevelAPIService;
-
-  // Helper function to get the token from localStorage
-  const getToken = () => localStorage.getItem("authToken");
-
   useEffect(() => {
     async function fetchKvizove() {
       setLoading(true);
       setError(null);
 
-      const token = getToken();
       if (!token) {
         setError("Token nije pronađen. Morate biti prijavljeni.");
         setLoading(false);
@@ -38,7 +40,6 @@ export function UrediNivoeForma() {
       }
 
       try {
-        // Pass token in request headers
         const response = await userQuizApiService.dobaviKvizoveSaProcentomPreko85SaBrojemVecimOdTri(token);
         setKvizovi(response.data);
 
@@ -59,7 +60,7 @@ export function UrediNivoeForma() {
       }
     }
     fetchKvizove();
-  }, []);
+  }, [token, userQuizApiService, languageLevelAPIService]);
 
   function getNextLevel(jezik: string, trenutniNivo: string): string | null {
     const nivoi = nivoiPoJeziku[jezik];
@@ -73,7 +74,6 @@ export function UrediNivoeForma() {
     const sledeciNivo = getNextLevel(jezik, trenutniNivo);
     const statusKey = `${userId}_${jezik}`;
 
-    const token = getToken();
     if (!token) {
       setAzuriranjeStatus(prev => ({
         ...prev,
@@ -84,7 +84,6 @@ export function UrediNivoeForma() {
 
     if (!sledeciNivo) {
       try {
-        // Ako je poslednji nivo, zatvori trenutni
         const krajNivoResponse = await userLanguageLevelApi.updateKrajNivoa(userId, jezik, trenutniNivo, token);
         if (krajNivoResponse.success) {
           setAzuriranjeStatus(prev => ({
