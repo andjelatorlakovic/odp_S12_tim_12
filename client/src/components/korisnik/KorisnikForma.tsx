@@ -192,7 +192,6 @@ export const KorisnikForma: React.FC<KorisnikFormaProps> = ({ apiService }) => {
         </div>
 
         {/* Logout dugme */}
-        {/* Logout dugme odmah ispod zaglavlja */}
         <div className="fixed top-[20px] right-6 z-30">
           <button
             onClick={handleLogout}

@@ -50,7 +50,7 @@ export default function BlokirajKorisnikaForma() {
   const podnesiFormu = async (e: React.FormEvent) => {
     e.preventDefault();
     if (selektovani.length === 0) {
-      setPoruka("Изаберите бар 1 корисника за блокирање.");
+      setPoruka("Izaberite bar 1 korisnika za blokiranje.");
       return;
     }
 
@@ -71,7 +71,7 @@ export default function BlokirajKorisnikaForma() {
         throw new Error(text || "Greška pri blokiranju korisnika");
       }
 
-      setPoruka("Успешно блокирани корисници.");
+      setPoruka("Uspesno blokirani korisnici.");
 
 
       setKorisnici((prev) => prev.filter((k) => !selektovani.includes(k.id)));

@@ -3,18 +3,15 @@ import { kvizApi } from "../../api_services/quiz/QuizApiService";
 import knjiga from "../../assets/knjiga.png";
 import type { ILanguageLevelAPIService } from "../../api_services/languageLevels/ILanguageLevelApiService";
 import type { IQuestionAPIService } from "../../api_services/questions/IQuestionsApiService";
-
 import { validacijaPodatakaPitanja } from "../../api_services/validators/questions/QuestionsValidator";
 import { validacijaPodatakaOdgovora } from "../../api_services/validators/answers/AnswerValidator";
 import type { IAnswerAPIService } from "../../api_services/answers/IAnswerApiService";
 import { useAuth } from "../../hooks/auth/useAuthHook";
 
-
-// Tipovi
 type Pitanje = {
   pitanje: string;
   odgovori: string[];
-  tacanOdgovor: string; // npr. "odgovor1"
+  tacanOdgovor: string;
 };
 
 type Jezik = {
@@ -33,7 +30,7 @@ export function KreirajKvizForma({
   questionAPIService,
   answerAPIService,
 }: KreirajKvizFormaProps) {
-  const { user, token, isAuthenticated } = useAuth(); 
+  const {token} = useAuth(); 
 
   const [pitanja, setPitanja] = useState<Pitanje[]>([
     { pitanje: "", odgovori: ["", "", "", ""], tacanOdgovor: "" },
@@ -84,8 +81,8 @@ export function KreirajKvizForma({
 
   // Dodavanje pitanja
   const handleAddQuestion = () => {
-    if (pitanja.length >= 14) {
-      setErrorMessage("Максимално 14 питања по квизу!");
+    if (pitanja.length >= 7) {
+      setErrorMessage("Maksimalno 7 pitanja po kvizu!");
       return;
     }
     setPitanja([
@@ -124,7 +121,7 @@ export function KreirajKvizForma({
       // Validacija za pitanje
       const validacijaPitanja = validacijaPodatakaPitanja(p.pitanje);
       if (!validacijaPitanja.uspesno) {
-        setErrorMessage(`Питање ${i + 1}: ${validacijaPitanja.poruka}`);
+        setErrorMessage(`Pitanje ${i + 1}: ${validacijaPitanja.poruka}`);
         return false;
       }
 
@@ -132,13 +129,13 @@ export function KreirajKvizForma({
       for (let j = 0; j < p.odgovori.length; j++) {
         const validacija = validacijaPodatakaOdgovora(p.odgovori[j]);
         if (!validacija.uspesno) {
-          setErrorMessage(`Питање ${i + 1}, одговор ${j + 1}: ${validacija.poruka}`);
+          setErrorMessage(`Pitanje ${i + 1}, odgovor ${j + 1}: ${validacija.poruka}`);
           return false;
         }
       }
 
       if (!p.tacanOdgovor) {
-        setErrorMessage(`Изаберите тачан одговор за питање ${i + 1}.`);
+        setErrorMessage(`Izaberite tacan odgovor za pitanje ${i + 1}.`);
         return false;
       }
     }
@@ -156,7 +153,7 @@ export function KreirajKvizForma({
     setErrorMessage("");
 
     if (!nazivKviza.trim() || !selectedLanguage || !selectedLevel) {
-      setApiMessage("Молимо попуните сва обавезна поља: назив квиза, језик, ниво.");
+      setApiMessage("Molimo popunite sva obavezna polja: naziv kviza, jezik, nivo.");
       return;
     }
 
@@ -174,7 +171,7 @@ export function KreirajKvizForma({
       // Kreiraj kviz
       const response = await kvizApi.kreirajKviz(nazivKviza, selectedLanguage, selectedLevel, token); // Prosleđivanje tokena
       if (!response.success || !response.data) {
-        setApiMessage(response.message || "Дошло је до грешке приликом креирања квиза.");
+        setApiMessage(response.message || "Doslo je do greske prilikom kreiranja kviza.");
         return;
       }
 
@@ -184,7 +181,7 @@ export function KreirajKvizForma({
       for (const pitanje of pitanja) {
         const pitanjeResponse = await questionAPIService.kreirajPitanje(createdQuizId, pitanje.pitanje, token); // Prosleđivanje tokena
         if (!pitanjeResponse.success || !pitanjeResponse.data) {
-          setApiMessage("Грешка при креирању питања.");
+          setApiMessage("Greska pri kreiranju pitanja.");
           return;
         }
 
@@ -197,7 +194,7 @@ export function KreirajKvizForma({
         }
       }
 
-      setApiMessage("Квиз, питања и одговори успешно креирани!");
+      setApiMessage("Kviz uspesno kreiran!");
 
       // Reset forme
       setNazivKviza("");
@@ -208,7 +205,7 @@ export function KreirajKvizForma({
       setErrorMessage("");
     } catch (error) {
       console.error(error);
-      setApiMessage("Грешка при слању података на сервер.");
+      setApiMessage("Greska pri slanju na server.");
     }
   };
 

@@ -35,7 +35,7 @@ export default function DodajNoviJezikForma({ languageLevelApi }: DodajJezikForm
 
     // Validacija broja nivoa
     if (!brojNivoi || brojNivoi === "") {
-      setGreska("Морате одабрати бар 1 ниво.");
+      setGreska("Morate odabrati bar 1 nivo.");
       return;
     }
 
@@ -136,7 +136,7 @@ export default function DodajNoviJezikForma({ languageLevelApi }: DodajJezikForm
 
           {uspesno && (
             <p className="text-green-700 text-center mt-4">
-              Језик је успешно додат!
+              Jezik je uspeno dodat!
             </p>
           )}
         </form>

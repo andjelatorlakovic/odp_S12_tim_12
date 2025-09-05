@@ -61,7 +61,7 @@ export default function ListaBlokiranihKorisnikaForma() {
 
       // Ukloni korisnika iz liste nakon odblokiranja
       setKorisnici((prev) => prev.filter((k) => k.id !== id));
-      setPoruka("Корисник успешно блокиран.");
+      setPoruka("Korisnik uspesno odblokiran.");
     } catch (err) {
       setPoruka(err instanceof Error ? err.message : "Nepoznata greška");
     } finally {
@@ -96,7 +96,7 @@ export default function ListaBlokiranihKorisnikaForma() {
                 <button
                   onClick={() => odblokirajKorisnika(k.id)}
                   disabled={loadingOdblokiraj === k.id}
-                  className="py-1 px-3 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400 transition"
+                  className="py-1 px-3 bg-[#8f60bf] text-white font-semibold rounded-md hover:bg-white hover:text-[#8f60bf] border-2 border-[#8f60bf] transition disabled:bg-gray-400"
                 >
                   {loadingOdblokiraj === k.id ? "Odblokiranje..." : "Odblokiraj"}
                 </button>

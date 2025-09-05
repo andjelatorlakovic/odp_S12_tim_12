@@ -18,6 +18,7 @@ import { LanguageLevelAPIService } from './api_services/languageLevels/LanguageL
 import { QuestionAPIService } from './api_services/questions/QuestionsApiService';
 import { AnswerAPIService } from './api_services/answers/AnswerApiService';
 import { UserQuizApiService } from './api_services/userQuiz/UserQuizApiService';
+import NotFoundStranica from './pages/not_found/404Stranica';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
 
       <Route path="/prijava" element={<PrijavaStranica authApi={authApi} />} />
       <Route path="/registracija" element={<RegistracijaStranica authApi={authApi} />} />
+      <Route path="/404" element={<NotFoundStranica />} />
       <Route path="/prikazi-napredak/:username" element={<PrikaziNapredakStranica />} />
 
       {/* Zaštićene rute */}

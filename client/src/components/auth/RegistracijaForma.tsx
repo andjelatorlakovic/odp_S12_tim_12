@@ -19,7 +19,7 @@ export function RegistracijaForma({ authApi }: AuthFormProps) {
 
     const validacija = validacijaPodatakaAuth(korisnickoIme, lozinka);
     if (!validacija.uspesno) {
-      setGreska(validacija.poruka ?? "Неисправни подаци");
+      setGreska(validacija.poruka ?? "Neispravni podaci");
       return;
     }
 
@@ -93,7 +93,7 @@ export function RegistracijaForma({ authApi }: AuthFormProps) {
 
           <button
             type="submit"
-            className="mt-[30px] w-[60%] h-[60px] bg-[#8f60bf] text-white text-[20px] hover:bg-white hover:text-[#8f60bf] border-2 border-[#8f60bf] transition mx-auto block"
+            className="mt-[50px] w-[80%] h-[45px] bg-[#8f60bf] text-white text-[20px] hover:bg-white hover:text-[#8f60bf] border-2 border-[#8f60bf] transition mx-auto block rounded-lg"
             disabled={uspesno}
           >
             Registracija

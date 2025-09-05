@@ -57,7 +57,7 @@ function PocetnaStranica({ apiService, userQuizApiService }: PocetnaProps) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-  
+
         const languagesResponse = await apiService.getLanguagesWithLevels();
         const quizCountResponse = await userQuizApiService.dobaviBrojKvizovaPoUseru();
 
@@ -86,7 +86,7 @@ function PocetnaStranica({ apiService, userQuizApiService }: PocetnaProps) {
     setUserLevels(null);
 
     try {
-    
+
 
       const data = await userQuizApiService.dobaviZavrseneNivoePoKorisnickomImenu(username);
       setUserLevels(data);
@@ -157,13 +157,14 @@ function PocetnaStranica({ apiService, userQuizApiService }: PocetnaProps) {
         <div className="w-1/2 flex flex-col items-center pt-[10px] px-8">
           <h2 className="text-[60px] text-[#8f60bf] font-semibold mb-8">DOBRO DOŠLI!</h2>
           <button
-            className="mt-[30px] w-[50%] h-[10%] bg-[#8f60bf] text-white text-[20px] hover:bg-white hover:text-[#8f60bf] border-2 border-[#8f60bf] transition"
+            className="mt-[30px] w-[50%] h-[10%] bg-[#8f60bf] text-white text-[20px] hover:bg-white hover:text-[#8f60bf] border-2 border-[#8f60bf] transition rounded-md"
             onClick={() => navigate('/prijava')}
           >
             Prijava
           </button>
+
           <button
-            className="mt-[30px] w-[50%] h-[10%] bg-[#8f60bf] text-white text-[20px] hover:bg-white hover:text-[#8f60bf] border-2 border-[#8f60bf] transition"
+            className="mt-[30px] w-[50%] h-[10%] bg-[#8f60bf] text-white text-[20px] hover:bg-white hover:text-[#8f60bf] border-2 border-[#8f60bf] transition rounded-md"
             onClick={() => navigate('/registracija')}
           >
             Registracija

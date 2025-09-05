@@ -288,9 +288,8 @@ export function KvizForma({
                     onClick={() => {
                       if (!selectedKvizId) setSelectedKvizId(kviz.id);
                     }}
-                    className={`bg-[#f3e5ff] border border-purple-300 rounded-xl shadow-md p-6 cursor-pointer select-none ${
-                      selectedKvizId === kviz.id ? "ring-2 ring-[#8f60bf]" : ""
-                    } ${selectedKvizId ? "opacity-50 pointer-events-none" : ""}`}
+                    className={`bg-[#f3e5ff] border border-purple-300 rounded-xl shadow-md p-6 cursor-pointer select-none ${selectedKvizId === kviz.id ? "ring-2 ring-[#8f60bf]" : ""
+                      } ${selectedKvizId ? "opacity-50 pointer-events-none" : ""}`}
                   >
                     <h3 className="text-2xl font-bold text-[#8f60bf]">{kviz.naziv_kviza}</h3>
                     <p>
@@ -340,10 +339,10 @@ export function KvizForma({
 
             <div className="text-center mt-10">
               <button
-                onClick={zavrsiKviz}
-                className="bg-[#8f60bf] text-white font-semibold px-8 py-3 rounded-xl shadow-md hover:bg-[#764ba2] transition"
+                type="submit"
+                className="mt-[30px] w-[20%] h-[45px] bg-[#8f60bf] text-white text-[20px] hover:bg-white hover:text-[#8f60bf] border-2 border-[#8f60bf] transition mx-auto block rounded-md"
               >
-                Završi kviz
+                Završi
               </button>
             </div>
           </div>

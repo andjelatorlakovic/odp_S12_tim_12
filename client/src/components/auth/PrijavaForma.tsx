@@ -35,7 +35,7 @@ export function PrijavaForma({ authApi, onUlogovan }: PrijavaFormaProps) {
 
     const validacija = validacijaPodatakaAuth(korisnickoIme, lozinka);
     if (!validacija.uspesno) {
-      setGreska(validacija.poruka ?? "Неисправни подаци");
+      setGreska(validacija.poruka ?? "Neispravni podaci");
       return;
     }
 
@@ -78,7 +78,7 @@ export function PrijavaForma({ authApi, onUlogovan }: PrijavaFormaProps) {
       }
     } catch (error) {
       console.error("Greška prilikom prijave: ", error);
-      setGreska("Неисправни подаци.");
+      setGreska("Neispravni podaci.");
     }
   };
 
@@ -118,7 +118,7 @@ export function PrijavaForma({ authApi, onUlogovan }: PrijavaFormaProps) {
 
           <button
             type="submit"
-            className="mt-[30px] w-[50%] h-[45px] bg-[#8f60bf] text-white text-[20px] hover:bg-white hover:text-[#8f60bf] border-2 border-[#8f60bf] transition mx-auto block"
+            className="mt-[30px] w-[50%] h-[45px] bg-[#8f60bf] text-white text-[20px] hover:bg-white hover:text-[#8f60bf] border-2 border-[#8f60bf] transition mx-auto block rounded-lg"
           >
             Prijava
           </button>

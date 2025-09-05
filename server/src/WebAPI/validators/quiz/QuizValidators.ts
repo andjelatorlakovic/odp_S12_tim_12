@@ -6,21 +6,21 @@ export function validacijaPodatakaKviz(
   nivo_znanja?: string
 ): RezultatValidacije {
   if (!naziv_kviza) {
-    return { uspesno: false, poruka: 'Назив квиза је обавезан.' };
+    return { uspesno: false, poruka: 'Naziv kviza je obavezan.' };
   }
   if (naziv_kviza.length < 3) {
-    return { uspesno: false, poruka: 'Назив квиза мора имати најмање 3 карактера.' };
+    return { uspesno: false, poruka: 'Naziv kviza mora imati najmanje 3 karaktera.' };
   }
 
   if (!jezik) {
-    return { uspesno: false, poruka: 'Језик је обавезан.' };
+    return { uspesno: false, poruka: 'Jezik je obavezan.' };
   }
   if (jezik.length < 3) {
-    return { uspesno: false, poruka: 'Језик мора имати најмање 3 карактера.' };
+    return { uspesno: false, poruka: 'Jezik mora imati najmanje 3 karaktera.' };
   }
 
   if (!nivo_znanja) {
-    return { uspesno: false, poruka: 'Ниво знања је обавезан.' };
+    return { uspesno: false, poruka: 'Nivo znanja je obavezan.' };
   }
   
   return { uspesno: true };
