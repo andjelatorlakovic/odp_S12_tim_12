@@ -1,11 +1,13 @@
-
 import type { ApiResponseDelete, ApiResponseKviz, ApiResponseKvizList } from "../../types/quiz/ApiResponseQuiz";
 
 export interface IQuizApiService {
-  // Metoda za dodavanje jezika
- dobaviSveKvizove(): Promise<ApiResponseKvizList>;
-dobaviKvizPoNazivJezikNivo(naziv_kviza: string, jezik: string, nivo_znanja: string): Promise<ApiResponseKviz>;
- kreirajKviz(naziv_kviza: string, jezik: string, nivo_znanja: string): Promise<ApiResponseKviz>;
- dobaviKvizPoId(id: number): Promise<ApiResponseKviz>;
- obrisiKviz(id: number): Promise<ApiResponseDelete>;
+  dobaviSveKvizove(token: string): Promise<ApiResponseKvizList>;
+
+  dobaviKvizPoNazivJezikNivo(naziv_kviza: string, jezik: string, nivo_znanja: string, token: string): Promise<ApiResponseKviz>;
+  dobaviKvizovePoJezikuINivou(jezik: string, nivo_znanja: string, token: string): Promise<ApiResponseKvizList>;
+  kreirajKviz(naziv_kviza: string, jezik: string, nivo_znanja: string, token: string): Promise<ApiResponseKviz>;
+
+  dobaviKvizPoId(id: number, token: string): Promise<ApiResponseKviz>;
+
+  obrisiKviz(id: number, token: string): Promise<ApiResponseDelete>;
 }

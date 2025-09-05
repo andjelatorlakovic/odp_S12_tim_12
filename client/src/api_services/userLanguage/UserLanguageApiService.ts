@@ -1,19 +1,16 @@
 import axios from "axios";
 import type { ApiResponseUserLanguageLevel, ApiResponseLanguagesList } from "../../types/userLanguage/ApiResponseUserLanguage";
+import type { IUserLanguageLevelAPIService } from "./IUserLanguageApiService";
 
-const API_BASE = import.meta.env.VITE_API_URL;
-const API_URL_ADD = API_BASE + "userLanguagesAdd";
-const API_URL_MISSING = API_BASE + "userLanguagesMissing";
-const API_URL_BY_USER_AND_LANGUAGE = API_BASE + "userLanguageByUserAndLanguage";
-const API_URL_UPDATE_KRAJ_NIVOA = API_BASE + "updateKrajNivoa";
-const getToken = () => localStorage.getItem("authToken");
+const API_URL: string = import.meta.env.VITE_API_URL + "userLanguage";
 
-export const userLanguageLevelApi = {
-  async dodajUserLanguageLevel(userId: number, jezik: string, nivo: string): Promise<ApiResponseUserLanguageLevel> {
+
+export const userLanguageLevelApi : IUserLanguageLevelAPIService= {
+
+  async dodajUserLanguageLevel(userId: number, jezik: string, nivo: string, token: string): Promise<ApiResponseUserLanguageLevel> {
     try {
-      const token = getToken();
-      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-      const response = await axios.post<ApiResponseUserLanguageLevel>(API_URL_ADD, { userId, jezik, nivo }, config);
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const response = await axios.post<ApiResponseUserLanguageLevel>(`${API_URL}/Add`, { userId, jezik, nivo }, config);
       return response.data;
     } catch (error) {
       let message = "Greška pri dodavanju jezika korisniku.";
@@ -24,17 +21,11 @@ export const userLanguageLevelApi = {
       return { success: false, message, data: null };
     }
   },
- async updateKrajNivoa(userId: number, jezik: string, nivo: string): Promise<{ success: boolean; message: string }> {
+
+  async updateKrajNivoa(userId: number, jezik: string, nivo: string, token: string): Promise<{ success: boolean; message: string }> {
     try {
-      const token = getToken();
-      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-
-      const response = await axios.put<{ success: boolean; message: string }>(
-        API_URL_UPDATE_KRAJ_NIVOA,
-        { userId, jezik, nivo },
-        config
-      );
-
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const response = await axios.put<{ success: boolean; message: string }>(`${API_URL}/updateKrajNivoa`, { userId, jezik, nivo }, config);
       return response.data;
     } catch (error) {
       let message = "Greška pri ažuriranju datuma kraj nivoa.";
@@ -45,16 +36,11 @@ export const userLanguageLevelApi = {
       return { success: false, message };
     }
   },
-  async getLanguagesUserDoesNotHave(userId: number): Promise<ApiResponseLanguagesList> {
+
+  async getLanguagesUserDoesNotHave(userId: number, token: string): Promise<ApiResponseLanguagesList> {
     try {
-      const token = getToken();
-      const config = token
-        ? {
-            headers: { Authorization: `Bearer ${token}` },
-            params: { userId },
-          }
-        : { params: { userId } };
-      const response = await axios.get<ApiResponseLanguagesList>(API_URL_MISSING, config);
+      const config = { headers: { Authorization: `Bearer ${token}` }, params: { userId } };
+      const response = await axios.get<ApiResponseLanguagesList>(`${API_URL}/Missing`, config);
       return response.data;
     } catch (error) {
       let message = "Greška pri dohvatanu jezika koje korisnik nema.";
@@ -66,16 +52,10 @@ export const userLanguageLevelApi = {
     }
   },
 
-  async getByUserAndLanguage(userId: number, jezik: string): Promise<ApiResponseUserLanguageLevel> {
+  async getByUserAndLanguage(userId: number, jezik: string, token: string): Promise<ApiResponseUserLanguageLevel> {
     try {
-      const token = getToken();
-      const config = token
-        ? {
-            headers: { Authorization: `Bearer ${token}` },
-            params: { userId, jezik },
-          }
-        : { params: { userId, jezik } };
-      const response = await axios.get<ApiResponseUserLanguageLevel>(API_URL_BY_USER_AND_LANGUAGE, config);
+      const config = { headers: { Authorization: `Bearer ${token}` }, params: { userId, jezik } };
+      const response = await axios.get<ApiResponseUserLanguageLevel>(`${API_URL}/ByUserAndLanguage`, config);
       return response.data;
     } catch (error) {
       let message = "Greška pri dohvatanu jezika korisnika.";

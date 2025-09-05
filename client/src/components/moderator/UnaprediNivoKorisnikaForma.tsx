@@ -19,15 +19,27 @@ export function UrediNivoeForma() {
   const [azuriranjeStatus, setAzuriranjeStatus] = useState<Record<string, string>>({});
   const [globalniStatus, setGlobalniStatus] = useState<string | null>(null);
 
-  const userQuizApiService = new UserQuizApiService();
-  const languageLevelAPIService = new LanguageLevelAPIService();
+  const userQuizApiService = UserQuizApiService;
+  const languageLevelAPIService = LanguageLevelAPIService;
+
+  // Helper function to get the token from localStorage
+  const getToken = () => localStorage.getItem("authToken");
 
   useEffect(() => {
     async function fetchKvizove() {
       setLoading(true);
       setError(null);
+
+      const token = getToken();
+      if (!token) {
+        setError("Token nije pronađen. Morate biti prijavljeni.");
+        setLoading(false);
+        return;
+      }
+
       try {
-        const response = await userQuizApiService.dobaviKvizoveSaProcentomPreko85SaBrojemVecimOdTri();
+        // Pass token in request headers
+        const response = await userQuizApiService.dobaviKvizoveSaProcentomPreko85SaBrojemVecimOdTri(token);
         setKvizovi(response.data);
 
         const jedinstveniJezici = Array.from(new Set(response.data.map(k => k.jezik)));
@@ -35,7 +47,7 @@ export function UrediNivoeForma() {
         const nivoiMap: Record<string, string[]> = {};
         await Promise.all(
           jedinstveniJezici.map(async (jezik) => {
-            const nivoiObj = await languageLevelAPIService.getLevelsByLanguage(jezik);
+            const nivoiObj = await languageLevelAPIService.getLevelsByLanguage(jezik, token);
             nivoiMap[jezik] = nivoiObj.nivoi.length > 0 ? nivoiObj.nivoi : ["Nema nivoa"];
           })
         );
@@ -61,10 +73,19 @@ export function UrediNivoeForma() {
     const sledeciNivo = getNextLevel(jezik, trenutniNivo);
     const statusKey = `${userId}_${jezik}`;
 
+    const token = getToken();
+    if (!token) {
+      setAzuriranjeStatus(prev => ({
+        ...prev,
+        [statusKey]: "Token nije pronađen."
+      }));
+      return;
+    }
+
     if (!sledeciNivo) {
       try {
         // Ako je poslednji nivo, zatvori trenutni
-        const krajNivoResponse = await userLanguageLevelApi.updateKrajNivoa(userId, jezik, trenutniNivo);
+        const krajNivoResponse = await userLanguageLevelApi.updateKrajNivoa(userId, jezik, trenutniNivo, token);
         if (krajNivoResponse.success) {
           setAzuriranjeStatus(prev => ({
             ...prev,
@@ -77,7 +98,6 @@ export function UrediNivoeForma() {
           }));
         }
       } catch (error) {
-        console.error(error);
         setAzuriranjeStatus(prev => ({
           ...prev,
           [statusKey]: "Greška pri zatvaranju nivoa"
@@ -92,7 +112,7 @@ export function UrediNivoeForma() {
     }));
 
     try {
-      const updateKrajResponse = await userLanguageLevelApi.updateKrajNivoa(userId, jezik, trenutniNivo);
+      const updateKrajResponse = await userLanguageLevelApi.updateKrajNivoa(userId, jezik, trenutniNivo, token);
       if (!updateKrajResponse.success) {
         setAzuriranjeStatus(prev => ({
           ...prev,
@@ -101,7 +121,7 @@ export function UrediNivoeForma() {
         return;
       }
 
-      const dodajNoviResponse = await userLanguageLevelApi.dodajUserLanguageLevel(userId, jezik, sledeciNivo);
+      const dodajNoviResponse = await userLanguageLevelApi.dodajUserLanguageLevel(userId, jezik, sledeciNivo, token);
       if (dodajNoviResponse.success) {
         setAzuriranjeStatus(prev => ({
           ...prev,
@@ -118,7 +138,6 @@ export function UrediNivoeForma() {
         ...prev,
         [statusKey]: "Došlo je do greške prilikom ažuriranja"
       }));
-      console.error("Greška pri ažuriranju nivoa:", error);
     }
   }
 

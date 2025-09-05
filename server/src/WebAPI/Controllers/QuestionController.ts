@@ -1,26 +1,28 @@
 import { Router, Request, Response } from 'express';
-
-import { QuestionService } from '../../Services/questions/QuestionService';
 import { authenticate } from '../../Middlewares/autentification/AuthMiddleware';
 import { validacijaPodatakaPitanja } from '../validators/questions/QuestionsValidator';
+import { IQuestionService } from '../../Domain/services/questions/IQuestionService';
   // Importuj validaciju
 
 export class QuestionController {
-  private router = Router();
-  private questionService: QuestionService;
+  private router: Router;
+  private questionService: IQuestionService;
 
-  constructor(questionService: QuestionService) {
+  constructor(questionService: IQuestionService) {
+    this.router = Router();
     this.questionService = questionService;
-
-    // Definisanje ruta sa autentifikacijom
-    this.router.get('/questionsAll', authenticate, this.dobaviSvaPitanja);
-    this.router.post('/questionAdd', authenticate, this.kreirajPitanje);  // Dodaj autentifikaciju
-    this.router.get('/questionGetId/:id', authenticate, this.dobaviPitanjePoId);
-    this.router.get('/questionsForQuiz/:kviz_id', authenticate, this.dobaviPitanjaZaKviz);
-    this.router.delete('/questionDelete/:id', authenticate, this.obrisiPitanje);
+    this.initializeRoutes();
   }
 
-  getRouter() {
+    private initializeRoutes(): void {
+    this.router.get('/question/All', authenticate, this.dobaviSvaPitanja);
+    this.router.post('/question/Add', authenticate, this.kreirajPitanje);  // Dodaj autentifikaciju
+    this.router.get('/question/GetId/:id', authenticate, this.dobaviPitanjePoId);
+    this.router.get('/question/ForQuiz/:kviz_id', authenticate, this.dobaviPitanjaZaKviz);
+    this.router.delete('/question/Delete/:id', authenticate, this.obrisiPitanje);
+  }
+
+  public getRouter(): Router {
     return this.router;
   }
 

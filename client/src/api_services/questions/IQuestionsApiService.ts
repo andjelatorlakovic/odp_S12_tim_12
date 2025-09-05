@@ -1,13 +1,14 @@
 import type { ApiResponseQuestion, Question } from '../../types/questions/ApiResponseQuestion';
 
 export interface IQuestionAPIService {
-  dobaviSvaPitanja(): Promise<Question[]>;
 
-  kreirajPitanje(kviz_id: number, tekst_pitanja: string): Promise<ApiResponseQuestion>;
+  dobaviSvaPitanja(token: string): Promise<Question[]>;
 
-  dobaviPitanjePoId(id: number): Promise<Question | null>;
+  kreirajPitanje(kviz_id: number, tekst_pitanja: string, token: string): Promise<ApiResponseQuestion>;
 
-  dobaviPitanjaZaKviz(kviz_id: number): Promise<Question[]>;
+  dobaviPitanjePoId(id: number, token: string): Promise<Question | null>;
 
-  obrisiPitanje(id: number): Promise<{ success: boolean; message: string }>;
+  dobaviPitanjaZaKviz(kviz_id: number, token: string): Promise<Question[]>;
+
+  obrisiPitanje(id: number, token: string): Promise<{ success: boolean; message: string }>;
 }

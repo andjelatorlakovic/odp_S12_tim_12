@@ -1,171 +1,121 @@
 import axios from "axios";
-import type {
-  ApiResponseDelete,
-  ApiResponseUserQuiz,
-  ApiResponseUserQuizList,
-  ApiResponseKvizStatistika
-} from "../../types/userQuiz/ApiResponseUserQuiz";
+import type { ApiResponseUserQuiz, ApiResponseUserQuizList, ApiResponseDelete, ApiResponseKvizStatistika } from "../../types/userQuiz/ApiResponseUserQuiz";
 import type { IUserQuizApiService } from "./IUserQuizApiService";
-import type { ApiResponseQuizCountList } from "../../types/userQuiz/ApiResponseQuizCount";
 import type { FinishedLanguageLevelDto } from "../../models/userQuiz/FinishedLevelsDto";
+import type { ApiResponseQuizCountList } from "../../types/userQuiz/ApiResponseQuizCount";
 
-const API_URL_REZULTATI = import.meta.env.VITE_API_URL + "rezultati";
-const API_URL_REZULTAT = import.meta.env.VITE_API_URL + "rezultat";
-const API_URL_REZULTATI_USER = import.meta.env.VITE_API_URL + "rezultatiUser";
-const API_URL_REZULTATI_KVIZ = import.meta.env.VITE_API_URL + "rezultatiKviz";
-const API_URL_AZURIRAJ_PROCENT = import.meta.env.VITE_API_URL + "azurirajProcenat";
-const API_URL_OBRISI_REZULTAT = import.meta.env.VITE_API_URL + "obrisiRezultat";
-const API_URL_KVIZOVI_PREKO_85_BROJ_3 = import.meta.env.VITE_API_URL + "kvizoviPreko85SaBrojemVecimOdTri";
-const API_URL_BROJ_KVIZOVA_PO_USERU = import.meta.env.VITE_API_URL + "brojKvizovaPoUseru"; 
-const API_URL_FINISHED_LEVELS = import.meta.env.VITE_API_URL + "userLanguagesFinished";
+const API_URL = import.meta.env.VITE_API_URL + "rezultat";
+const API_URL_LANG = import.meta.env.VITE_API_URL + "userLanguage";
 
-const getToken = () => localStorage.getItem("authToken");
+export const UserQuizApiService: IUserQuizApiService = {
 
-export class UserQuizApiService implements IUserQuizApiService {
-  async dobaviSveRezultate(): Promise<ApiResponseUserQuizList> {
+  async dobaviSveRezultate(token: string): Promise<ApiResponseUserQuizList> {
     try {
-      const token = getToken();
       const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-      const res = await axios.get<ApiResponseUserQuizList>(API_URL_REZULTATI, config);
+      const res = await axios.get<ApiResponseUserQuizList>(`${API_URL}/Svi`, config);
       return res.data;
     } catch (error) {
-      console.error("Greška pri dohvatanju svih rezultata:", error);
+      console.error("❌ Greška pri dohvatanju svih rezultata:", error);
       throw error;
     }
-  }
+  },
 
-  async dobaviBrojKvizovaPoUseru(): Promise<ApiResponseQuizCountList> {
+  async dobaviBrojKvizovaPoUseru(token: string): Promise<ApiResponseQuizCountList> {
     try {
-      const token = getToken();
       const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-      const res = await axios.get<ApiResponseQuizCountList>(API_URL_BROJ_KVIZOVA_PO_USERU, config);
+      const res = await axios.get<ApiResponseQuizCountList>(`${API_URL}/brojKvizovaPoUseru`, config);
       return res.data;
     } catch (error) {
-      console.error("Greška pri dohvatanju broja kvizova:", error);
+      console.error("❌ Greška pri dohvatanju broja kvizova:", error);
       throw error;
     }
-  }
+  },
 
-  async dobaviRezultatPoUserIKviz(userId: number, kvizId: number): Promise<ApiResponseUserQuiz> {
+  async dobaviRezultatPoUserIKviz(userId: number, kvizId: number, token: string): Promise<ApiResponseUserQuiz> {
     try {
-      const token = getToken();
-      const config = token
-        ? { headers: { Authorization: `Bearer ${token}` }, params: { userId, kvizId } }
-        : { params: { userId, kvizId } };
-      const res = await axios.get<ApiResponseUserQuiz>(API_URL_REZULTAT, config);
+      const config = token ? { headers: { Authorization: `Bearer ${token}` }, params: { userId, kvizId } } : { params: { userId, kvizId } };
+      const res = await axios.get<ApiResponseUserQuiz>(`${API_URL}/PoUserIKviz`, config);
       return res.data;
     } catch (error) {
-      console.error("Greška pri dohvatanju rezultata po user i kviz:", error);
+      console.error("❌ Greška pri dohvatanju rezultata po user i kviz:", error);
       throw error;
     }
-  }
+  },
 
-  async dobaviRezultatePoUser(userId: number): Promise<ApiResponseUserQuizList> {
+  async dobaviRezultatePoUser(userId: number, token: string): Promise<ApiResponseUserQuizList> {
     try {
-      const token = getToken();
-      const config = token
-        ? { headers: { Authorization: `Bearer ${token}` }, params: { userId } }
-        : { params: { userId } };
-      const res = await axios.get<ApiResponseUserQuizList>(API_URL_REZULTATI_USER, config);
+      const config = token ? { headers: { Authorization: `Bearer ${token}` }, params: { userId } } : { params: { userId } };
+      const res = await axios.get<ApiResponseUserQuizList>(`${API_URL}/User`, config);
       return res.data;
     } catch (error) {
-      console.error("Greška pri dohvatanju rezultata po useru:", error);
+      console.error("❌ Greška pri dohvatanju rezultata po useru:", error);
       throw error;
     }
-  }
+  },
 
-  async dobaviRezultatePoKviz(kvizId: number): Promise<ApiResponseUserQuizList> {
+  async dobaviRezultatePoKviz(kvizId: number, token: string): Promise<ApiResponseUserQuizList> {
     try {
-      const token = getToken();
-      const config = token
-        ? { headers: { Authorization: `Bearer ${token}` }, params: { kvizId } }
-        : { params: { kvizId } };
-      const res = await axios.get<ApiResponseUserQuizList>(API_URL_REZULTATI_KVIZ, config);
+      const config = token ? { headers: { Authorization: `Bearer ${token}` }, params: { kvizId } } : { params: { kvizId } };
+      const res = await axios.get<ApiResponseUserQuizList>(`${API_URL}/Kviz`, config);
       return res.data;
     } catch (error) {
-      console.error("Greška pri dohvatanju rezultata po kvizu:", error);
+      console.error("❌ Greška pri dohvatanju rezultata po kvizu:", error);
       throw error;
     }
-  }
+  },
 
-  async kreirajRezultat(
-    userId: number,
-    kvizId: number,
-    jezik: string,
-    nivo: string,
-    procenatTacnihOdgovora: number
-  ): Promise<ApiResponseUserQuiz> {
+  async kreirajRezultat(userId: number, kvizId: number, jezik: string, nivo: string, procenatTacnihOdgovora: number, token: string): Promise<ApiResponseUserQuiz> {
     try {
-      const token = getToken();
       const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-      const res = await axios.post<ApiResponseUserQuiz>(
-        API_URL_REZULTAT,
-        { userId, kvizId, jezik, nivo, procenatTacnihOdgovora },
-        config
-      );
+      const res = await axios.post<ApiResponseUserQuiz>(`${API_URL}/Kreiraj`, { userId, kvizId, jezik, nivo, procenatTacnihOdgovora }, config);
       return res.data;
     } catch (error) {
-      console.error("Greška pri kreiranju rezultata:", error);
+      console.error("❌ Greška pri kreiranju rezultata:", error);
       throw error;
     }
-  }
+  },
 
-  async azurirajProcenat(userId: number, kvizId: number, procenat: number): Promise<ApiResponseUserQuiz> {
+  async azurirajProcenat(userId: number, kvizId: number, procenat: number, token: string): Promise<ApiResponseUserQuiz> {
     try {
-      const token = getToken();
       const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-      const res = await axios.put<ApiResponseUserQuiz>(
-        API_URL_AZURIRAJ_PROCENT,
-        { userId, kvizId, procenat },
-        config
-      );
+      const res = await axios.put<ApiResponseUserQuiz>(`${API_URL}/azurirajProcenat`, { userId, kvizId, procenat }, config);
       return res.data;
     } catch (error) {
-      console.error("Greška pri ažuriranju procenta:", error);
+      console.error("❌ Greška pri ažuriranju procenta:", error);
       throw error;
     }
-  }
+  },
 
-  async obrisiRezultat(userId: number, kvizId: number): Promise<ApiResponseDelete> {
+  async obrisiRezultat(userId: number, kvizId: number, token: string): Promise<ApiResponseDelete> {
     try {
-      const token = getToken();
-      const config = token
-        ? { headers: { Authorization: `Bearer ${token}` }, data: { userId, kvizId } }
-        : { data: { userId, kvizId } };
-      const res = await axios.delete<ApiResponseDelete>(API_URL_OBRISI_REZULTAT, config);
+      const config = token ? { headers: { Authorization: `Bearer ${token}` }, data: { userId, kvizId } } : { data: { userId, kvizId } };
+      const res = await axios.delete<ApiResponseDelete>(`${API_URL}/ObrisiRezultat`, config);
       return res.data;
     } catch (error) {
-      console.error("Greška pri brisanju rezultata:", error);
+      console.error("❌ Greška pri brisanju rezultata:", error);
       throw error;
     }
-  }
+  },
 
-  async dobaviKvizoveSaProcentomPreko85SaBrojemVecimOdTri(): Promise<ApiResponseKvizStatistika> {
+  async dobaviKvizoveSaProcentomPreko85SaBrojemVecimOdTri(token: string): Promise<ApiResponseKvizStatistika> {
     try {
-      const token = getToken();
       const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-      const res = await axios.get<ApiResponseKvizStatistika>(API_URL_KVIZOVI_PREKO_85_BROJ_3, config);
+      const res = await axios.get<ApiResponseKvizStatistika>(`${API_URL}/kvizoviPreko85SaBrojemVecimOdTri`, config);
       return res.data;
     } catch (error) {
-      console.error("Greška pri dohvatanju kvizova sa procentom preko 85 i brojem većim od 3:", error);
+      console.error("❌ Greška pri dohvatanju kvizova sa procentom preko 85 i brojem većim od 3:", error);
       throw error;
     }
-  }
+  },
 
-  async dobaviZavrseneNivoePoKorisnickomImenu(korIme: string): Promise<FinishedLanguageLevelDto[]> {
+  async dobaviZavrseneNivoePoKorisnickomImenu(korIme: string, token: string): Promise<FinishedLanguageLevelDto[]> {
     try {
-      const token = getToken();
-      const config = token
-        ? { headers: { Authorization: `Bearer ${token}` }, params: { korIme } }
-        : { params: { korIme } };
-      const res = await axios.get<{ success: boolean; data: FinishedLanguageLevelDto[] }>(
-        API_URL_FINISHED_LEVELS,
-        config
-      );
+      const config = token ? { headers: { Authorization: `Bearer ${token}` }, params: { korIme } } : { params: { korIme } };
+      const res = await axios.get<{ success: boolean; data: FinishedLanguageLevelDto[] }>(`${API_URL_LANG}/Finished`, config);
       return res.data.data;
     } catch (error) {
-      console.error("Greška pri dohvatanju završenih nivoa:", error);
+      console.error("❌ Greška pri dohvatanju završenih nivoa:", error);
       throw error;
     }
   }
-}
+};

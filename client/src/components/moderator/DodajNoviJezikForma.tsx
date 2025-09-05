@@ -6,7 +6,7 @@ import { validacijaPodatakaJezik } from "../../api_services/validators/languages
 import knjiga from "../../assets/knjiga.png";
 
 // Instanciraj servis za nivoe
-const languageLevelApi = new LanguageLevelAPIService();
+const languageLevelApi = LanguageLevelAPIService;
 
 export default function DodajNoviJezikForma() {
   const [jezik, setJezik] = useState("");
@@ -37,8 +37,15 @@ export default function DodajNoviJezikForma() {
     }
     const nivoiZaDodavanje = nivoiOpcije.slice(0, Number(brojNivoi));
 
+    // Uzimanje tokena sa localStorage
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      setGreska("Token nije pronađen.");
+      return;
+    }
+
     // Dodaj jezik
-    const odgovorJezik = await languageApi.dodajJezik(jezik.trim(), nivoiZaDodavanje.join(", "));
+    const odgovorJezik = await languageApi.dodajJezik(jezik.trim(), nivoiZaDodavanje.join(", "), token);
     console.log("API odgovorJezik:", odgovorJezik);
 
     if (odgovorJezik.success) {
@@ -52,7 +59,7 @@ export default function DodajNoviJezikForma() {
 
       // Dodaj svaki nivo posebno
       for (let nivo of nivoiZaDodavanje) {
-        const odgovorNivo = await languageLevelApi.dodajLanguageLevel(jezik.trim(), nivo);
+        const odgovorNivo = await languageLevelApi.dodajLanguageLevel(jezik.trim(), nivo, token);
         if (!odgovorNivo.success) {
           setGreska(`Greška pri dodavanju nivoa: ${nivo}`);
           return;

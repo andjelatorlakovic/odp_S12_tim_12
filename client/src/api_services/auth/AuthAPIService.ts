@@ -14,7 +14,7 @@ export const authApi: IAuthAPIService = {
  
       return res.data;
     } catch (error) {
-      let message = "Грешка приликом пријаве.";
+      let message = "Greška prilikom prijave.";
       if (axios.isAxiosError(error)) {
         message = error.response?.data?.message || message;
       }
@@ -51,8 +51,6 @@ export const authApi: IAuthAPIService = {
     }
   },
 };
-
-// --- Dodajem ovde novi export axios instance sa interceptorom ---
 
 export const apiInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL,

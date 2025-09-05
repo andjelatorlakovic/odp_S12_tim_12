@@ -4,5 +4,5 @@ export interface FinishedLanguageLevelDto {
   nivo: string;
   pocetakNivoa: string;
   krajNivoa: string;
-  dani: number;  // dodaj ovo polje
+  dani: number;
 }

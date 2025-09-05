@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import knjiga from "../../assets/knjiga.png";
-import { UserQuizApiService } from "../../api_services/userQuiz/UserQuizApiService";
 import type { FinishedLanguageLevelDto } from "../../models/userQuiz/FinishedLevelsDto";
+import type { IUserQuizApiService } from "../../api_services/userQuiz/IUserQuizApiService";
 
 interface JwtPayload {
   id: number;
@@ -10,9 +10,11 @@ interface JwtPayload {
   blokiran?: boolean | number;
 }
 
-const userQuizApi = new UserQuizApiService();
+interface RezultatiFormaProps {
+  userQuizApi: IUserQuizApiService;
+}
 
-export function RezultatiForma() {
+export function RezultatiForma({ userQuizApi }: RezultatiFormaProps) {
   const [rezultati, setRezultati] = useState<FinishedLanguageLevelDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,24 +42,31 @@ export function RezultatiForma() {
   useEffect(() => {
     if (!username) return;
 
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      setError("Nema tokena za autorizaciju.");
+      setLoading(false);
+      return;
+    }
+
     (async () => {
       try {
-        const data = await userQuizApi.dobaviZavrseneNivoePoKorisnickomImenu(username);
-        setRezultati(data ?? []); 
+        const data = await userQuizApi.dobaviZavrseneNivoePoKorisnickomImenu(username, token); // Prosleđivanje tokena
+        setRezultati(data ?? []);
       } catch {
         setError("Greška pri dohvatanju završenih nivoa.");
       } finally {
         setLoading(false);
       }
     })();
-  }, [username]);
+  }, [username, userQuizApi]);
 
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <div className="fixed top-0 left-0 w-full bg-[#f3e5ff] py-4 shadow-md z-10 flex justify-center items-center gap-2">
-        <img src={knjiga} alt="knjiga" className="w-16 h-auto" />
-        <h1 className="text-4xl font-bold text-[#8f60bf]">Ucilingo</h1>
+      <div className="fixed top-0 left-0 w-screen box-border px-5 py-2 bg-[#f3e5ff] shadow-md flex items-center justify-center gap-2 z-20">
+        <img src={knjiga} alt="knjiga" className="w-20 h-auto" />
+        <h1 className="text-[60px] text-[#8f60bf] font-bold">Ucilingo</h1>
       </div>
 
       <div className="pt-32 px-4 max-w-5xl mx-auto">

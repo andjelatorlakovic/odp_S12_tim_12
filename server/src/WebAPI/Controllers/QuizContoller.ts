@@ -1,25 +1,25 @@
 import { Router, Request, Response } from 'express';
 import { validacijaPodatakaKviz } from '../validators/quiz/QuizValidators';
 import { authenticate } from '../../Middlewares/autentification/AuthMiddleware';
-import { KvizService } from '../../Services/quiz/QuizService';
+import { IKvizService } from '../../Domain/services/quiz/IQuizService';
 
 export class KvizController {
   private router: Router;
-  private kvizService: KvizService;
+  private kvizService: IKvizService;
 
-  constructor(kvizService: KvizService) {
+  constructor(kvizService: IKvizService) {
     this.router = Router();
     this.kvizService = kvizService;
     this.initializeRoutes();
   }
 
   private initializeRoutes(): void {
-    this.router.get('/kviz', authenticate, this.dobaviSveKvizove.bind(this));
-    this.router.get('/kvizId', authenticate, this.dobaviKvizPoId.bind(this));
-    this.router.get('/kvizPretraga', authenticate, this.dobaviKvizPoNazivJezikNivo.bind(this));
-    this.router.get('/kvizFilter', authenticate, this.dobaviKvizovePoJezikuINivou.bind(this));
-    this.router.post('/kviz', authenticate, this.kreirajKviz.bind(this));
-    this.router.delete('/kvizObrisi', authenticate, this.obrisiKviz.bind(this));
+    this.router.get('/kviz/Svi', authenticate, this.dobaviSveKvizove.bind(this));
+    this.router.get('/kviz/Id', authenticate, this.dobaviKvizPoId.bind(this));
+    this.router.get('/kviz/Pretraga', authenticate, this.dobaviKvizPoNazivJezikNivo.bind(this));
+    this.router.get('/kviz/Filter', authenticate, this.dobaviKvizovePoJezikuINivou.bind(this));
+    this.router.post('/kviz/Kreiraj', authenticate, this.kreirajKviz.bind(this));
+    this.router.delete('/kviz/Obrisi', authenticate, this.obrisiKviz.bind(this));
   }
 
   public getRouter(): Router {

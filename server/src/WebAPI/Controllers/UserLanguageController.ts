@@ -1,31 +1,29 @@
 import { Router, Request, Response } from 'express';
 
-import { UserLanguageLevelService } from '../../Services/userLanguages/UserLanguageService';
 import { authenticate } from '../../Middlewares/autentification/AuthMiddleware';
+import { IUserLanguageLevelService } from '../../Domain/services/userLanguage/IUserLanguageService';
 export class UserLanguageLevelController {
-  private router = Router();
-  private userLanguageLevelService: UserLanguageLevelService;
+   private router: Router;
+  private userLanguageLevelService: IUserLanguageLevelService;
 
-  constructor(userLanguageLevelService: UserLanguageLevelService) {
+  constructor(userLanguageLevelService: IUserLanguageLevelService) {
+    this.router = Router();
     this.userLanguageLevelService = userLanguageLevelService;
-
-    // Test ruta za proveru
-    this.router.get('/test', (req, res) => {
-      res.json({ msg: 'Radi!' });
-    });
-
-    // Postavljamo rute
-    this.router.post('/userLanguagesAdd',authenticate, this.createUserLanguageLevel);
-    this.router.get('/userLanguagesMissing',authenticate, this.getLanguagesUserDoesNotHave);
-    this.router.get('/userLanguageByUserAndLanguage',authenticate, this.getByUserAndLanguage);
-    this.router.get('/userLanguageByUserLanguageAndLevel',authenticate, this.getByUserLanguageAndLevel);
-    this.router.put('/updateKrajNivoa',authenticate, this.updateKrajNivoa);
-    this.router.get('/userLanguagesFinished',authenticate, this.getFinishedLevelsByUsername);
+    this.initializeRoutes();
+  }
+   private initializeRoutes(): void {
+    this.router.post('/userLanguage/Add',authenticate, this.createUserLanguageLevel);
+    this.router.get('/userLanguage/Missing',authenticate, this.getLanguagesUserDoesNotHave);
+    this.router.get('/userLanguage/ByUserAndLanguage',authenticate, this.getByUserAndLanguage);
+    this.router.get('/userLanguage/ByUserLanguageAndLevel',authenticate, this.getByUserLanguageAndLevel);
+    this.router.put('/userLanguage/updateKrajNivoa',authenticate, this.updateKrajNivoa);
+    this.router.get('/userLanguage/Finished',authenticate, this.getFinishedLevelsByUsername);
   }
 
-  getRouter() {
+  public getRouter(): Router {
     return this.router;
   }
+  
   private updateKrajNivoa = async (req: Request, res: Response) => {
     try {
       const { userId, jezik, nivo } = req.body;

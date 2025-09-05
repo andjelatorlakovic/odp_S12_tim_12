@@ -1,8 +1,8 @@
 import { ILanguageLevelService } from "../../Domain/services/languageLevel/ILanguageLevelService";
 import { LanguageLevelDto } from "../../Domain/DTOs/languageLevel/LanguageLevelDto";
 import { LanguageLevelsDto } from "../../Domain/DTOs/languageLevel/LanguageLevelsDto";
-
 import { LanguageLevelRepository } from "../../Domain/repositories/languageLevels/LanguageLevelRepository";
+import { LanguageLevel } from "../../Domain/models/LagnuageLevel";
 
 export class LanguageLevelService implements ILanguageLevelService {
   private languageLevelRepository: LanguageLevelRepository;
@@ -11,31 +11,47 @@ export class LanguageLevelService implements ILanguageLevelService {
     this.languageLevelRepository = languageLevelRepository;
   }
 
-  async getLanguagesWithLevels() {
-    return this.languageLevelRepository.getLanguagesWithLevels();
-  }
-
-  async getLevelsByLanguage(jezik: string): Promise<LanguageLevelsDto> {
+  // Metoda za dobijanje jezika sa nivoima
+  async getLanguagesWithLevels(): Promise<{ jezik: string; nivoi: string[] }[]> {
     try {
-      const nivoi = await this.languageLevelRepository.getLevelsByLanguage(jezik);
-      return new LanguageLevelsDto(jezik, nivoi);
+      // Dobijamo jezike sa njihovim nivoima iz repozitorijuma
+      return await this.languageLevelRepository.getLanguagesWithLevels();
     } catch (error) {
-      console.error(`Greška pri dohvatanju nivoa za jezik ${jezik}:`, error);
-      return new LanguageLevelsDto();
+      console.error("Greška pri dohvatanju jezika sa nivoima:", error);
+      return [];
     }
   }
 
+  // Metoda za dobijanje nivoa za određeni jezik
+  async getLevelsByLanguage(jezik: string): Promise<LanguageLevelsDto> {
+    try {
+      // Dobijamo nivoe za jezik iz repozitorijuma
+      const nivoi = await this.languageLevelRepository.getLevelsByLanguage(jezik);
+
+      // Vraćamo DTO sa podacima jezika i nivoa
+      return new LanguageLevelsDto(jezik, nivoi);
+    } catch (error) {
+      console.error(`Greška pri dohvatanju nivoa za jezik ${jezik}:`, error);
+      return new LanguageLevelsDto();  // U slučaju greške vraćamo prazan DTO
+    }
+  }
+
+  // Metoda za dodavanje novog nivoa za jezik
   async dodavanjeLanguageLevel(jezik: string, naziv: string): Promise<LanguageLevelDto> {
     try {
-      const languageLevel = await this.languageLevelRepository.createLanguageLevels({ jezik, naziv });
+      // Kreiramo novi nivo jezika pomoću repozitorijuma
+      const languageLevel = await this.languageLevelRepository.createLanguageLevels(new LanguageLevel(jezik, naziv));
 
+      // Ako je unos uspešan, vraćamo DTO sa podacima o nivou
       if (languageLevel.jezik !== "") {
         return new LanguageLevelDto(languageLevel.jezik, languageLevel.naziv);
       }
+
+      // Ako unos nije uspešan, vraćamo prazan DTO
       return new LanguageLevelDto();
     } catch (error) {
-      console.error("Error while adding language level:", error);
-      throw new Error("Failed to add language level");
+      console.error("Greška pri dodavanju nivoa jezika:", error);
+      throw new Error("Neuspešno dodavanje nivoa jezika");  // Bacamo grešku ako dođe do problema
     }
   }
 }

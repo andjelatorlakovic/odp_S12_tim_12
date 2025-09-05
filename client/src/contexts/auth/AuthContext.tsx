@@ -107,8 +107,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         logout,
         isAuthenticated,
         isLoading,
-        blokiran,        // dodaj u context
-        setBlokiran      // i set funkciju
+        blokiran,       
+        setBlokiran      
     };
 
     return (

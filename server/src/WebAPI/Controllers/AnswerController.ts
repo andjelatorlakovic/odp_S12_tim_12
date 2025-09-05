@@ -1,24 +1,26 @@
 import { Router, Request, Response } from 'express';
-import { AnswerService } from '../../Services/answers/AnswerService'; // prilagodi putanju
 import { validacijaPodatakaOdgovora } from '../validators/answers/AnswerValidator';
 import { authenticate } from '../../Middlewares/autentification/AuthMiddleware';
+import { IAnswerService } from '../../Domain/services/answers/IAnswerService';
 
 export class AnswerController {
-  private router = Router();
-  private answerService: AnswerService;
+  private router: Router;
+  private answerService: IAnswerService;
 
-  constructor(answerService: AnswerService) {
+  constructor(answerService: IAnswerService) {
+    this.router = Router();
     this.answerService = answerService;
-
-    // Definisanje ruta
-    this.router.get('/answersAll',authenticate, this.dobaviSveOdgovore);
-    this.router.post('/answerAdd', authenticate,this.kreirajOdgovor);
-    this.router.get('/answerGetId/:id',authenticate, this.dobaviOdgovorPoId);
-    this.router.get('/answersForQuestion/:pitanje_id',authenticate, this.dobaviOdgovoreZaPitanje);
-    this.router.delete('/answerDelete/:id',authenticate, this.obrisiOdgovor);
+    this.initializeRoutes();
+  }
+  private initializeRoutes(): void {
+    this.router.get('/answer/All',authenticate, this.dobaviSveOdgovore);
+    this.router.post('/answer/Add', authenticate,this.kreirajOdgovor);
+    this.router.get('/answer/GetId/:id',authenticate, this.dobaviOdgovorPoId);
+    this.router.get('/answer/ForQuestion/:pitanje_id',authenticate, this.dobaviOdgovoreZaPitanje);
+    this.router.delete('/answer/Delete/:id',authenticate, this.obrisiOdgovor);
   }
 
-  getRouter() {
+    public getRouter(): Router {
     return this.router;
   }
 

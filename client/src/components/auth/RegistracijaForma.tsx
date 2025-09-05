@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link } from "react-router-dom"; 
 import { validacijaPodatakaAuth } from "../../api_services/validators/auth/AuthValidator";
 import type { AuthFormProps } from "../../types/props/auth_form_props/AuthFormProps";
-
 import knjiga from "../../assets/knjiga.png";
 
 export function RegistracijaForma({ authApi }: AuthFormProps) {

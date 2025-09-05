@@ -6,4 +6,5 @@ export interface IKvizService {
   dobaviKvizPoId(id: number): Promise<QuizDto>;
   dobaviKvizPoNazivJezikNivo(naziv_kviza: string, jezik: string, nivo_znanja: string): Promise<QuizDto>;
   obrisiKviz(id: number): Promise<boolean>;
+  dobaviKvizovePoJezikuINivou(userId: number, jezik: string, nivo_znanja: string): Promise<QuizDto[]>;
 }

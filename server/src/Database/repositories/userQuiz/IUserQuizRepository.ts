@@ -19,9 +19,9 @@ export interface IUserQuizResultRepository {
 
   // Izbriši rezultat po userId i kvizId
   deleteByUserAndKviz(userId: number, kvizId: number): Promise<boolean>;
-
+  getQuizCountByUser(): Promise<{ username: string, quizCount: number }[]>;
   countQuizzesAbove85(userId: number, jezik: string): Promise<number>;
-
+  getQuizzesAbove85Grouped(): Promise<{ user_id: number; jezik: string; nivo: string; broj_kviza: number }[]>;
   // Ažuriraj procenat tačnih odgovora
   updateProcenat(userId: number, kvizId: number, procenat: number): Promise<boolean>;
 }

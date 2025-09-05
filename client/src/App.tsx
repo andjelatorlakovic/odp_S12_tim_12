@@ -14,6 +14,10 @@ import KvizStranica from './pages/korisnik/KvizStranica';
 import UnaprediNivoKorisnikaStranica from './pages/moderator/UnaprediNivoKorisnikaStranica';
 import RezultatiStranica from './pages/korisnik/RezultatiStranica';
 import PrikaziNapredakStranica from './pages/korisnik/PrikaziNapredakStranica';
+import { LanguageLevelAPIService } from './api_services/languageLevels/LanguageLevelApiService'
+import { QuestionAPIService } from './api_services/questions/QuestionsApiService';
+import { AnswerAPIService } from './api_services/answers/AnswerApiService';
+import { UserQuizApiService } from './api_services/userQuiz/UserQuizApiService';
 
 function App() {
   return (
@@ -22,23 +26,40 @@ function App() {
 
       <Route path="/prijava" element={<PrijavaStranica authApi={authApi} />} />
       <Route path="/registracija" element={<RegistracijaStranica authApi={authApi} />} />
-       <Route path="/prikazi-napredak/:username" element={<PrikaziNapredakStranica />} />
-
+      <Route path="/prikazi-napredak/:username" element={<PrikaziNapredakStranica />} />
 
       {/* Zaštićene rute */}
       <Route
         path="/korisnik-dashboard"
         element={
           <ProtectedRoute requiredRole="korisnik">
-            <KorisnikStranica />
+            <KorisnikStranica apiService={LanguageLevelAPIService} />
           </ProtectedRoute>
         }
-        >
-          <Route path="kreiraj-kviz" element={<KreirajKvizStranica />} />
-           <Route path="kviz" element={<KvizStranica />} />
-           <Route path="moji-rezultati" element={<RezultatiStranica />} />
-           
-       </Route>
+      >
+        <Route
+          path="kreiraj-kviz"
+          element={
+            <KreirajKvizStranica
+              languageLevelAPIService={LanguageLevelAPIService}
+              questionAPIService={QuestionAPIService}
+              answerAPIService={AnswerAPIService}
+            />
+          }
+        />
+        <Route
+        path="kviz"
+        element={
+          <KvizStranica
+            questionApiService={QuestionAPIService}
+            answerApiService={AnswerAPIService}
+            userQuizApi={UserQuizApiService}
+          />
+        }
+      />
+        <Route path="moji-rezultati" element={<RezultatiStranica userQuizApi={UserQuizApiService} />} />
+
+      </Route>
 
       <Route
         path="/moderator-dashboard"
@@ -49,12 +70,10 @@ function App() {
         }
       >
         <Route path="dodaj-jezik" element={<DodajNoviJezikStranica />} />
-        <Route path="blokiraj-korisnika" element={<BlokirajKorisnikaStranica />} /> 
-         <Route path="lista-blokiranih" element={<ListaBlokiranihStranica />} /> 
-         <Route path="uredi-nivo" element={<UnaprediNivoKorisnikaStranica />} />
+        <Route path="blokiraj-korisnika" element={<BlokirajKorisnikaStranica />} />
+        <Route path="lista-blokiranih" element={<ListaBlokiranihStranica />} />
+        <Route path="uredi-nivo" element={<UnaprediNivoKorisnikaStranica />} />
       </Route>
-
-
 
       {/* Default preusmeravanje */}
       <Route path="*" element={<Navigate to="/prijava" replace />} />

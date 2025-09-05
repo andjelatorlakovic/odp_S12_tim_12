@@ -3,23 +3,26 @@ import { useNavigate } from "react-router-dom";
 import knjiga from "../../assets/knjiga.png";
 import { Link } from "react-router-dom";
 import type { JezikSaNivoima } from "../../types/languageLevels/ApiResponseLanguageWithLevel";
-import { LanguageLevelAPIService } from "../../api_services/languageLevels/LanguageLevelApiService";
 import { jwtDecode } from "jwt-decode";
 import { userLanguageLevelApi } from "../../api_services/userLanguage/UserLanguageApiService";
+import type { ILanguageLevelAPIService } from "../../api_services/languageLevels/ILanguageLevelApiService";
 
 interface JwtPayload {
   id: number;
   blokiran?: boolean | number;
 }
 
-export function KorisnikForma() {
+interface KorisnikFormaProps{
+  apiService: ILanguageLevelAPIService;
+}
+
+export const KorisnikForma : React.FC<KorisnikFormaProps> = ({apiService}:KorisnikFormaProps) => {
   const [selectedLanguage, setSelectedLanguage] = useState("");
   const [languages, setLanguages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockedMessage, setBlockedMessage] = useState("");
-  const apiService = new LanguageLevelAPIService();
   const navigate = useNavigate();
 
   const getUserFromToken = (): JwtPayload | null => {
@@ -52,7 +55,9 @@ export function KorisnikForma() {
     }
 
     setLoading(true);
-    const response = await userLanguageLevelApi.dodajUserLanguageLevel(user.id, selectedLanguage, "A1");
+    const token = localStorage.getItem('authToken'); // Uzmi token sa localStorage
+    const response = await userLanguageLevelApi.dodajUserLanguageLevel(user.id, selectedLanguage, "A1", token!); // Prosledi token
+
     setLoading(false);
 
     if (response.success) {
@@ -67,8 +72,14 @@ export function KorisnikForma() {
   };
 
   const fetchLanguages = async () => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      console.error("Token nije pronađen. Niste ulogovani.");
+      return;
+    }
+
     try {
-      const data: JezikSaNivoima[] = await apiService.getLanguagesWithLevels();
+      const data: JezikSaNivoima[] = await apiService.getLanguagesWithLevels(token); // Prosledi token kao argument
       const jezici = data.map(item => item.jezik);
       setLanguages(jezici);
     } catch (error) {

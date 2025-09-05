@@ -18,10 +18,7 @@ export class AuthController {
     this.router.post('/auth/register', this.registracija.bind(this));
   }
 
-  /**
-   * POST /api/v1/auth/login
-   * Prijava korisnika
-   */
+
 private async prijava(req: Request, res: Response): Promise<void> {
   try {
     const { korisnickoIme, lozinka } = req.body;

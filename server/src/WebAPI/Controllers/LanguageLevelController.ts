@@ -1,32 +1,34 @@
 import { Router, Request, Response } from 'express';
-import { LanguageLevelRepository } from '../../Domain/repositories/languageLevels/LanguageLevelRepository';
-import { LanguageLevelService } from '../../Services/languageLevels/LanguageLevelService';
 import { authenticate } from '../../Middlewares/autentification/AuthMiddleware';
 import { RezultatValidacije } from '../../Domain/types/ValidationResult';
 import { validacijaPodatakaJezikNivo } from '../validators/languageLevel/LanguageLevelValidator';
+import { ILanguageLevelService } from '../../Domain/services/languageLevel/ILanguageLevelService';
 
 
 export class LanguageLevelController {
-  private router = Router();
-  private languageLevelRepository = new LanguageLevelRepository();
-  private languageLevelService: LanguageLevelService;
+  private router: Router;
+  private languageLevelService: ILanguageLevelService;
 
-  constructor() {
-    this.languageLevelService = new LanguageLevelService(this.languageLevelRepository);
-
-    this.router.get('/languageLevels', authenticate, this.getLanguageLevels);
-    this.router.post('/addLanguageLevel', authenticate, this.dodajLanguageLevel);
-    this.router.get('/languagesWithLevels', this.getLanguagesWithLevels);
-    this.router.get('/levels', authenticate, this.getLevelsByLanguage);
+  constructor(languageLevelService: ILanguageLevelService) {
+    this.router = Router();
+    this.languageLevelService = languageLevelService;
+    this.initializeRoutes();
   }
 
-  getRouter() {
+    private initializeRoutes(): void {
+    this.router.get('/languageLevel/Get', authenticate, this.getLanguageLevels);
+    this.router.post('/languageLevel/Add', authenticate, this.dodajLanguageLevel);
+    this.router.get('/languageLevel/With', this.getLanguagesWithLevels);
+    this.router.get('/languageLevel/levels', authenticate, this.getLevelsByLanguage);
+  }
+
+  public getRouter(): Router {
     return this.router;
   }
 
   private getLanguageLevels = async (req: Request, res: Response) => {
     try {
-      const languageLevels = await this.languageLevelRepository.getLanguagesWithLevels();
+      const languageLevels = await this.languageLevelService.getLanguagesWithLevels();
       res.json(languageLevels);
     } catch (error) {
       console.error('Greška pri dohvaćanju jezik-nivo parova:', error);

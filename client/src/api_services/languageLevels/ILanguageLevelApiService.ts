@@ -1,9 +1,11 @@
-import type { ApiResponseLanguageLevel } from "../../types/languageLevels/ApiResponseLanguageLevel";
+import type { ApiResponseLanguageLevel } from '../../types/languageLevels/ApiResponseLanguageLevel';
+import type { JezikSaNivoima } from '../../types/languageLevels/ApiResponseLanguageWithLevel';
+import type { LanguageLevelsDto } from '../../models/languageLevels/LanguageLevelsDto'; // DTO interface
 
 export interface ILanguageLevelAPIService {
-  // Metoda za dodavanje jezik-nivo para
-  dodajLanguageLevel(jezik: string, naziv: string): Promise<ApiResponseLanguageLevel>;
+  dodajLanguageLevel(jezik: string, naziv: string, token: string): Promise<ApiResponseLanguageLevel>;
 
-  // Metoda za dohvatanje svih jezik-nivo parova
-  getAllLanguageLevels(): Promise<ApiResponseLanguageLevel>;
+  getLanguagesWithLevels(token: string): Promise<JezikSaNivoima[]>;
+
+  getLevelsByLanguage(jezik: string, token: string): Promise<LanguageLevelsDto>;
 }

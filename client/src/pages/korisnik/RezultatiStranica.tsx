@@ -1,10 +1,14 @@
 
+import type { IUserQuizApiService } from "../../api_services/userQuiz/IUserQuizApiService";
 import { RezultatiForma } from "../../components/korisnik/RezultatiForma";
 
-export default function RezultatiStranica() {
+interface RezultatiFormaProps {
+  userQuizApi: IUserQuizApiService;
+} 
+export default function RezultatiStranica({userQuizApi} : RezultatiFormaProps) {
   return (
     <div>
-      <RezultatiForma />
+      <RezultatiForma userQuizApi={userQuizApi} />
     </div>
   );
 }

@@ -1,99 +1,81 @@
-import type { ApiResponseAnswer, Answer } from '../../types/answers/ApiResponseAnswer';
-import axios from 'axios';
+import axios from "axios";
+import type { ApiResponseAnswer, Answer } from "../../types/answers/ApiResponseAnswer";
 import type { IAnswerAPIService } from './IAnswerApiService';
 
+const API_URL: string = import.meta.env.VITE_API_URL + 'answer';
 
-// Endpointe
-const API_URL_ALL_ANSWERS = import.meta.env.VITE_API_URL + 'answersAll';
-const API_URL_ADD_ANSWER = import.meta.env.VITE_API_URL + 'answerAdd';
-const API_URL_GET_ANSWER_BY_ID = import.meta.env.VITE_API_URL + 'answerGetId';
-const API_URL_GET_ANSWERS_FOR_QUESTION = import.meta.env.VITE_API_URL + 'answersForQuestion';
-const API_URL_DELETE_ANSWER = import.meta.env.VITE_API_URL + 'answerDelete';
-
-// Funkcija za token
-const getToken = () => localStorage.getItem('authToken');
-
-export class AnswerAPIService implements IAnswerAPIService {
-  private apiUrlAllAnswers: string;
-  private apiUrlAddAnswer: string;
-  private apiUrlGetAnswerById: string;
-  private apiUrlGetAnswersForQuestion: string;
-  private apiUrlDeleteAnswer: string;
-
-  constructor() {
-    this.apiUrlAllAnswers = API_URL_ALL_ANSWERS;
-    this.apiUrlAddAnswer = API_URL_ADD_ANSWER;
-    this.apiUrlGetAnswerById = API_URL_GET_ANSWER_BY_ID;
-    this.apiUrlGetAnswersForQuestion = API_URL_GET_ANSWERS_FOR_QUESTION;
-    this.apiUrlDeleteAnswer = API_URL_DELETE_ANSWER;
-  }
-
-  // Dohvati sve odgovore (zahteva autentifikaciju)
-  async dobaviSveOdgovore(): Promise<Answer[]> {
+export const AnswerAPIService: IAnswerAPIService = {
+  async dobaviSveOdgovore(token: string): Promise<Answer[]> {
     try {
-      const token = getToken();
-      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-      const response = await axios.get<Answer[]>(this.apiUrlAllAnswers, config);
+      const response = await axios.get<Answer[]>(`${API_URL}/All`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return response.data;
     } catch (error) {
-      console.error('❌ Greška pri dohvatanju svih odgovora:', error);
+      console.error('❌ Error fetching all answers:', error);
       return [];
     }
-  }
+  },
 
-  // Kreiraj novi odgovor
-  async kreirajOdgovor(pitanje_id: number, tekst_odgovora: string, tacan: boolean): Promise<ApiResponseAnswer> {
+  async kreirajOdgovor(pitanje_id: number, tekst_odgovora: string, tacan: boolean, token: string): Promise<ApiResponseAnswer> {
     try {
-      const token = getToken();
-      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-      const response = await axios.post<ApiResponseAnswer>(
-        this.apiUrlAddAnswer,
-        { pitanje_id, tekst_odgovora, tacan },
-        config
-      );
+      const response = await axios.post<ApiResponseAnswer>(`${API_URL}/Add`, {
+        pitanje_id,
+        tekst_odgovora,
+        tacan,
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return response.data;
     } catch (error) {
-      console.error('❌ Greška pri kreiranju odgovora:', error);
+      console.error('❌ Error creating answer:', error);
       throw new Error('Failed to create answer');
     }
-  }
+  },
 
-  // Dohvati odgovor po ID (zahteva autentifikaciju)
-  async dobaviOdgovorPoId(id: number): Promise<Answer | null> {
+  async dobaviOdgovorPoId(id: number, token: string): Promise<Answer | null> {
     try {
-      const token = getToken();
-      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-      const response = await axios.get<Answer>(`${this.apiUrlGetAnswerById}/${id}`, config);
+      const response = await axios.get<Answer>(`${API_URL}/GetId/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return response.data;
     } catch (error) {
-      console.error('❌ Greška pri dohvatanju odgovora po ID:', error);
+      console.error('❌ Error fetching answer by ID:', error);
       return null;
     }
-  }
+  },
 
-  // Dohvati odgovore za pitanje po pitanje_id (zahteva autentifikaciju)
-  async dobaviOdgovoreZaPitanje(pitanje_id: number): Promise<Answer[]> {
+  async dobaviOdgovoreZaPitanje(pitanje_id: number, token: string): Promise<Answer[]> {
     try {
-      const token = getToken();
-      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-      const response = await axios.get<Answer[]>(`${this.apiUrlGetAnswersForQuestion}/${pitanje_id}`, config);
+      const response = await axios.get<Answer[]>(`${API_URL}/ForQuestion/${pitanje_id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return response.data;
     } catch (error) {
-      console.error('❌ Greška pri dohvatanju odgovora za pitanje:', error);
+      console.error('❌ Error fetching answers for the question:', error);
       return [];
     }
-  }
+  },
 
-  // Obrisi odgovor po ID (zahteva autentifikaciju)
-  async obrisiOdgovor(id: number): Promise<{ success: boolean; message: string }> {
+  async obrisiOdgovor(id: number, token: string): Promise<{ success: boolean; message: string }> {
     try {
-      const token = getToken();
-      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-      const response = await axios.delete<{ success: boolean; message: string }>(`${this.apiUrlDeleteAnswer}/${id}`, config);
+      const response = await axios.delete<{ success: boolean; message: string }>(`${API_URL}/Delete/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return response.data;
     } catch (error) {
-      console.error('❌ Greška pri brisanju odgovora:', error);
-      return { success: false, message: 'Greška pri brisanju odgovora' };
+      console.error('❌ Error deleting answer:', error);
+      return { success: false, message: 'Error deleting answer' };
     }
-  }
-}
+  },
+};

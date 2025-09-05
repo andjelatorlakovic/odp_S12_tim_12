@@ -1,12 +1,12 @@
 import { IAnswerRepository } from "../../Database/repositories/answer/IAnswerRepository";
 import { AnswerDto } from "../../Domain/DTOs/answers/AnswerDto";
 import { Answer } from "../../Domain/models/Answer";
+import { IAnswerService } from "../../Domain/services/answers/IAnswerService";
 
-export class AnswerService {
-  private answerRepository: IAnswerRepository;
+export class AnswerService implements IAnswerService {
 
-  constructor(answerRepository: IAnswerRepository) {
-    this.answerRepository = answerRepository;
+
+  constructor(private answerRepository: IAnswerRepository) {
   }
 
   async kreirajOdgovor(pitanje_id: number, tekst_odgovora: string, tacan: boolean): Promise<AnswerDto> {

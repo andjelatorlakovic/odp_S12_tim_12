@@ -1,18 +1,23 @@
 import type { Answer, ApiResponseAnswer } from "../../types/answers/ApiResponseAnswer";
 
-
 export interface IAnswerAPIService {
-    dobaviSveOdgovore(): Promise<Answer[]>;
+    // Dohvati sve odgovore sa prosleđenim tokenom
+    dobaviSveOdgovore(token: string): Promise<Answer[]>;
 
+    // Kreiraj novi odgovor sa prosleđenim tokenom
     kreirajOdgovor(
         pitanje_id: number,
         tekst_odgovora: string,
-        tacan: boolean
+        tacan: boolean,
+        token: string
     ): Promise<ApiResponseAnswer>;
 
-    dobaviOdgovoreZaPitanje(pitanje_id: number): Promise<Answer[]>;
+    // Dohvati odgovore za pitanje sa prosleđenim tokenom
+    dobaviOdgovoreZaPitanje(pitanje_id: number, token: string): Promise<Answer[]>;
 
-    dobaviOdgovorPoId(id: number): Promise<Answer | null>;
+    // Dohvati odgovor po ID sa prosleđenim tokenom
+    dobaviOdgovorPoId(id: number, token: string): Promise<Answer | null>;
 
-    obrisiOdgovor(id: number): Promise<{ success: boolean; message: string }>;
+    // Obrisi odgovor po ID sa prosleđenim tokenom
+    obrisiOdgovor(id: number, token: string): Promise<{ success: boolean; message: string }>;
 }

@@ -1,31 +1,31 @@
 import { Router, Request, Response } from 'express';
-import { LanguagesRepository } from '../../Domain/repositories/languages/LanguagesRepository';
-import { LanguageService } from '../../Services/languages/LanguageService'; // Importujemo LanguageService
 import { validacijaPodatakaAuth } from '../validators/languages/LanguageValidator'; // Importujemo funkciju za validaciju jezika
 import { authenticate } from '../../Middlewares/autentification/AuthMiddleware';
+import { ILanguageService } from '../../Domain/services/languages/ILanguageService';
 
 export class LanguagesController {
-  private router = Router();
-  private languagesRepository = new LanguagesRepository();
-  private languageService: LanguageService;
+  private router: Router;
+  private languageService: ILanguageService;
 
-  constructor() {
-    // Kreiramo instancu LanguageService sa zavisnošću LanguagesRepository
-    this.languageService = new LanguageService(this.languagesRepository);
-
-    // Postavljamo rute
-    this.router.get('/languages',authenticate ,this.getLanguages);
-    this.router.post('/languagesAdd',authenticate, this.dodajJezik); // Nova ruta za dodavanje jezika
+  constructor(languageService: ILanguageService) {
+    this.router = Router();
+    this.languageService = languageService;
+    this.initializeRoutes();
+  }
+    private initializeRoutes(): void {
+      this.router.get('/languages',authenticate ,this.getLanguages);
+    this.router.post('/languagesAdd',authenticate, this.dodajJezik); 
   }
 
-  getRouter() {
+
+  public getRouter(): Router {
     return this.router;
   }
 
   // Ruta za dohvat svih jezika
   private getLanguages = async (req: Request, res: Response) => {
     try {
-      const jezici = await this.languagesRepository.getAllLanguages();
+      const jezici = await this.languageService.uzmiSveJezike();
       res.json(jezici);
     } catch (error) {
       console.error('Greška pri dohvaćanju jezika:', error);

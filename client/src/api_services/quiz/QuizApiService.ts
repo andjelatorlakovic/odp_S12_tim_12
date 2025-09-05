@@ -1,25 +1,20 @@
 import axios from 'axios';
 import type { ApiResponseKviz, ApiResponseKvizList, ApiResponseDelete } from '../../types/quiz/ApiResponseQuiz';
+import type { IQuizApiService } from './IQuizApiService';
 
-const BASE_URL: string = import.meta.env.VITE_API_URL;
+const API_URL: string = import.meta.env.VITE_API_URL + "kviz";
 
-// API rute
-const API_URL_ALL = BASE_URL + "kviz";
-const API_URL_ADD = BASE_URL + "kviz";
-const API_URL_GET_ID = (id: number) => BASE_URL + `kvizId?id=${id}`;
-const API_URL_GET_NAZ_JEZ_NIV = BASE_URL + "kvizPretraga";
-const API_URL_FILTER = BASE_URL + "kvizFilter";
-const API_URL_DELETE = (id: number) => BASE_URL + `kvizObrisi?id=${id}`;
 
-const getToken = () => localStorage.getItem('authToken');
+export const kvizApi: IQuizApiService = {
 
-export const kvizApi = {
-  async dobaviSveKvizove(): Promise<ApiResponseKvizList> {
+  async dobaviSveKvizove(token: string): Promise<ApiResponseKvizList> {
     try {
-      const token = getToken();
-      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-      const res = await axios.get<ApiResponseKvizList>(API_URL_ALL, config);
-      return res.data;
+      const response = await axios.get<ApiResponseKvizList>(`${API_URL}/All`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
     } catch (error) {
       let message = "Greška pri dohvatanju svih kvizova.";
       if (axios.isAxiosError(error)) {
@@ -29,16 +24,17 @@ export const kvizApi = {
     }
   },
 
-  async kreirajKviz(naziv_kviza: string, jezik: string, nivo_znanja: string): Promise<ApiResponseKviz> {
+  async kreirajKviz(naziv_kviza: string, jezik: string, nivo_znanja: string, token: string): Promise<ApiResponseKviz> {
     try {
-      const token = getToken();
-      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-      const res = await axios.post<ApiResponseKviz>(
-        API_URL_ADD,
+      const response = await axios.post<ApiResponseKviz>(`${API_URL}/Add`, 
         { naziv_kviza, jezik, nivo_znanja },
-        config
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
-      return res.data;
+      return response.data;
     } catch (error) {
       let message = "Greška pri kreiranju kviza.";
       if (axios.isAxiosError(error)) {
@@ -48,12 +44,15 @@ export const kvizApi = {
     }
   },
 
-  async dobaviKvizPoId(id: number): Promise<ApiResponseKviz> {
+  async dobaviKvizPoId(id: number, token: string): Promise<ApiResponseKviz> {
     try {
-      const token = getToken();
-      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-      const res = await axios.get<ApiResponseKviz>(API_URL_GET_ID(id), config);
-      return res.data;
+      const response = await axios.get<ApiResponseKviz>(`${API_URL}/Id`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        params: { id },
+      });
+      return response.data;
     } catch (error) {
       let message = "Greška pri dohvatanju kviza po ID.";
       if (axios.isAxiosError(error)) {
@@ -63,14 +62,15 @@ export const kvizApi = {
     }
   },
 
-  async dobaviKvizPoNazivJezikNivo(naziv_kviza: string, jezik: string, nivo_znanja: string): Promise<ApiResponseKviz> {
+  async dobaviKvizPoNazivJezikNivo(naziv_kviza: string, jezik: string, nivo_znanja: string, token: string): Promise<ApiResponseKviz> {
     try {
-      const token = getToken();
-      const config = token
-        ? { headers: { Authorization: `Bearer ${token}` }, params: { naziv_kviza, jezik, nivo_znanja } }
-        : { params: { naziv_kviza, jezik, nivo_znanja } };
-      const res = await axios.get<ApiResponseKviz>(API_URL_GET_NAZ_JEZ_NIV, config);
-      return res.data;
+      const response = await axios.get<ApiResponseKviz>(`${API_URL}/Pretraga`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        params: { naziv_kviza, jezik, nivo_znanja },
+      });
+      return response.data;
     } catch (error) {
       let message = "Greška pri dohvatanju kviza po naziv-jezik-nivo.";
       if (axios.isAxiosError(error)) {
@@ -80,14 +80,15 @@ export const kvizApi = {
     }
   },
 
-  async dobaviKvizovePoJezikuINivou(jezik: string, nivo_znanja: string): Promise<ApiResponseKvizList> {
+  async dobaviKvizovePoJezikuINivou(jezik: string, nivo_znanja: string, token: string): Promise<ApiResponseKvizList> {
     try {
-      const token = getToken();
-      const config = token
-        ? { headers: { Authorization: `Bearer ${token}` }, params: { jezik, nivo_znanja } }
-        : { params: { jezik, nivo_znanja } };
-      const res = await axios.get<ApiResponseKvizList>(API_URL_FILTER, config);
-      return res.data;
+      const response = await axios.get<ApiResponseKvizList>(`${API_URL}/Filter`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        params: { jezik, nivo_znanja },
+      });
+      return response.data;
     } catch (error) {
       let message = "Greška pri filtriranju kvizova po jeziku i nivou.";
       if (axios.isAxiosError(error)) {
@@ -97,12 +98,15 @@ export const kvizApi = {
     }
   },
 
-  async obrisiKviz(id: number): Promise<ApiResponseDelete> {
+  async obrisiKviz(id: number, token: string): Promise<ApiResponseDelete> {
     try {
-      const token = getToken();
-      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-      const res = await axios.delete<ApiResponseDelete>(API_URL_DELETE(id), config);
-      return res.data;
+      const response = await axios.delete<ApiResponseDelete>(`${API_URL}/Obrisi`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        params: { id },
+      });
+      return response.data;
     } catch (error) {
       let message = "Greška pri brisanju kviza.";
       if (axios.isAxiosError(error)) {

@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { userLanguageLevelApi } from "../../api_services/userLanguage/UserLanguageApiService";
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import { kvizApi } from "../../api_services/quiz/QuizApiService";
-import { UserQuizApiService } from "../../api_services/userQuiz/UserQuizApiService";
-
 import knjiga from "../../assets/knjiga.png";
-import { QuestionAPIService } from "../../api_services/questions/QuestionsApiService";
-import { AnswerAPIService } from "../../api_services/answers/AnswerApiService";
+import type { IQuestionAPIService } from "../../api_services/questions/IQuestionsApiService";
+import type { IAnswerAPIService } from "../../api_services/answers/IAnswerApiService";
+import type { IUserQuizApiService } from "../../api_services/userQuiz/IUserQuizApiService";
 
+interface KvizFomaProps{
+questionApiService :IQuestionAPIService;
+answerApiService : IAnswerAPIService;
+userQuizApi : IUserQuizApiService;
+}
 interface Kviz {
   id: number;
   naziv_kviza: string;
@@ -29,7 +33,6 @@ interface Answer {
 
 function getUserIdFromToken(): number | null {
   const token = localStorage.getItem("authToken");
-  console.log(token);
   if (!token) return null;
 
   try {
@@ -41,11 +44,11 @@ function getUserIdFromToken(): number | null {
   }
 }
 
-const questionApiService = new QuestionAPIService();
-const answerApiService = new AnswerAPIService();
-const userQuizApi = new UserQuizApiService();
-
-export function KvizForma() {
+export function KvizForma({
+  questionApiService,
+  answerApiService,
+  userQuizApi,
+}: KvizFomaProps)  {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const language = params.get("language") || "";
@@ -95,7 +98,8 @@ export function KvizForma() {
 
     // Čuvanje rezultata
     const userId = getUserIdFromToken();
-    if (!userId || !language || !nivo) return;
+    const token = localStorage.getItem("authToken");
+    if (!userId || !language || !nivo || !token) return;
 
     const procenatTacnih = (brojTacnih / pitanja.length) * 100;
 
@@ -105,7 +109,8 @@ export function KvizForma() {
         selectedKvizId,
         language,
         nivo,
-        procenatTacnih
+        procenatTacnih,
+        token // prosleđivanje tokena
       );
 
       if (response.success) {
@@ -128,11 +133,12 @@ export function KvizForma() {
 
     // Osvježavanje liste kvizova
     const userId = getUserIdFromToken();
-    if (!userId || !language || !nivo) return;
+    const token = localStorage.getItem("authToken");
+    if (!userId || !language || !nivo || !token) return;
 
     setLoadingKvizovi(true);
     kvizApi
-      .dobaviKvizovePoJezikuINivou(language, nivo)
+      .dobaviKvizovePoJezikuINivou(language, nivo, token) // Prosleđivanje tokena
       .then((response) => {
         if (response.success && response.data) {
           setKvizovi(response.data);
@@ -166,7 +172,7 @@ export function KvizForma() {
 
     setLoading(true);
     userLanguageLevelApi
-      .getByUserAndLanguage(userId, language)
+      .getByUserAndLanguage(userId, language, localStorage.getItem("authToken")!) // Prosleđivanje tokena
       .then((response) => {
         if (response.success && response.data) {
           setNivo(response.data.nivo);
@@ -188,10 +194,11 @@ export function KvizForma() {
 
     setLoadingKvizovi(true);
     const userId = getUserIdFromToken();
-    if (!userId) return;
+    const token = localStorage.getItem("authToken");
+    if (!userId || !token) return;
 
     kvizApi
-      .dobaviKvizovePoJezikuINivou(language, nivo)
+      .dobaviKvizovePoJezikuINivou(language, nivo, token) // Prosleđivanje tokena
       .then((response) => {
         if (response.success && response.data) {
           setKvizovi(response.data);
@@ -214,15 +221,22 @@ export function KvizForma() {
     setLoadingPitanja(true);
     setErrorPitanja(null);
 
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      setError("Korisnik nije ulogovan.");
+      setLoadingPitanja(false);
+      return;
+    }
+
     questionApiService
-      .dobaviPitanjaZaKviz(selectedKvizId)
+      .dobaviPitanjaZaKviz(selectedKvizId, token) // Prosljeđivanje tokena
       .then(async (pitanjaResponse) => {
         setPitanja(pitanjaResponse);
 
         const odgovoriMap: Record<number, Answer[]> = {};
         await Promise.all(
           pitanjaResponse.map(async (pitanje) => {
-            const odgovori = await answerApiService.dobaviOdgovoreZaPitanje(pitanje.id);
+            const odgovori = await answerApiService.dobaviOdgovoreZaPitanje(pitanje.id, token); // Prosljeđivanje tokena
             odgovoriMap[pitanje.id] = odgovori;
           })
         );

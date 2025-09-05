@@ -2,29 +2,28 @@ import { Router, Request, Response } from 'express';
 import { authenticate } from '../../Middlewares/autentification/AuthMiddleware';
 import { UserQuizResultService } from '../../Services/userQuiz/UserQuizService';
 import { validacijaPodatakaUserQuiz } from '../validators/userQuiz/UserQuizValidator';
+import { IUserQuizResultService } from '../../Domain/services/userQuiz/IUserQuizService';
 
 export class UserQuizResultController {
   private router: Router;
-  private userQuizResultService: UserQuizResultService;
+  private userQuizResultService: IUserQuizResultService;
 
-  constructor(userQuizResultService: UserQuizResultService) {
+  constructor(userQuizResultService: IUserQuizResultService) {
     this.router = Router();
     this.userQuizResultService = userQuizResultService;
     this.initializeRoutes();
   }
 
   private initializeRoutes(): void {
-    this.router.get('/rezultati', authenticate, this.dobaviSveRezultate.bind(this));
-    this.router.get('/rezultat', authenticate, this.dobaviRezultatPoUserIKviz.bind(this));
-    this.router.get('/rezultatiUser', authenticate, this.dobaviRezultatePoUser.bind(this));
-    this.router.get('/rezultatiKviz', authenticate, this.dobaviRezultatePoKviz.bind(this));
-    this.router.post('/rezultat', authenticate, this.kreirajRezultat.bind(this));
-    this.router.put('/azurirajProcenat', authenticate, this.azurirajProcenat.bind(this));
-    this.router.delete('/obrisiRezultat', authenticate, this.obrisiRezultat.bind(this));
-
-    // Nova ruta za dohvatanje kvizova sa procenat tacnih > 85 i brojem kvizova > 3
-    this.router.get('/kvizoviPreko85SaBrojemVecimOdTri', this.dobaviKvizoveSaProcentomPreko85SaBrojemVecimOdTri.bind(this));
-     this.router.get('/brojKvizovaPoUseru', this.dobaviBrojKvizovaPoUseru.bind(this));
+    this.router.get('/rezultat/Svi', authenticate, this.dobaviSveRezultate.bind(this));
+    this.router.get('/rezultat/PoUser', authenticate, this.dobaviRezultatPoUserIKviz.bind(this));
+    this.router.get('/rezultat/User', authenticate, this.dobaviRezultatePoUser.bind(this));
+    this.router.get('/rezultat/Kviz', authenticate, this.dobaviRezultatePoKviz.bind(this));
+    this.router.post('/rezultat/Kreiraj', authenticate, this.kreirajRezultat.bind(this));
+    this.router.put('/rezultat/azurirajProcenat', authenticate, this.azurirajProcenat.bind(this));
+    this.router.delete('/rezultat/obrisiRezultat', authenticate, this.obrisiRezultat.bind(this));
+    this.router.get('/rezultat/kvizoviPreko85SaBrojemVecimOdTri', this.dobaviKvizoveSaProcentomPreko85SaBrojemVecimOdTri.bind(this));
+     this.router.get('/rezultat/brojKvizovaPoUseru', this.dobaviBrojKvizovaPoUseru.bind(this));
   }
 
   public getRouter(): Router {
@@ -166,7 +165,6 @@ private async dobaviBrojKvizovaPoUseru(req: Request, res: Response): Promise<voi
     }
   }
 
-  // NOVI METOD ZA DOBAVLJANJE KVIZOVA SA PROCENTOM PREKO 85 I BROJEM > 3
 private async dobaviKvizoveSaProcentomPreko85SaBrojemVecimOdTri(req: Request, res: Response): Promise<void> {
   try {
     const rezultati = await this.userQuizResultService.dobaviKvizoveSaProcentomPreko85SaBrojemVecimOdTri();

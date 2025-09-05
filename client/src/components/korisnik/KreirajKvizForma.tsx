@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
-import knjiga from "../../assets/knjiga.png";
-
-import { LanguageLevelAPIService } from "../../api_services/languageLevels/LanguageLevelApiService";
 import { kvizApi } from "../../api_services/quiz/QuizApiService";
-import { QuestionAPIService } from "../../api_services/questions/QuestionsApiService";
-import { AnswerAPIService } from "../../api_services/answers/AnswerApiService";
-import { validacijaPodatakaOdgovora } from "../../api_services/validators/answers/AnswerValidator";
+import knjiga from "../../assets/knjiga.png";
+import type { ILanguageLevelAPIService } from "../../api_services/languageLevels/ILanguageLevelApiService";
+import type { IQuestionAPIService } from "../../api_services/questions/IQuestionsApiService";
+import type { IAnswerAPIService } from "../../api_services/answers/IAnswerApiService";
 import { validacijaPodatakaPitanja } from "../../api_services/validators/questions/QuestionsValidator";
+import { validacijaPodatakaOdgovora } from "../../api_services/validators/answers/AnswerValidator";
 
 // Tipovi
 type Pitanje = {
@@ -20,7 +19,17 @@ type Jezik = {
   nivoi: string[];
 };
 
-export function KreirajKvizForma() {
+interface KreirajKvizFormaProps {
+  languageLevelAPIService: ILanguageLevelAPIService;
+  questionAPIService: IQuestionAPIService;
+  answerAPIService: IAnswerAPIService;
+}
+
+export function KreirajKvizForma({
+  languageLevelAPIService,
+  questionAPIService,
+  answerAPIService,
+}: KreirajKvizFormaProps) {
   const [pitanja, setPitanja] = useState<Pitanje[]>([
     { pitanje: "", odgovori: ["", "", "", ""], tacanOdgovor: "" },
   ]);
@@ -34,15 +43,17 @@ export function KreirajKvizForma() {
 
   const [nazivKviza, setNazivKviza] = useState<string>("");
 
-  const languageLevelAPIService = new LanguageLevelAPIService();
-  const questionAPIService = new QuestionAPIService();
-  const answerAPIService = new AnswerAPIService();
-
   // Učitavanje jezika i nivoa
   useEffect(() => {
     const fetchLanguages = async () => {
       try {
-        const langs = await languageLevelAPIService.getLanguagesWithLevels();
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+          setErrorMessage("Nema tokena za autorizaciju.");
+          return;
+        }
+
+        const langs = await languageLevelAPIService.getLanguagesWithLevels(token); // Prosleđivanje tokena
         setLanguages(langs);
       } catch (error) {
         console.error("Greška pri dohvaćanju jezika:", error);
@@ -144,15 +155,20 @@ export function KreirajKvizForma() {
       return;
     }
 
-
-
     if (!validateQuestions()) {
       return;
     }
 
     try {
+      // Get token
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        setApiMessage("Nema tokena za autorizaciju.");
+        return;
+      }
+
       // Kreiraj kviz
-      const response = await kvizApi.kreirajKviz(nazivKviza, selectedLanguage, selectedLevel);
+      const response = await kvizApi.kreirajKviz(nazivKviza, selectedLanguage, selectedLevel, token); // Prosleđivanje tokena
       if (!response.success || !response.data) {
         setApiMessage(response.message || "Дошло је до грешке приликом креирања квиза.");
         return;
@@ -162,7 +178,7 @@ export function KreirajKvizForma() {
 
       // Kreiranje pitanja i odgovora
       for (const pitanje of pitanja) {
-        const pitanjeResponse = await questionAPIService.kreirajPitanje(createdQuizId, pitanje.pitanje);
+        const pitanjeResponse = await questionAPIService.kreirajPitanje(createdQuizId, pitanje.pitanje, token); // Prosleđivanje tokena
         if (!pitanjeResponse.success || !pitanjeResponse.data) {
           setApiMessage("Грешка при креирању питања.");
           return;
@@ -173,7 +189,7 @@ export function KreirajKvizForma() {
         for (let i = 0; i < pitanje.odgovori.length; i++) {
           const odgovorTekst = pitanje.odgovori[i];
           const tacan = pitanje.tacanOdgovor === `odgovor${i + 1}`;
-          await answerAPIService.kreirajOdgovor(createdQuestionId, odgovorTekst, tacan);
+          await answerAPIService.kreirajOdgovor(createdQuestionId, odgovorTekst, tacan, token); // Prosleđivanje tokena
         }
       }
 
