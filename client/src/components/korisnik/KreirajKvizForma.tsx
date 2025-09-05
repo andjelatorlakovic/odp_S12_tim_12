@@ -144,7 +144,7 @@ export function KreirajKvizForma({
     return true;
   };
 
-  const canCreateQuiz = pitanja.length >= 14;
+  const canCreateQuiz = pitanja.length >= 7;
 
   // Podnošenje forme
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

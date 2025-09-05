@@ -26,7 +26,7 @@ export const kvizApi: IQuizApiService = {
 
   async kreirajKviz(naziv_kviza: string, jezik: string, nivo_znanja: string, token: string): Promise<ApiResponseKviz> {
     try {
-      const response = await axios.post<ApiResponseKviz>(`${API_URL}/Add`, 
+      const response = await axios.post<ApiResponseKviz>(`${API_URL}/Kreiraj`, 
         { naziv_kviza, jezik, nivo_znanja },
         {
           headers: {

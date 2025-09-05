@@ -14,11 +14,11 @@ export class KvizController {
   }
 
   private initializeRoutes(): void {
-    this.router.get('/kviz/Svi', authenticate, this.dobaviSveKvizove.bind(this));
+    this.router.get('/kviz/All', authenticate, this.dobaviSveKvizove.bind(this));
     this.router.get('/kviz/Id', authenticate, this.dobaviKvizPoId.bind(this));
     this.router.get('/kviz/Pretraga', authenticate, this.dobaviKvizPoNazivJezikNivo.bind(this));
     this.router.get('/kviz/Filter', authenticate, this.dobaviKvizovePoJezikuINivou.bind(this));
-    this.router.post('/kviz/Kreiraj', authenticate, this.kreirajKviz.bind(this));
+    this.router.post('/kviz/Kreiraj', this.kreirajKviz.bind(this));
     this.router.delete('/kviz/Obrisi', authenticate, this.obrisiKviz.bind(this));
   }
 

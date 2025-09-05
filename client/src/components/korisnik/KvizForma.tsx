@@ -339,7 +339,7 @@ export function KvizForma({
 
             <div className="text-center mt-10">
               <button
-                type="submit"
+                onClick={zavrsiKviz}
                 className="mt-[30px] w-[20%] h-[45px] bg-[#8f60bf] text-white text-[20px] hover:bg-white hover:text-[#8f60bf] border-2 border-[#8f60bf] transition mx-auto block rounded-md"
               >
                 Završi
