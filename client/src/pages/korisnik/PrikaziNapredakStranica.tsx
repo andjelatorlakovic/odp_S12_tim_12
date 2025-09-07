@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import knjiga from "../../assets/knjiga.png";
-
+import { UserQuizApiService } from '../../api_services/userQuiz/UserQuizApiService';
 
 import {
   Chart as ChartJS,
@@ -14,7 +14,6 @@ import {
   Legend
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import type { IUserQuizApiService } from '../../api_services/userQuiz/IUserQuizApiService';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -26,16 +25,13 @@ type FinishedLanguageLevelDto = {
   dani?: number;
 };
 
-interface NapredakProps {
-     userQuizApiService : IUserQuizApiService;
-}
-function PrikaziNapredakStranica({userQuizApiService}: NapredakProps) {
+function PrikaziNapredakStranica() {
   const { username } = useParams<{ username: string }>();
   const [userLevels, setUserLevels] = useState<FinishedLanguageLevelDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-
+  const userQuizApiService = UserQuizApiService;
 
   useEffect(() => {
     if (username) {

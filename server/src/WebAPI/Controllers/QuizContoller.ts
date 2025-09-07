@@ -118,7 +118,7 @@ export class KvizController {
       if (noviKviz.id !== 0) {
         res.status(201).json({ success: true, message: 'Kviz uspešno kreiran', data: noviKviz });
       } else {
-        res.status(400).json({ success: false, message: 'Kviz vec postoji sa datim nazivom za dati jezik i nivo.' });
+        res.status(400).json({ success: false, message: 'Kviz sa datim parametrima već postoji ili nije uspešno kreiran.' });
       }
     } catch (error) {
       console.error("Greška pri kreiranju kviza:", error);

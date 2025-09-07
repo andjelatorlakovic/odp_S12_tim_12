@@ -1,72 +1,39 @@
-import  { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import knjiga from "../../assets/knjiga.png";
 import type { FinishedLanguageLevelDto } from "../../models/userQuiz/FinishedLevelsDto";
 import type { IUserQuizApiService } from "../../api_services/userQuiz/IUserQuizApiService";
-import type { ILanguageLevelAPIService } from "../../api_services/languageLevels/ILanguageLevelApiService";
 import { useAuth } from "../../hooks/auth/useAuthHook";
 
 interface RezultatiFormaProps {
   userQuizApi: IUserQuizApiService;
-  languageLevelAPIService: ILanguageLevelAPIService;
 }
 
-export function RezultatiForma({ userQuizApi, languageLevelAPIService }: RezultatiFormaProps) {
+export function RezultatiForma({ userQuizApi }: RezultatiFormaProps) {
   const { token, user } = useAuth();  
   const [rezultati, setRezultati] = useState<FinishedLanguageLevelDto[]>([]);
-  const [nivoiPoJeziku, setNivoiPoJeziku] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchData() {
-      if (!user?.korisnickoIme || !token) {
-        setError("Niste prijavljeni ili nema tokena.");
-        setLoading(false);
-        return;
-      }
+    if (!user?.korisnickoIme || !token) {
+      setError("Niste prijavljeni ili nema tokena.");
+      setLoading(false);
+      return;
+    }
 
-      setLoading(true);
-      setError(null);
-
+    (async () => {
       try {
-     
         const data = await userQuizApi.dobaviZavrseneNivoePoKorisnickomImenu(user.korisnickoIme);
         setRezultati(data ?? []);
-
-        
-        const jedinstveniJezici = Array.from(new Set((data ?? []).map(r => r.jezik)));
-
-
-        const nivoiMap: Record<string, string[]> = {};
-        await Promise.all(
-          jedinstveniJezici.map(async (jezik) => {
-            const nivoRes = await languageLevelAPIService.getLevelsByLanguage(jezik, token);
-            nivoiMap[jezik] = nivoRes.nivoi.length > 0 ? nivoRes.nivoi : ["Nema nivoa"];
-          })
-        );
-
-        setNivoiPoJeziku(nivoiMap);
         setError(null);
       } catch {
-        setError("Greška pri dohvatanju podataka.");
+        setError("Greška pri dohvatanju završenih nivoa.");
       } finally {
         setLoading(false);
       }
-    }
-
-    fetchData();
-  }, [user, token, userQuizApi, languageLevelAPIService]);
-
-  // Provera da li je nivo poslednji za dati jezik
-  function isLastLevel(jezik: string, nivo: string): boolean {
-    const nivoi = nivoiPoJeziku[jezik];
-    if (!nivoi || nivoi.length === 0) return false;
-    return nivoi[nivoi.length - 1] === nivo;
-  }
-
-  // Provera da li je korisnik završio kurs za neki od jezika
-  const korisnikZavrsioKurs = rezultati.some(item => isLastLevel(item.jezik, item.nivo));
+    })();
+  }, [user, token, userQuizApi]);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -116,13 +83,6 @@ export function RezultatiForma({ userQuizApi, languageLevelAPIService }: Rezulta
                     <td className="p-4">{item.dani} dana</td>
                   </tr>
                 ))}
-                {korisnikZavrsioKurs && (
-                  <tr>
-                    <td colSpan={6} className="p-4 text-center  font-bold bg-purple-200">
-                      Korisnik je završio kurs
-                    </td>
-                  </tr>
-                )}
               </tbody>
             </table>
           </div>

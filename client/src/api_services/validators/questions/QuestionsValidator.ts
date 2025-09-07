@@ -7,8 +7,8 @@ export function validacijaPodatakaPitanja(tekst_pitanja?: string): RezultatValid
   }
 
   // Provera da li je tekst pitanja duži od 5 karaktera
-  if (tekst_pitanja.length < 3) {
-    return { uspesno: false, poruka: 'Tekst pitanja mora imati najmanje 3 karaktera.' };
+  if (tekst_pitanja.length < 5) {
+    return { uspesno: false, poruka: 'Tekst pitanja mora imati najmanje 5 karaktera.' };
   }
 
   // Ako je sve u redu
