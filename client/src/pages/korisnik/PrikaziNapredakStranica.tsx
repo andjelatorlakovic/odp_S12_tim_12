@@ -2,7 +2,6 @@ import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import knjiga from "../../assets/knjiga.png";
 
-
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -27,21 +26,20 @@ type FinishedLanguageLevelDto = {
 };
 
 interface NapredakProps {
-     userQuizApiService : IUserQuizApiService;
+  userQuizApiService: IUserQuizApiService;
 }
-function PrikaziNapredakStranica({userQuizApiService}: NapredakProps) {
+
+function PrikaziNapredakStranica({ userQuizApiService }: NapredakProps) {
   const { username } = useParams<{ username: string }>();
   const [userLevels, setUserLevels] = useState<FinishedLanguageLevelDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-
-
   useEffect(() => {
     if (username) {
       setLoading(true);
       setError(null);
-      
+
       userQuizApiService.dobaviZavrseneNivoePoKorisnickomImenu(username)
         .then(data => setUserLevels(data))
         .catch(() => setError("Greška pri dohvatanju napretka"))
@@ -49,48 +47,12 @@ function PrikaziNapredakStranica({userQuizApiService}: NapredakProps) {
     }
   }, [username]);
 
-  // Sortiranje nivoa po nazivu
-  const sortiraniNivoi = userLevels
-    ? [...userLevels].sort((a, b) => a.nivo.localeCompare(b.nivo))
-    : [];
-
-  const chartData = {
-    labels: sortiraniNivoi.map(n => n.nivo),
-    datasets: [
-      {
-        label: 'Broj dana po nivou',
-        data: sortiraniNivoi.map(n => n.dani ?? 0),
-        borderColor: '#8f60bf',
-        backgroundColor: '#d9bfff',
-        tension: 0.4,
-        fill: true,
-        pointBackgroundColor: "#8f60bf",
-      }
-    ]
-  };
-
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: { position: 'top' as const }
-    },
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: 'Nivoi znanja'
-        }
-      },
-      y: {
-        title: {
-          display: true,
-          text: 'Broj dana'
-        },
-        beginAtZero: true,
-        ticks: { stepSize: 1 }
-      }
-    }
-  };
+  // Grupiši nivoe po jeziku
+  const nivoiPoJeziku: Record<string, FinishedLanguageLevelDto[]> = userLevels.reduce((acc, nivo) => {
+    if (!acc[nivo.jezik]) acc[nivo.jezik] = [];
+    acc[nivo.jezik].push(nivo);
+    return acc;
+  }, {} as Record<string, FinishedLanguageLevelDto[]>);
 
   if (loading) return <div className="text-center mt-10">Učitavanje...</div>;
   if (error) return <div className="text-center mt-10 text-red-600">{error}</div>;
@@ -106,39 +68,83 @@ function PrikaziNapredakStranica({userQuizApiService}: NapredakProps) {
         Napredak korisnika: {username}
       </h2>
 
-      {userLevels.length === 0 ? (
+      {Object.keys(nivoiPoJeziku).length === 0 ? (
         <div className="text-gray-700">Nema završenih nivoa za ovog korisnika.</div>
       ) : (
-        <>
-          <table className="table-auto border-collapse border border-purple-300 w-full text-left mb-6">
-            <thead>
-              <tr>
-                <th className="border border-purple-300 px-4 py-2">Jezik</th>
-                <th className="border border-purple-300 px-4 py-2">Nivo</th>
-                <th className="border border-purple-300 px-4 py-2">Početak nivoa</th>
-                <th className="border border-purple-300 px-4 py-2">Kraj nivoa</th>
-                <th className="border border-purple-300 px-4 py-2">Broj dana</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortiraniNivoi.map((nivo, idx) => (
-                <tr key={idx} className="even:bg-purple-50">
-                  <td className="border border-purple-300 px-4 py-2">{nivo.jezik}</td>
-                  <td className="border border-purple-300 px-4 py-2">{nivo.nivo}</td>
-                  <td className="border border-purple-300 px-4 py-2">
-                    {nivo.pocetakNivoa ? new Date(nivo.pocetakNivoa).toLocaleDateString() : "-"}
-                  </td>
-                  <td className="border border-purple-300 px-4 py-2">
-                    {nivo.krajNivoa ? new Date(nivo.krajNivoa).toLocaleDateString() : "-"}
-                  </td>
-                  <td className="border border-purple-300 px-4 py-2">{nivo.dani ?? "-"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        Object.entries(nivoiPoJeziku).map(([jezik, nivoi]) => {
+          const sortiraniNivoi = [...nivoi].sort((a, b) => a.nivo.localeCompare(b.nivo));
 
-          <Line data={chartData} options={chartOptions} />
-        </>
+          const chartData = {
+            labels: sortiraniNivoi.map(n => n.nivo),
+            datasets: [
+              {
+                label: 'Broj dana po nivou',
+                data: sortiraniNivoi.map(n => n.dani ?? 0),
+                borderColor: '#8f60bf',
+                backgroundColor: '#d9bfff',
+                tension: 0,
+                fill: true,
+                pointBackgroundColor: "#8f60bf",
+              }
+            ]
+          };
+
+          const chartOptions = {
+            responsive: true,
+            plugins: {
+              legend: { position: 'top' as const }
+            },
+            scales: {
+              x: {
+                title: {
+                  display: true,
+                  text: 'Nivoi znanja'
+                }
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: 'Broj dana'
+                },
+                beginAtZero: true,
+                ticks: { stepSize: 1 }
+              }
+            }
+          };
+
+          return (
+            <div key={jezik} className="mb-12">
+              <h3 className="text-2xl font-bold text-purple-700 mb-4">Jezik: {jezik}</h3>
+
+              <table className="table-auto border-collapse border border-purple-300 w-full text-left mb-6">
+                <thead>
+                  <tr>
+                    <th className="border border-purple-300 px-4 py-2">Nivo</th>
+                    <th className="border border-purple-300 px-4 py-2">Početak nivoa</th>
+                    <th className="border border-purple-300 px-4 py-2">Kraj nivoa</th>
+                    <th className="border border-purple-300 px-4 py-2">Broj dana</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortiraniNivoi.map((nivo, idx) => (
+                    <tr key={idx} className="even:bg-purple-50">
+                      <td className="border border-purple-300 px-4 py-2">{nivo.nivo}</td>
+                      <td className="border border-purple-300 px-4 py-2">
+                        {nivo.pocetakNivoa ? new Date(nivo.pocetakNivoa).toLocaleDateString() : "-"}
+                      </td>
+                      <td className="border border-purple-300 px-4 py-2">
+                        {nivo.krajNivoa ? new Date(nivo.krajNivoa).toLocaleDateString() : "-"}
+                      </td>
+                      <td className="border border-purple-300 px-4 py-2">{nivo.dani ?? "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <Line data={chartData} options={chartOptions} />
+            </div>
+          );
+        })
       )}
     </div>
   );

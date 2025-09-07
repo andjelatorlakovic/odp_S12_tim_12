@@ -1,5 +1,4 @@
-import  { useEffect, useState } from "react";
-
+import { useEffect, useState } from "react";
 import knjiga from "../../assets/knjiga.png";
 import type { FinishedLanguageLevelDto } from "../../models/userQuiz/FinishedLevelsDto";
 import type { IUserQuizApiService } from "../../api_services/userQuiz/IUserQuizApiService";
@@ -12,7 +11,7 @@ interface RezultatiFormaProps {
 }
 
 export function RezultatiForma({ userQuizApi, languageLevelAPIService }: RezultatiFormaProps) {
-  const { token, user } = useAuth();  
+  const { token, user } = useAuth();
   const [rezultati, setRezultati] = useState<FinishedLanguageLevelDto[]>([]);
   const [nivoiPoJeziku, setNivoiPoJeziku] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(true);
@@ -30,13 +29,10 @@ export function RezultatiForma({ userQuizApi, languageLevelAPIService }: Rezulta
       setError(null);
 
       try {
-     
         const data = await userQuizApi.dobaviZavrseneNivoePoKorisnickomImenu(user.korisnickoIme);
         setRezultati(data ?? []);
 
-        
         const jedinstveniJezici = Array.from(new Set((data ?? []).map(r => r.jezik)));
-
 
         const nivoiMap: Record<string, string[]> = {};
         await Promise.all(
@@ -64,9 +60,6 @@ export function RezultatiForma({ userQuizApi, languageLevelAPIService }: Rezulta
     if (!nivoi || nivoi.length === 0) return false;
     return nivoi[nivoi.length - 1] === nivo;
   }
-
-  // Provera da li je korisnik završio kurs za neki od jezika
-  const korisnikZavrsioKurs = rezultati.some(item => isLastLevel(item.jezik, item.nivo));
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -116,13 +109,20 @@ export function RezultatiForma({ userQuizApi, languageLevelAPIService }: Rezulta
                     <td className="p-4">{item.dani} dana</td>
                   </tr>
                 ))}
-                {korisnikZavrsioKurs && (
-                  <tr>
-                    <td colSpan={6} className="p-4 text-center  font-bold bg-purple-200">
-                      Korisnik je završio kurs
-                    </td>
-                  </tr>
-                )}
+
+                {/* Prikaz informacija o završenim kursevima po jeziku */}
+                {Object.entries(nivoiPoJeziku).map(([jezik, nivoi]) => {
+                  const poslednjiNivo = nivoi[nivoi.length - 1];
+                  const korisnikZavrsio = rezultati.some(r => r.jezik === jezik && r.nivo === poslednjiNivo);
+
+                  return korisnikZavrsio ? (
+                    <tr key={jezik}>
+                      <td colSpan={6} className="p-4 text-center font-bold bg-green-100 text-green-700">
+                        ✅ Korisnik je završio kurs iz jezika: <span className="italic">{jezik}</span>
+                      </td>
+                    </tr>
+                  ) : null;
+                })}
               </tbody>
             </table>
           </div>
