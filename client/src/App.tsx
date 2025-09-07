@@ -20,6 +20,7 @@ import { AnswerAPIService } from './api_services/answers/AnswerApiService';
 import { UserQuizApiService } from './api_services/userQuiz/UserQuizApiService';
 import NotFoundStranica from './pages/not_found/404Stranica';
 
+
 function App() {
   return (
     <Routes>
@@ -28,7 +29,7 @@ function App() {
       <Route path="/prijava" element={<PrijavaStranica authApi={authApi} />} />
       <Route path="/registracija" element={<RegistracijaStranica authApi={authApi} />} />
       <Route path="/404" element={<NotFoundStranica />} />
-      <Route path="/prikazi-napredak/:username" element={<PrikaziNapredakStranica />} />
+      <Route path="/prikazi-napredak/:username" element={<PrikaziNapredakStranica  userQuizApiService={UserQuizApiService}/>} />
 
       {/* Zaštićene rute */}
       <Route
@@ -59,7 +60,7 @@ function App() {
           />
         }
       />
-        <Route path="moji-rezultati" element={<RezultatiStranica userQuizApi={UserQuizApiService} />} />
+        <Route path="moji-rezultati" element={<RezultatiStranica userQuizApi={UserQuizApiService}  languageLevelAPIService={LanguageLevelAPIService}/>} />
 
       </Route>
 

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import knjiga from '../../assets/knjiga.png';
-import panda from '../../assets/panda.png';
+import slika from '../../assets/slika.png';
 
 import {
   Chart as ChartJS,
@@ -151,7 +151,7 @@ function PocetnaStranica({ apiService, userQuizApiService }: PocetnaProps) {
       {/* Hero */}
       <div className="pt-[150px] h-screen flex w-screen">
         <div className="w-1/2 flex justify-center items-start mt-5">
-          <img src={panda} alt="panda" className="w-[80%] h-auto" />
+          <img src={slika} alt="panda" className="w-[60%] h-auto" />
         </div>
 
         <div className="w-1/2 flex flex-col items-center pt-[10px] px-8">
