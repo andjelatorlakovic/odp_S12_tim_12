@@ -54,13 +54,6 @@ export function RezultatiForma({ userQuizApi, languageLevelAPIService }: Rezulta
     fetchData();
   }, [user, token, userQuizApi, languageLevelAPIService]);
 
-  // Provera da li je nivo poslednji za dati jezik
-  function isLastLevel(jezik: string, nivo: string): boolean {
-    const nivoi = nivoiPoJeziku[jezik];
-    if (!nivoi || nivoi.length === 0) return false;
-    return nivoi[nivoi.length - 1] === nivo;
-  }
-
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
