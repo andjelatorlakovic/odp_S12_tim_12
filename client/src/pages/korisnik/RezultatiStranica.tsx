@@ -4,12 +4,14 @@ import { useAuth } from "../../hooks/auth/useAuthHook";
 
 import type { IUserQuizApiService } from "../../api_services/userQuiz/IUserQuizApiService";
 import { RezultatiForma } from "../../components/korisnik/RezultatiForma";
+import type { ILanguageLevelAPIService } from "../../api_services/languageLevels/ILanguageLevelApiService";
 
 interface RezultatiFormaProps {
   userQuizApi: IUserQuizApiService;
+  languageLevelAPIService: ILanguageLevelAPIService; // Dodaj servis za nivoe kao opcioni prop
 }
 
-export default function RezultatiStranica({ userQuizApi }: RezultatiFormaProps) {
+export default function RezultatiStranica({ userQuizApi, languageLevelAPIService }: RezultatiFormaProps) {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
 
@@ -21,7 +23,7 @@ export default function RezultatiStranica({ userQuizApi }: RezultatiFormaProps) 
 
   return (
     <div>
-      <RezultatiForma userQuizApi={userQuizApi} />
+      <RezultatiForma userQuizApi={userQuizApi} languageLevelAPIService={languageLevelAPIService}/>
     </div>
   );
 }

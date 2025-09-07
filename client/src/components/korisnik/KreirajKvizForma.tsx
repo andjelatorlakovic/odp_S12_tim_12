@@ -7,6 +7,7 @@ import { validacijaPodatakaPitanja } from "../../api_services/validators/questio
 import { validacijaPodatakaOdgovora } from "../../api_services/validators/answers/AnswerValidator";
 import type { IAnswerAPIService } from "../../api_services/answers/IAnswerApiService";
 import { useAuth } from "../../hooks/auth/useAuthHook";
+import { validacijaDuplikataPitanjaIPonovljenihOdgovora } from "../../api_services/validators/questions/QuestionAnswerValidator";
 
 type Pitanje = {
   pitanje: string;
@@ -30,7 +31,7 @@ export function KreirajKvizForma({
   questionAPIService,
   answerAPIService,
 }: KreirajKvizFormaProps) {
-  const {token} = useAuth(); 
+  const { token } = useAuth();
 
   const [pitanja, setPitanja] = useState<Pitanje[]>([
     { pitanje: "", odgovori: ["", "", "", ""], tacanOdgovor: "" },
@@ -49,13 +50,11 @@ export function KreirajKvizForma({
   useEffect(() => {
     const fetchLanguages = async () => {
       try {
-        // const token = localStorage.getItem("authToken"); // Sada koristiš token iz useAuth
         if (!token) {
           setErrorMessage("Nema tokena za autorizaciju.");
           return;
         }
-
-        const langs = await languageLevelAPIService.getLanguagesWithLevels(); // Prosleđivanje tokena
+        const langs = await languageLevelAPIService.getLanguagesWithLevels();
         setLanguages(langs);
       } catch (error) {
         console.error("Greška pri dohvaćanju jezika:", error);
@@ -81,7 +80,7 @@ export function KreirajKvizForma({
 
   // Dodavanje pitanja
   const handleAddQuestion = () => {
-    if (pitanja.length >= 7) {
+    if (pitanja.length >= 20) { // Maksimalno 20 pitanja
       setErrorMessage("Maksimalno 7 pitanja po kvizu!");
       return;
     }
@@ -113,7 +112,7 @@ export function KreirajKvizForma({
     setPitanja(copy);
   };
 
-  // Validacija pitanja
+  // Validacija pitanja (postojeće validacije)
   const validateQuestions = (): boolean => {
     for (let i = 0; i < pitanja.length; i++) {
       const p = pitanja[i];
@@ -135,9 +134,16 @@ export function KreirajKvizForma({
       }
 
       if (!p.tacanOdgovor) {
-        setErrorMessage(`Izaberite tacan odgovor za pitanje ${i + 1}.`);
+        setErrorMessage(`Izaberite tačan odgovor za pitanje ${i + 1}.`);
         return false;
       }
+    }
+
+ 
+    const validacijaDuplikata = validacijaDuplikataPitanjaIPonovljenihOdgovora(pitanja);
+    if (!validacijaDuplikata.uspesno) {
+      setErrorMessage(validacijaDuplikata.poruka);
+      return false;
     }
 
     setErrorMessage("");
@@ -162,16 +168,15 @@ export function KreirajKvizForma({
     }
 
     try {
-      // const token = localStorage.getItem("authToken"); // Sada koristiš token iz useAuth
       if (!token) {
         setApiMessage("Nema tokena za autorizaciju.");
         return;
       }
 
       // Kreiraj kviz
-      const response = await kvizApi.kreirajKviz(nazivKviza, selectedLanguage, selectedLevel, token); // Prosleđivanje tokena
+      const response = await kvizApi.kreirajKviz(nazivKviza, selectedLanguage, selectedLevel, token);
       if (!response.success || !response.data) {
-        setApiMessage(response.message || "Doslo je do greske prilikom kreiranja kviza.");
+        setApiMessage(response.message || "Došlo je do greške prilikom kreiranja kviza.");
         return;
       }
 
@@ -179,9 +184,9 @@ export function KreirajKvizForma({
 
       // Kreiranje pitanja i odgovora
       for (const pitanje of pitanja) {
-        const pitanjeResponse = await questionAPIService.kreirajPitanje(createdQuizId, pitanje.pitanje, token); // Prosleđivanje tokena
+        const pitanjeResponse = await questionAPIService.kreirajPitanje(createdQuizId, pitanje.pitanje, token);
         if (!pitanjeResponse.success || !pitanjeResponse.data) {
-          setApiMessage("Greska pri kreiranju pitanja.");
+          setApiMessage("Greška pri kreiranju pitanja.");
           return;
         }
 
@@ -190,11 +195,11 @@ export function KreirajKvizForma({
         for (let i = 0; i < pitanje.odgovori.length; i++) {
           const odgovorTekst = pitanje.odgovori[i];
           const tacan = pitanje.tacanOdgovor === `odgovor${i + 1}`;
-          await answerAPIService.kreirajOdgovor(createdQuestionId, odgovorTekst, tacan, token); // Prosleđivanje tokena
+          await answerAPIService.kreirajOdgovor(createdQuestionId, odgovorTekst, tacan, token);
         }
       }
 
-      setApiMessage("Kviz uspesno kreiran!");
+      setApiMessage("Kviz uspešno kreiran!");
 
       // Reset forme
       setNazivKviza("");
@@ -205,7 +210,7 @@ export function KreirajKvizForma({
       setErrorMessage("");
     } catch (error) {
       console.error(error);
-      setApiMessage("Greska pri slanju na server.");
+      setApiMessage("Greška pri slanju na server.");
     }
   };
 
@@ -331,20 +336,21 @@ export function KreirajKvizForma({
             )}
 
             <div className="flex justify-between items-center">
-              <button
+                <button
                 type="button"
                 onClick={handleAddQuestion}
-                className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition"
+                className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-white hover:text-[#8f60bf] border-2 border-[#8f60bf] transition"
               >
                 Dodaj pitanje
               </button>
+
 
               <button
                 type="submit"
                 disabled={!canCreateQuiz}
                 className={`px-4 py-2 rounded-md text-white ${
                   canCreateQuiz
-                    ? "bg-green-600 hover:bg-green-700"
+                    ? "bg-purple-600 hover:bg-white hover:text-[#8f60bf] border-2 border-[#8f60bf] transition"
                     : "bg-gray-400 cursor-not-allowed"
                 } transition`}
               >
